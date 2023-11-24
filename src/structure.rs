@@ -119,8 +119,6 @@ impl StructStoneHeader {
             let packet_arr:&[u8] = &packet[..];
             let fields: Vec<&[u8]> = packet_arr.split_str("..").collect();
 
-            println!("{:?}", fields);
-
             StructStonePayload {
                 sysinfo: Vec::from(fields[0]),
                 command_input: Vec::from(fields[1]),

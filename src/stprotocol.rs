@@ -67,8 +67,6 @@ impl Client for Session {
 
         let mut buffer : Vec<u8> = vec![0; buffer_size];
 
-        println!("버퍼 생성 성공! 버퍼 크기 : {}", buffer.len());
-
         match self.socket.read_exact(&mut buffer) {
             Ok(_) => println!("성공적으로 수신함! 페이로드 크기 : {}", buffer_size),
             Err(_) => println!("에러 발생! 페이로드 크기 : {}", buffer_size)
@@ -82,11 +80,8 @@ impl Client for Session {
         let mut payload = StructStonePayload::default();
         let mut packet: Vec<u8> = Vec::new();
 
-        println!("{:?}, {}, {}, {}", buffer.header, buffer.header.eq(&header), buffer.payload.eq(&payload), buffer.header.stone_size != vec![12]);
-
         if buffer.header.stone_size != vec![12,0,0,0] {
             let buffer_size: usize = self.get_payload_size( buffer.header );
-            println!("페이로드 크기 추정 완료! : {}", buffer_size);
 
             payload = StructStonePayload::from(self.recv( buffer_size ));
             return StructStone::from(header, payload)

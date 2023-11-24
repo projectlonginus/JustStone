@@ -13,7 +13,8 @@ fn main() {
     let mut buffer = StructStone::default();
     buffer = client.receiving(buffer);
 
-    println!("{:?}", buffer)
+    println!("받은거 : {:?}", buffer.header);
+    println!("받은거 : {:?}", buffer.payload);
 
     // match client.recv() {
     //     Ok(ssh) => {
