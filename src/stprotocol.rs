@@ -2,8 +2,9 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::ptr::eq;
 use std::u8;
-use crate::structure::{StructStoneHeader, StructRawStonePayload, StructStone, StructStonePayload, Generator};
+use crate::structure::{StoneTransferProtocol, StructStoneHeader, StructRawStonePayload, StructStone, StructStonePayload, Generator, Detector};
 
+#[derive(Debug)]
 pub struct Session {
     ip_port: String,
     socket: TcpStream,
@@ -18,11 +19,12 @@ impl Session {
 
             let packet = StructRawStonePayload {
                 sysinfo: String::from("sysinfo.."),
-                command_input: String::from("command_input.."),
-                command_output: String::from("command_output.."),
-                stone_chain: String::from("stone_chain.."),
+                command_input: String::from(""),
+                command_output: String::from(""),
+                stone_chain: String::from(""),
             }.generator();
 
+            println!("send : {:?} ", &packet.header.detect_header_type());
 
             socket.write_all(&packet.stone).expect("TODO: panic message");
 
@@ -39,8 +41,7 @@ impl Session {
 }
 
 pub trait Client {
-    fn send_stone(&mut self, stone: &[u8]) -> Result<(), std::io::Error>;
-    fn detect_header_type(&mut self, header: Vec<u8>) -> bool;
+    fn send(&mut self, stone: &[u8]) -> Result<&str, &str>;
     fn get_payload_size(&mut self, header: StructStoneHeader) -> usize;
     fn recv(&mut self, buffer_size: usize) -> Vec<u8>;
     fn receiving(&mut self, buffer: StructStone) -> StructStone;
@@ -48,13 +49,12 @@ pub trait Client {
 }
 
 impl Client for Session {
-    fn send_stone(&mut self, stone: &[u8]) -> Result<(), std::io::Error> {
-        self.socket.write_all(stone)?;
-        Ok(())
-    }
-
-    fn detect_header_type(&mut self, header: Vec<u8>) -> bool {
-        todo!()
+    fn send(&mut self, stone: &[u8]) -> Result<&str, &str> {
+        self.socket.write_all(stone).expect("Failed to send");
+        match self.socket.try_clone() {
+            Ok(_) => Ok("Socket close successful"),
+            Err(_) => Err("Socket close failed")
+        }
     }
 
     fn get_payload_size(&mut self, header: StructStoneHeader) -> usize {
@@ -68,9 +68,9 @@ impl Client for Session {
         let mut buffer : Vec<u8> = vec![0; buffer_size];
 
         match self.socket.read_exact(&mut buffer) {
-            Ok(_) => println!("성공적으로 수신함! 페이로드 크기 : {}", buffer_size),
-            Err(_) => println!("에러 발생! 페이로드 크기 : {}", buffer_size)
-        }
+            Ok(_) => buffer_size,
+            Err(_) => buffer_size
+        };
 
         buffer
     }
@@ -81,10 +81,10 @@ impl Client for Session {
         let mut packet: Vec<u8> = Vec::new();
 
         if buffer.header.stone_size != vec![12,0,0,0] {
-            let buffer_size: usize = self.get_payload_size( buffer.header );
+            let buffer_size: usize = self.get_payload_size( buffer.header.clone() );
 
             payload = StructStonePayload::from(self.recv( buffer_size ));
-            return StructStone::from(header, payload)
+            return StructStone::from(buffer.header, payload);
         }
 
         header = StructStoneHeader::load(self.recv(12));

@@ -36,6 +36,16 @@ pub struct StructStone {
     pub stone:  Vec<u8>
 }
 
+#[derive(Debug)]
+pub enum StoneTransferProtocol {
+    Connection,
+    Handshake,
+    HealthCheck,
+    Request,
+    Response,
+    Unknown
+}
+
 pub trait Generator {
     fn generator(self) -> StructStone;
 }
@@ -47,13 +57,26 @@ impl Generator for StructRawStonePayload {
         let ssp= StructRawStonePayload::to_vec( &self);
         let ssh = StructStoneHeader::from(&ssp);
 
-        println!("보낸거 : {:?} \n보낸거 : {:?}", ssh, ssp);
-
         StructStone::from(ssh, ssp)
 
     }
 }
 
+pub trait Detector {
+    fn detect_header_type(&self) -> StoneTransferProtocol;
+}
+
+impl Detector for StructStoneHeader {
+    fn detect_header_type(&self) -> StoneTransferProtocol {
+        match &self.stone_type.as_slice() {
+            &[ 0,0,0,0 ] => StoneTransferProtocol::Connection,
+            &[ 1,0,0,0 ] => StoneTransferProtocol::Response,
+            &[ 2,0,0,0 ] => StoneTransferProtocol::Request,
+            &[ 3,0,0,0 ]=> StoneTransferProtocol::HealthCheck,
+            _ => StoneTransferProtocol::Unknown
+        }
+    }
+}
 
 impl StructRawStonePayload {
     pub fn to_vec(&self) ->StructStonePayload {
@@ -87,15 +110,20 @@ impl StructStoneHeader {
         }
 
         pub fn from(payload: &StructStonePayload) -> StructStoneHeader {
-            let stone_type = if !payload.sysinfo.is_empty() && payload.command_output.is_empty() && payload.stone_chain.is_empty() {
-                [1, 0, 0, 0].to_vec()
-            } else if !payload.command_output.is_empty() {
-                [2, 0, 0, 0].to_vec()
-            } else {
-                [3, 0, 0, 0].to_vec()
+            let stone_type = match (
+                payload.sysinfo.is_empty(),
+                payload.command_input.is_empty(),
+                payload.command_output.is_empty(),
+            ) {
+                (false, true, true) => vec![0, 0, 0, 0],  // Connection
+                (false, true, false) => vec![1, 0, 0, 0], // Response
+                (false, false, true) => vec![2, 0, 0, 0], // Request
+                _ => vec![3, 0, 0, 0],                    // HealthCheck
             };
 
-            let stone_size = (payload.sysinfo.len() + payload.command_input.len() + payload.command_output.len()).to_le_bytes()[0..4].to_vec();
+
+
+            let stone_size = (payload.sysinfo.len() + payload.command_input.len() + payload.command_output.len() + 8).to_le_bytes()[0..4].to_vec();
             let stone_status = 0u32.to_le_bytes().to_vec();
 
             StructStoneHeader {
@@ -117,13 +145,17 @@ impl StructStoneHeader {
     impl  StructStonePayload {
         pub fn from(packet: Vec<u8>) -> StructStonePayload {
             let packet_arr:&[u8] = &packet[..];
-            let fields: Vec<&[u8]> = packet_arr.split_str("..").collect();
+            let mut fields: Vec<&[u8]> = packet_arr.split_str("..").collect();
+
+            while fields.len() < 4 {
+                fields.push(b"");
+            }
 
             StructStonePayload {
-                sysinfo: Vec::from(fields[0]),
-                command_input: Vec::from(fields[1]),
-                command_output: Vec::from(fields[2]),
-                stone_chain: Vec::from(fields[3]),
+                sysinfo: fields[0].to_vec(),
+                command_input: fields[1].to_vec(),
+                command_output: fields[2].to_vec(),
+                stone_chain: fields[3].to_vec(),
             }
     }
 
