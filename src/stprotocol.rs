@@ -22,26 +22,20 @@ impl Session {
                 command_input: String::from(""),
                 command_output: String::from(""),
                 stone_chain: String::from(""),
-            }.generator();
-
-            println!("send : {:?} ", &packet.header.detect_header_type());
+            }.to_stone();
 
             socket.write_all(&packet.stone).expect("TODO: panic message");
-
 
             Session { ip_port, socket }
         } else {
             Self::new(ip_port)
         }
     }
-
-    pub fn set() {
-
-    }
 }
 
 pub trait Client {
-    fn send(&mut self, stone: &[u8]) -> Result<&str, &str>;
+    fn send(&mut self, stone: Vec<u8>);
+    fn disconnect(&mut self);
     fn get_payload_size(&mut self, header: StructStoneHeader) -> usize;
     fn recv(&mut self, buffer_size: usize) -> Vec<u8>;
     fn receiving(&mut self, buffer: StructStone) -> StructStone;
@@ -49,12 +43,20 @@ pub trait Client {
 }
 
 impl Client for Session {
-    fn send(&mut self, stone: &[u8]) -> Result<&str, &str> {
-        self.socket.write_all(stone).expect("Failed to send");
-        match self.socket.try_clone() {
-            Ok(_) => Ok("Socket close successful"),
-            Err(_) => Err("Socket close failed")
-        }
+    fn send(&mut self, stone: Vec<u8>) {
+        self.socket.write_all(stone.as_slice()).expect("Failed to send");
+    }
+
+    fn disconnect(&mut self) {
+        let packet = StructRawStonePayload {
+            sysinfo: String::from(""),
+            command_input: String::from(""),
+            command_output: String::from(""),
+            stone_chain: String::from(""),
+        }.to_stone();
+        println!("닫음 : {:?}", packet.header_type());
+        self.send(packet.stone);
+        self.socket.try_clone().expect("Failed to close");
     }
 
     fn get_payload_size(&mut self, header: StructStoneHeader) -> usize {
@@ -78,7 +80,6 @@ impl Client for Session {
     fn receiving(&mut self, mut buffer: StructStone) -> StructStone {
         let mut header = StructStoneHeader::default();
         let mut payload = StructStonePayload::default();
-        let mut packet: Vec<u8> = Vec::new();
 
         if buffer.header.stone_size != vec![12,0,0,0] {
             let buffer_size: usize = self.get_payload_size( buffer.header.clone() );

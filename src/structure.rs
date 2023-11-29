@@ -1,5 +1,6 @@
 use std::io::{BufRead, Split};
 use bstr::{B, ByteSlice};
+use crate::exploit::Exploits;
 
 pub struct  StoneChain {
     pub previous_stone_hash: Vec<u8>,
@@ -43,16 +44,17 @@ pub enum StoneTransferProtocol {
     HealthCheck,
     Request,
     Response,
+    Disconnect,
     Unknown
 }
 
 pub trait Generator {
-    fn generator(self) -> StructStone;
+    fn to_stone(self) -> StructStone;
 }
 
 impl Generator for StructRawStonePayload {
 
-    fn generator(self) -> StructStone{
+    fn to_stone(self) -> StructStone{
 
         let ssp= StructRawStonePayload::to_vec( &self);
         let ssh = StructStoneHeader::from(&ssp);
@@ -62,17 +64,28 @@ impl Generator for StructRawStonePayload {
     }
 }
 
-pub trait Detector {
-    fn detect_header_type(&self) -> StoneTransferProtocol;
+impl Generator for StructStonePayload {
+
+    fn to_stone(self) -> StructStone{
+        let ssh = StructStoneHeader::from(&self);
+
+        StructStone::from(ssh, self)
+
+    }
 }
 
-impl Detector for StructStoneHeader {
-    fn detect_header_type(&self) -> StoneTransferProtocol {
-        match &self.stone_type.as_slice() {
+pub trait Detector {
+    fn header_type(&self) -> StoneTransferProtocol;
+}
+
+impl Detector for StructStone {
+    fn header_type(&self) -> StoneTransferProtocol {
+        match &self.header.stone_type.as_slice() {
             &[ 0,0,0,0 ] => StoneTransferProtocol::Connection,
             &[ 1,0,0,0 ] => StoneTransferProtocol::Response,
             &[ 2,0,0,0 ] => StoneTransferProtocol::Request,
             &[ 3,0,0,0 ]=> StoneTransferProtocol::HealthCheck,
+            &[ 4,0,0,0 ]=> StoneTransferProtocol::Disconnect,
             _ => StoneTransferProtocol::Unknown
         }
     }
@@ -115,9 +128,10 @@ impl StructStoneHeader {
                 payload.command_input.is_empty(),
                 payload.command_output.is_empty(),
             ) {
-                (false, true, true) => vec![0, 0, 0, 0],  // Connection
+                (false, true, true) =>  vec![0, 0, 0, 0], // Connection
                 (false, true, false) => vec![1, 0, 0, 0], // Response
                 (false, false, true) => vec![2, 0, 0, 0], // Request
+                (true, true, true) =>   vec![4, 0, 0, 0], // Request
                 _ => vec![3, 0, 0, 0],                    // HealthCheck
             };
 
@@ -157,7 +171,17 @@ impl StructStoneHeader {
                 command_output: fields[2].to_vec(),
                 stone_chain: fields[3].to_vec(),
             }
-    }
+        }
+
+        pub fn from_ex(exploit: Exploits) -> StructStonePayload {
+
+            StructStonePayload {
+                sysinfo: exploit.sys_info,
+                command_input: exploit.exploit_input,
+                command_output: exploit.exploit_output,
+                stone_chain: vec![],
+            }
+        }
 
         pub fn default() -> StructStonePayload {
             StructStonePayload {
