@@ -1,8 +1,7 @@
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::ptr::eq;
 use std::u8;
-use crate::structure::{StoneTransferProtocol, StructStoneHeader, StructRawStonePayload, StructStone, StructStonePayload, Generator, Detector};
+use crate::structure::{ StructStoneHeader, StructRawStonePayload, StructStone, StructStonePayload, Generator, Detector };
 
 #[derive(Debug)]
 pub struct Session {
@@ -18,7 +17,7 @@ impl Session {
             socket = s;
 
             let packet = StructRawStonePayload {
-                sysinfo: String::from("sysinfo.."),
+                sysinfo: String::from("sysinfo"),
                 command_input: String::from(""),
                 command_output: String::from(""),
                 stone_chain: String::from(""),
@@ -48,13 +47,7 @@ impl Client for Session {
     }
 
     fn disconnect(&mut self) {
-        let packet = StructRawStonePayload {
-            sysinfo: String::from(""),
-            command_input: String::from(""),
-            command_output: String::from(""),
-            stone_chain: String::from(""),
-        }.to_stone();
-        println!("닫음 : {:?}", packet.header_type());
+        let packet = StructStone::disconnect();
         self.send(packet.stone);
         self.socket.try_clone().expect("Failed to close");
     }
@@ -77,19 +70,19 @@ impl Client for Session {
         buffer
     }
 
-    fn receiving(&mut self, mut buffer: StructStone) -> StructStone {
-        let mut header = StructStoneHeader::default();
-        let mut payload = StructStonePayload::default();
+    fn receiving(&mut self, mut buffer: StructStone) -> StructStone { // 함수가 재귀적으로 호출돠기 때문에 빈 헤더, 페이로드를 입력받음, 기본 헤더의 페이로드 크기는 12바이트 고정임
+        let mut header = StructStoneHeader::default(); // 응답을 받을 빈 헤더 구조체 생성
+        let mut payload = StructStonePayload::default(); // 응답을 받을 빈 페이로드 구조체 생성
 
-        if buffer.header.stone_size != vec![12,0,0,0] {
-            let buffer_size: usize = self.get_payload_size( buffer.header.clone() );
+        if buffer.header.stone_size != vec![12,0,0,0] { // 만약 수신받은 데이터의 크기가 12 바이트가 아니라면
+            let buffer_size: usize = self.get_payload_size( buffer.header.clone() ); // 헤더에서 페이로드 크기를 추출후
 
-            payload = StructStonePayload::from(self.recv( buffer_size ));
-            return StructStone::from(buffer.header, payload);
+            payload = StructStonePayload::from(self.recv( buffer_size )); // 페이로드 크기만큼 데이터를 받고 구조체로 변환하여 빈 페이로드 구조체에 저장
+            return StructStone::from(buffer.header, payload); // 헤더와 페이로드를 결합하여 구조체로 반환
         }
 
-        header = StructStoneHeader::load(self.recv(12));
-        return self.receiving(StructStone::from(header, payload));
+        header = StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고
+        return self.receiving(StructStone::from(header, payload)); // 새로운 헤더를 재귀함수로 입력함 이 경우 재귀함수에서 if buffer.header.stone_size != vec![12,0,0,0] 문에 걸려서 페이로드를 수신받게 됨
 
     }
 }

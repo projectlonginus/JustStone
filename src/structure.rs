@@ -1,5 +1,5 @@
-use std::io::{BufRead, Split};
-use bstr::{B, ByteSlice};
+use std::io::Read;
+use bstr::{ ByteSlice };
 use crate::exploit::Exploits;
 
 pub struct  StoneChain {
@@ -115,10 +115,14 @@ impl StructRawStonePayload {
 
 impl StructStoneHeader {
         pub fn load(packet: Vec<u8>) -> StructStoneHeader {
-            StructStoneHeader {
-                stone_status: Vec::from(&packet[0..4]),
-                stone_type: Vec::from(&packet[4..8]),
-                stone_size: Vec::from(&packet[8..12]),
+            if packet[0..4] != vec![0,0,0,0] {
+                return StructStoneHeader::default()
+            } else {
+                StructStoneHeader {
+                    stone_status: Vec::from(&packet[0..4]),
+                    stone_type: Vec::from(&packet[4..8]),
+                    stone_size: Vec::from(&packet[8..12]),
+                }
             }
         }
 
@@ -131,7 +135,7 @@ impl StructStoneHeader {
                 (false, true, true) =>  vec![0, 0, 0, 0], // Connection
                 (false, true, false) => vec![1, 0, 0, 0], // Response
                 (false, false, true) => vec![2, 0, 0, 0], // Request
-                (true, true, true) =>   vec![4, 0, 0, 0], // Request
+                (true, true, true) =>   vec![4, 0, 0, 0], // Disconnect
                 _ => vec![3, 0, 0, 0],                    // HealthCheck
             };
 
@@ -200,10 +204,13 @@ impl StructStone {
         stone.extend(&header.stone_type);
         stone.extend(&header.stone_size);
         stone.extend(&payload.sysinfo);
+        stone.extend("..".as_bytes().to_vec());
         stone.extend(&payload.command_input);
+        stone.extend("..".as_bytes().to_vec());
         stone.extend(&payload.command_output);
+        stone.extend("..".as_bytes().to_vec());
         stone.extend(&payload.stone_chain);
-
+        stone.extend("..".as_bytes().to_vec());
 
         StructStone {
             header, payload, stone
@@ -214,7 +221,21 @@ impl StructStone {
         StructStone {
             header: StructStoneHeader::default(),
             payload: StructStonePayload::default(),
-            stone: Vec::new(),
+            stone: StructStone::from(StructStoneHeader::default(),StructStonePayload::default()).stone,
+        }
+    }
+
+    pub  fn disconnect() -> StructStone{
+        let header = StructStoneHeader {
+            stone_status: vec![0,0,0,0],
+            stone_type: vec![4,0,0,0],
+            stone_size: vec![0,0,0,0],
+        };
+
+        StructStone {
+            header: header.clone(),
+            payload: StructStonePayload::default(),
+            stone: StructStone::from(header,StructStonePayload::default()).stone,
         }
     }
 }
