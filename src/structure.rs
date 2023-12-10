@@ -1,14 +1,13 @@
 use bstr::{ ByteSlice };
 use sysinfo::{System, SystemExt};
-use crate::exploit::Exploits;
 
-pub struct  StoneChain {
-    previous_stone_hash: Vec<u8>,
-    stone_hash:          Vec<u8>,
-    stonetree_hash:      Vec<u8>,
-    timestamp:           Vec<u8>,
-    transaction_list:    Vec<u8>
-}
+// pub struct  StoneChain {
+//     previous_stone_hash: Vec<u8>,
+//     stone_hash:          Vec<u8>,
+//     stonetree_hash:      Vec<u8>,
+//     timestamp:           Vec<u8>,
+//     transaction_list:    Vec<u8>
+// }
 pub struct StructRawStonePayload {
     sysinfo:        String,
     command_input:  String,
@@ -129,15 +128,18 @@ impl StructRawStonePayload {
         let mut sys = System::new_all();
         sys.refresh_all();
 
-        format!("total memory: {} bytes
-                 used memory : {} bytes
-                 total swap  : {} bytes
-                 used swap   : {} bytes
+        format!("
+        [ system information ]
 
-                 System name:             {:?}
-                 System kernel version:   {:?}
-                 System OS version:       {:?}
-                 System host name:        {:?}",
+        total memory: {} bytes
+        used memory : {} bytes
+        total swap  : {} bytes
+        used swap   : {} bytes
+
+        System name:             {:?}
+        System kernel version:   {:?}
+        System OS version:       {:?}
+        System host name:        {:?}",
                 sys.total_memory(),
                 sys.used_memory(),
                 sys.total_swap(),
