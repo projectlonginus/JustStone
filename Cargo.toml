@@ -7,6 +7,5 @@ edition = "2021"
 
 [dependencies]
 encoding_rs = "0.8.33"
-command = "0.0.0"
-sysinfo = "0.29.11"
+sysinfo = "0.30.1"
 bstr = "1.8.0"
