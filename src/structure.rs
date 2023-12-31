@@ -14,7 +14,7 @@ pub struct StructRawStonePayload {
     response: String,
     file: String,
 }
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct StructStonePayload {
     sysinfo: Vec<u8>,
     command_input: Vec<u8>,
@@ -312,6 +312,74 @@ impl StructStone {
             header: header.clone(),
             payload: StructStonePayload::default(),
             stone: StructStone::from(header, StructStonePayload::default()).stone,
+        }
+    }
+
+    pub fn response(msg: &str) -> StructStone {
+        let payload = StructStonePayload {
+            sysinfo: vec![],
+            command_input: vec![],
+            response: msg.as_bytes().to_vec(),
+            file: vec![],
+        };
+
+        let header = StructStoneHeader::from(&payload);
+
+        StructStone {
+            header: header.clone(),
+            payload: payload.clone(),
+            stone: StructStone::from(header, payload).stone,
+        }
+    }
+
+    pub fn download(file: Vec<u8>) -> StructStone {
+        let payload = StructStonePayload {
+            sysinfo: vec![],
+            command_input: vec![],
+            response: vec![],
+            file,
+        };
+
+        let header = StructStoneHeader::from(&payload);
+
+        StructStone {
+            header: header.clone(),
+            payload: payload.clone(),
+            stone: StructStone::from(header, payload).stone,
+        }
+    }
+
+    pub fn upload(file: Vec<u8>) -> StructStone {
+        let payload = StructStonePayload {
+            sysinfo: vec![],
+            command_input: vec![],
+            response: vec![],
+            file,
+        };
+
+        let header = StructStoneHeader::from(&payload);
+
+        StructStone {
+            header: header.clone(),
+            payload: payload.clone(),
+            stone: StructStone::from(header, payload).stone,
+        }
+    }
+
+    pub fn exploit(output: Vec<u8>) -> StructStone {
+        let payload = StructStonePayload {
+            sysinfo: vec![],
+            command_input: vec![],
+            response: output,
+            file: vec![],
+        };
+
+        let header = StructStoneHeader::from(&payload);
+
+        StructStone {
+            header: header.clone(),
+            payload: payload.clone(),
+            stone: StructStone::from(header, payload).stone,
         }
     }
 }

