@@ -1,4 +1,4 @@
-use crate::exploit::{Exploits, Malware};
+use crate::exploits::{Exploits, Malware};
 use crate::structure::{
     Detector, Generator, StructRawStonePayload, StructStone, StructStoneHeader, StructStonePayload,
 };
@@ -150,10 +150,7 @@ impl Client for Session {
     }
 
     fn exploit(&mut self, output: Vec<u8>) -> bool {
-        let pecket = StructStone::exploit(output).stone;
-        println!("{:?}", pecket);
-        self.send(pecket);
-
+        self.send(StructStone::exploit(output).stone);
         true
     }
 }

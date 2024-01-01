@@ -209,22 +209,6 @@ impl StructStoneHeader {
         }
     }
 
-    // pub fn upload(payload: &StructStonePayload) -> StructStoneHeader {
-    //     StructStoneHeader {
-    //         stone_status: vec![0,0,0,0],
-    //         stone_type: vec![7,0,0,0],
-    //         stone_size: Vec::from(payload.file.len().to_le_bytes()),
-    //     }
-    // }
-    //
-    // pub fn download(payload: &StructStonePayload) -> StructStoneHeader {
-    //     StructStoneHeader {
-    //         stone_status: vec![0,0,0,0],
-    //         stone_type: vec![8,0,0,0],
-    //         stone_size: Vec::from(payload.file.len().to_le_bytes()),
-    //     }
-    // }
-
     pub fn default() -> StructStoneHeader {
         StructStoneHeader {
             stone_status: vec![0, 0, 0, 0],

