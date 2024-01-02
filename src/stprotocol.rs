@@ -1,12 +1,14 @@
-use crate::exploits::{Exploits, Malware};
 use crate::structure::{
     Detector, Generator, StructRawStonePayload, StructStone, StructStoneHeader, StructStonePayload,
 };
 use bstr::ByteSlice;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::net::TcpStream;
-use std::{env, u8};
+use std::{
+    env,
+    fs::File,
+    io::{Read, Write},
+    net::TcpStream,
+    u8,
+};
 
 #[derive(Debug)]
 pub struct Session {

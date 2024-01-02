@@ -4,7 +4,10 @@ mod structure;
 
 use bstr::ByteSlice;
 use exploits::{Exploits, Malware};
-use std::{io::Read, io::Write, thread};
+use std::{
+    io::{Read, Write},
+    thread,
+};
 use stprotocol::{Client, Session};
 use structure::{Detector, Generator, StoneTransferProtocol, StructStone};
 
