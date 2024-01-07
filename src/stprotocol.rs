@@ -23,7 +23,7 @@ impl Session {
             socket = s;
             let packet = StructRawStonePayload::new("", "", "").to_stone();
             socket
-                .write_all(&packet.stone)
+                .write_all(&packet.get_stone())
                 .expect("TODO: panic message");
             Session { socket }
         } else {
@@ -51,12 +51,12 @@ impl Client for Session {
     }
 
     fn send_msg(&mut self, msg: &str) {
-        self.send(StructStone::response(msg).stone);
+        self.send(StructStone::response(msg).get_stone());
     }
 
     fn disconnect(&mut self) {
         let packet = StructStone::disconnect();
-        self.send(packet.stone);
+        self.send(packet.get_stone());
         self.socket.try_clone().expect("Failed to close");
     }
 
@@ -74,12 +74,12 @@ impl Client for Session {
     fn receiving(&mut self, buffer: StructStone) -> StructStone {
         // 함수가 재귀적으로 호출돠기 때문에 빈 헤더, 페이로드를 입력받음, 기본 헤더의 페이로드 크기는 12바이트 고정임
         let mut payload = StructStonePayload::default(); // 응답을 받을 빈 페이로드 구조체 생성
-        let buffer_size = buffer.payload_size();
+        let buffer_size = buffer.get_size();
 
         if buffer_size != 12 {
             // 만약 수신받은 데이터의 크기가 12 바이트가 아니라면
             payload = StructStonePayload::from(self.recv(buffer_size)); // 페이로드 크기만큼 데이터를 받고 구조체로 변환하여 빈 페이로드 구조체에 저장
-            return StructStone::from(buffer.header, payload); // 헤더와 페이로드를 결합하여 구조체로 반환
+            return StructStone::from(buffer.get_header(), payload); // 헤더와 페이로드를 결합하여 구조체로 반환
         }
 
         let header = StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고
@@ -112,7 +112,7 @@ impl Client for Session {
             }
         };
 
-        self.send(StructStone::download(file).stone);
+        self.send(StructStone::download(file).get_stone());
 
         true
     }
@@ -146,13 +146,13 @@ impl Client for Session {
             }
         };
 
-        self.send(StructStone::upload(file).stone);
+        self.send(StructStone::upload(file).get_stone());
 
         true
     }
 
     fn exploit(&mut self, output: Vec<u8>) -> bool {
-        self.send(StructStone::exploit(output).stone);
+        self.send(StructStone::exploit(output).get_stone());
         true
     }
 }

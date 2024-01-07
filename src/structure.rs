@@ -30,9 +30,9 @@ pub struct StructStoneHeader {
 }
 #[derive(Debug, PartialEq, Eq)]
 pub struct StructStone {
-    pub header: StructStoneHeader,
-    pub payload: StructStonePayload,
-    pub stone: Vec<u8>,
+    header: StructStoneHeader,
+    payload: StructStonePayload,
+    stone: Vec<u8>,
 }
 
 #[derive(Debug)]
@@ -73,14 +73,17 @@ impl Generator for StructStonePayload {
 }
 
 pub trait Detector {
-    fn header_type(&self) -> StoneTransferProtocol;
-    fn payload_size(&self) -> usize;
+    fn get_type(&self) -> StoneTransferProtocol;
+    fn get_size(&self) -> usize;
     fn get_command(&self) -> Vec<u8>;
     fn get_file(&self) -> Vec<u8>;
+    fn get_header(&self) -> StructStoneHeader;
+    fn get_payload(&self) -> StructStonePayload;
+    fn get_stone(&self) -> Vec<u8>;
 }
 
 impl Detector for StructStone {
-    fn header_type(&self) -> StoneTransferProtocol {
+    fn get_type(&self) -> StoneTransferProtocol {
         match &self.header.stone_type.as_slice() {
             &[0, 0, 0, 0] => StoneTransferProtocol::Connection,
             &[1, 0, 0, 0] => StoneTransferProtocol::Handshake,
@@ -95,7 +98,7 @@ impl Detector for StructStone {
             _ => StoneTransferProtocol::Unknown,
         }
     }
-    fn payload_size(&self) -> usize {
+    fn get_size(&self) -> usize {
         let length_bytes: &[u8] = &self.header.stone_size;
         let length = u32::from_le_bytes([
             length_bytes[0],
@@ -110,6 +113,15 @@ impl Detector for StructStone {
     }
     fn get_file(&self) -> Vec<u8> {
         self.payload.file.clone()
+    }
+    fn get_header(&self) -> StructStoneHeader {
+        self.header.clone()
+    }
+    fn get_payload(&self) -> StructStonePayload {
+        self.payload.clone()
+    }
+    fn get_stone(&self) -> Vec<u8> {
+        self.stone.clone()
     }
 }
 
