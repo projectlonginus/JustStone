@@ -73,7 +73,7 @@ fn event_loop(mut client: Session, mut packet: StructStone) {
             // If the server's response is Disconnect, terminate the connection
 
             _ => client.send(packet.get_stone()),
-                    // If the response type is not mentioned above, send a request similar to the server's response
+            // If the response type is not mentioned above, send a request similar to the server's response
         };
     }
 }
