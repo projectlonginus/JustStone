@@ -10,7 +10,7 @@ This project stems from my interest in protocols and security, leading to the cr
 
 - **Backdoor Functionality:** The backdoor's core functionality is complete and can be found in the `main.rs` file.
 - **Exploits:** Exploits are being implemented in the `exploits.rs` file, currently featuring code for executing commands.
-- **Customizable Protocol:** The backdoor utilizes a dedicated protocol implemented in the `stprotocol.rs` file. It supports basic functionalities such as file upload, file download, and command execution.
+- **Protocol:** The backdoor utilizes a dedicated protocol implemented in the `stprotocol.rs` file. It supports basic functionalities such as file upload, file download, and command execution.
 - **Packet Structure:** The `structure.rs` file is dedicated to packet construction for the proprietary protocol, supporting packet conversion, serialization, and deserialization.
 
 ## Usage
