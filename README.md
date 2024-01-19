@@ -80,9 +80,10 @@ fn event_loop(mut client: Session, mut packet: StructStone) {
 ```
 
 1. **main.rs:** Contains the core functionalities of the backdoor.
-2. **exploits.rs:** Manages the implementation of backdoor exploits.
+2. **exploits.rs:** Manages the implementation of backdoor exploits. 
 3. **stprotocol.rs:** Houses the backdoor's proprietary protocol, supporting features like file upload, file download, and command execution.
 4. **structure.rs:** Provides packet configuration for the protocol, including packet conversion, serialization, and deserialization.
+5. **Documentation of the module is still in progress. It will be completed soon. Please wait.**
 
 ### Customization
 
