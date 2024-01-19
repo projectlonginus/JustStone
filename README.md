@@ -49,6 +49,6 @@ This project includes a dedicated Python server. If you want the Python server, 
 
 ## License
 
-This project is distributed under the [License Name]. For more details, see the [LICENSE](LICENSE) file.
+Open Source
 
 **Disclaimer:** This project is for educational purposes only. Unauthorized use is strictly prohibited.
