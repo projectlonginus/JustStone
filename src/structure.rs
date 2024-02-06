@@ -257,17 +257,12 @@ impl StructStoneHeader {
     }
 
     pub fn build(encipher: bool, Type: StoneTransferProtocol, Size: usize) -> StructStoneHeader {
-        println!("{:?}", Size);
-
         let mut stone_status: Vec<u8> = match encipher {
             true => vec![0, 0, 0, 1],
             false => vec![0, 0, 0, 0],
         };
         let mut stone_type: Vec<u8> = Type.serialization();
         let mut stone_size: Vec<u8> = Size.to_le_bytes().to_vec();
-
-        println!("{:?}", Size);
-
         stone_size.resize(4, 0);
 
         StructStoneHeader {
