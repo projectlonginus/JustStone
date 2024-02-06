@@ -55,17 +55,6 @@ use structure::{Detector, Generator, StoneTransferProtocol, StructStone};
 
 ```rust
 fn main() {
-    match setup_registry() {
-        Ok(_) => {}
-        Err(_) => eprintln!(
-            "Exploit Failure: Failed to register registry key, resulting in insecure execution."
-        ),
-    }
-```
-
-- The `main` function initiates the backdoor by calling `setup_registry()`, a function responsible for setting up the backdoor registry key. If successful, the backdoor proceeds; otherwise, an error message is printed.
-
-```rust
     let handle_server = thread::spawn(|| event_loop());
 
     handle_server
