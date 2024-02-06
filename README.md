@@ -1,7 +1,6 @@
-<<<<<<< HEAD
+
 # JustStone
 Just StoneTransferProtocol&amp;Backdoor
-=======
 # Project Overview
 
 # Introduction
