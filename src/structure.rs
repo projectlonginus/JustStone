@@ -1,4 +1,5 @@
 use bstr::ByteSlice;
+use std::convert::AsRef;
 use sysinfo::System;
 
 // pub struct  StoneChain {
@@ -14,7 +15,7 @@ pub struct StructRawStonePayload {
     response: String,
     file: String,
 }
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone)]
 pub struct StructStonePayload {
     sysinfo: Vec<u8>,
     command_input: Vec<u8>,
@@ -22,20 +23,20 @@ pub struct StructStonePayload {
     file: Vec<u8>, // pub stone_chain: StoneChain,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone)]
 pub struct StructStoneHeader {
     stone_status: Vec<u8>,
     stone_type: Vec<u8>,
     stone_size: Vec<u8>,
 }
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone)]
 pub struct StructStone {
     header: StructStoneHeader,
     payload: StructStonePayload,
     stone: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum StoneTransferProtocol {
     Connection,
     Handshake,
@@ -51,16 +52,59 @@ pub enum StoneTransferProtocol {
     Unknown,
 }
 
+#[derive(Debug, Clone)]
+pub struct PacketBuilder {
+    encipher: bool,
+    Type: StoneTransferProtocol,
+    output: StructStonePayload,
+}
+
+impl PacketBuilder {
+    pub fn StructStone(&mut self) -> StructStone {
+        StructStone::build(
+            StructStoneHeader::build(self.encipher, self.Type.clone(), self.output.get_size()),
+            self.output.clone(),
+        )
+    }
+}
+
+pub trait TypeManager {
+    fn deserialization(&self) -> StoneTransferProtocol;
+    fn serialization(&self) -> Vec<u8>;
+}
+
+impl TypeManager for StoneTransferProtocol {
+    fn deserialization(&self) -> StoneTransferProtocol {
+        todo!()
+    }
+
+    fn serialization(&self) -> Vec<u8> {
+        match self {
+            StoneTransferProtocol::Connection => vec![0, 0, 0, 0],
+            StoneTransferProtocol::Handshake => vec![1, 0, 0, 0],
+            StoneTransferProtocol::HealthCheck => vec![4, 0, 0, 0],
+            StoneTransferProtocol::Disconnect => vec![5, 0, 0, 0],
+
+            StoneTransferProtocol::ExecuteCmd => vec![2, 0, 0, 0],
+            StoneTransferProtocol::Upload => vec![7, 0, 0, 0],
+            StoneTransferProtocol::Download => vec![8, 0, 0, 0],
+            StoneTransferProtocol::Response => vec![3, 0, 0, 0],
+
+            StoneTransferProtocol::Unknown => vec![0, 0, 0, 1],
+            _ => vec![0, 0, 0, 2],
+        }
+    }
+}
 pub trait Generator {
     fn to_stone(self) -> StructStone;
 }
 
 impl Generator for StructRawStonePayload {
     fn to_stone(self) -> StructStone {
-        let ssp = StructRawStonePayload::to_vec(&self);
+        let ssp = StructRawStonePayload::serialization(&self);
         let ssh = StructStoneHeader::from(&ssp);
 
-        StructStone::from(ssh, ssp)
+        StructStone::build(ssh, ssp)
     }
 }
 
@@ -68,7 +112,7 @@ impl Generator for StructStonePayload {
     fn to_stone(self) -> StructStone {
         let ssh = StructStoneHeader::from(&self);
 
-        StructStone::from(ssh, self)
+        StructStone::build(ssh, self)
     }
 }
 
@@ -79,7 +123,7 @@ pub trait Detector {
     fn get_file(&self) -> Vec<u8>;
     fn get_header(&self) -> StructStoneHeader;
     fn get_payload(&self) -> StructStonePayload;
-    fn get_stone(&self) -> Vec<u8>;
+    fn get_stone(&self) -> &[u8];
 }
 
 impl Detector for StructStone {
@@ -120,8 +164,8 @@ impl Detector for StructStone {
     fn get_payload(&self) -> StructStonePayload {
         self.payload.clone()
     }
-    fn get_stone(&self) -> Vec<u8> {
-        self.stone.clone()
+    fn get_stone(&self) -> &[u8] {
+        self.stone.as_slice()
     }
 }
 
@@ -163,7 +207,7 @@ impl StructRawStonePayload {
             System::host_name(),
         )
     }
-    pub fn to_vec(&self) -> StructStonePayload {
+    pub fn serialization(&self) -> StructStonePayload {
         let sysinfo = self.sysinfo.as_bytes().to_vec();
         let command_input = self.command_input.as_bytes().to_vec();
         let response = self.response.as_bytes().to_vec();
@@ -178,7 +222,7 @@ impl StructRawStonePayload {
 }
 
 impl StructStoneHeader {
-    pub fn load(packet: Vec<u8>) -> StructStoneHeader {
+    pub fn deserialization(packet: Vec<u8>) -> StructStoneHeader {
         if packet[0..4] != vec![0, 0, 0, 0] {
             return StructStoneHeader::default();
         } else {
@@ -228,6 +272,22 @@ impl StructStoneHeader {
             stone_size: vec![12, 0, 0, 0],
         }
     }
+
+    pub fn build(encipher: bool, Type: StoneTransferProtocol, Size: usize) -> StructStoneHeader {
+        let mut stone_status: Vec<u8> = match encipher {
+            true => vec![0, 0, 0, 1],
+            false => vec![0, 0, 0, 0],
+        };
+        let mut stone_type: Vec<u8> = Type.serialization();
+        let mut stone_size: Vec<u8> = Size.to_le_bytes().to_vec();
+        stone_size.resize(4, 0);
+
+        StructStoneHeader {
+            stone_status,
+            stone_type,
+            stone_size,
+        }
+    }
 }
 
 impl StructStonePayload {
@@ -258,28 +318,79 @@ impl StructStonePayload {
 
     pub fn default() -> StructStonePayload {
         StructStonePayload {
-            sysinfo: vec![],
+            sysinfo: StructRawStonePayload::sysinfo().as_bytes().to_vec(),
             command_input: vec![],
             response: vec![],
             file: vec![],
         }
     }
+
+    pub fn get_size(&mut self) -> usize {
+        return self.sysinfo.len()
+            + self.command_input.len()
+            + self.response.len()
+            + self.file.len();
+    }
+
+    pub fn build<T: AsRef<[u8]>>(
+        encipher: bool,
+        Type: StoneTransferProtocol,
+        payload: T,
+    ) -> PacketBuilder {
+        let output = match Type {
+            StoneTransferProtocol::Response | StoneTransferProtocol::ExecuteCmd => {
+                StructStonePayload {
+                    sysinfo: StructRawStonePayload::sysinfo().as_bytes().to_vec(),
+                    command_input: vec![],
+                    response: payload.as_ref().to_vec(),
+                    file: vec![],
+                }
+            }
+            StoneTransferProtocol::Upload | StoneTransferProtocol::Download => StructStonePayload {
+                sysinfo: if Type == StoneTransferProtocol::Download {
+                    StructRawStonePayload::sysinfo().as_bytes().to_vec()
+                } else {
+                    vec![]
+                },
+                command_input: vec![],
+                response: vec![],
+                file: payload.as_ref().to_vec(),
+            },
+            _ => StructStonePayload::default(),
+        };
+
+        PacketBuilder {
+            encipher,
+            Type,
+            output,
+        }
+    }
 }
 
 impl StructStone {
-    pub fn from(header: StructStoneHeader, payload: StructStonePayload) -> StructStone {
+    pub fn build(header: StructStoneHeader, payload: StructStonePayload) -> StructStone {
         let mut stone: Vec<u8> = Vec::new();
         stone.extend(&header.stone_status);
         stone.extend(&header.stone_type);
         stone.extend(&header.stone_size);
+
+        println!("{:?}", 0_i32.to_le_bytes().to_vec());
+
+        if header.stone_size == 0_i32.to_le_bytes().to_vec() {
+            return StructStone {
+                header,
+                payload,
+                stone,
+            };
+        }
         stone.extend(&payload.sysinfo);
-        stone.extend("<>".as_bytes().to_vec());
+        stone.extend(b"<>");
         stone.extend(&payload.command_input);
-        stone.extend("<>".as_bytes().to_vec());
+        stone.extend(b"<>");
         stone.extend(&payload.response);
-        stone.extend("<>".as_bytes().to_vec());
+        stone.extend(b"<>");
         stone.extend(&payload.file);
-        stone.extend("<>".as_bytes().to_vec());
+        stone.extend(b"<>");
 
         StructStone {
             header,
@@ -289,107 +400,30 @@ impl StructStone {
     }
 
     pub fn default() -> StructStone {
-        StructStone {
-            header: StructStoneHeader::default(),
-            payload: StructStonePayload::default(),
-            stone: StructStone::from(StructStoneHeader::default(), StructStonePayload::default())
-                .stone,
-        }
+        StructStone::build(StructStoneHeader::default(), StructStonePayload::default())
     }
 
     pub fn connection() -> StructStone {
-        let header = StructStoneHeader {
-            stone_status: vec![0, 0, 0, 0],
-            stone_type: vec![0, 0, 0, 0],
-            stone_size: vec![8, 0, 0, 0],
-        };
-
-        StructStone {
-            header: header.clone(),
-            payload: StructStonePayload::default(),
-            stone: StructStone::from(header, StructStonePayload::default()).stone,
-        }
+        StructStonePayload::build(false, StoneTransferProtocol::Connection, vec![]).StructStone()
     }
 
     pub fn disconnect() -> StructStone {
-        let header = StructStoneHeader {
-            stone_status: vec![0, 0, 0, 0],
-            stone_type: vec![5, 0, 0, 0],
-            stone_size: vec![0, 0, 0, 0],
-        };
-
-        StructStone {
-            header: header.clone(),
-            payload: StructStonePayload::default(),
-            stone: StructStone::from(header, StructStonePayload::default()).stone,
-        }
+        StructStonePayload::build(false, StoneTransferProtocol::Disconnect, vec![]).StructStone()
     }
 
     pub fn response(msg: &str) -> StructStone {
-        let payload = StructStonePayload {
-            sysinfo: vec![],
-            command_input: vec![],
-            response: msg.as_bytes().to_vec(),
-            file: vec![],
-        };
-
-        let header = StructStoneHeader::from(&payload);
-
-        StructStone {
-            header: header.clone(),
-            payload: payload.clone(),
-            stone: StructStone::from(header, payload).stone,
-        }
+        StructStonePayload::build(false, StoneTransferProtocol::Response, msg).StructStone()
     }
 
     pub fn download(file: Vec<u8>) -> StructStone {
-        let payload = StructStonePayload {
-            sysinfo: vec![],
-            command_input: vec![],
-            response: vec![],
-            file,
-        };
-
-        let header = StructStoneHeader::from(&payload);
-
-        StructStone {
-            header: header.clone(),
-            payload: payload.clone(),
-            stone: StructStone::from(header, payload).stone,
-        }
+        StructStonePayload::build(false, StoneTransferProtocol::Download, file).StructStone()
     }
 
     pub fn upload(file: Vec<u8>) -> StructStone {
-        let payload = StructStonePayload {
-            sysinfo: vec![],
-            command_input: vec![],
-            response: vec![],
-            file,
-        };
-
-        let header = StructStoneHeader::from(&payload);
-
-        StructStone {
-            header: header.clone(),
-            payload: payload.clone(),
-            stone: StructStone::from(header, payload).stone,
-        }
+        StructStonePayload::build(false, StoneTransferProtocol::Upload, file).StructStone()
     }
 
     pub fn exploit(output: Vec<u8>) -> StructStone {
-        let payload = StructStonePayload {
-            sysinfo: vec![],
-            command_input: vec![],
-            response: output,
-            file: vec![],
-        };
-
-        let header = StructStoneHeader::from(&payload);
-
-        StructStone {
-            header: header.clone(),
-            payload: payload.clone(),
-            stone: StructStone::from(header, payload).stone,
-        }
+        StructStonePayload::build(false, StoneTransferProtocol::ExecuteCmd, output).StructStone()
     }
 }
