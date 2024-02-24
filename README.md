@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # JustStone
 Just StoneTransferProtocol&amp;Backdoor
 =======
@@ -215,4 +215,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 **Disclaimer:** This project is for educational purposes only. Unauthorized use is strictly prohibited.
->>>>>>> 4c971b0d346d4e1c79dffdaedbc8e48c520d2828
