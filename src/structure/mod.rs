@@ -1,9 +1,9 @@
-mod packets;
-mod protocols;
+mod packet;
+mod protocol;
 mod utils;
 
-pub use packets::*;
-pub use protocols::*;
+pub use packet::*;
+pub use protocol::*;
 pub use utils::*;
 
 pub fn connection() -> StructStone {

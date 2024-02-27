@@ -1,5 +1,5 @@
 use std::net::TcpStream;
-use crate::exploits::Exploits;
+use crate::exploit::Exploits;
 use crate::structure::{Detector, StructStone};
 
 #[derive(Debug)]
@@ -78,10 +78,13 @@ pub trait HandleSession {
 }
 
 pub trait HandleProtocols {
-    fn default_protocol_handler(&mut self) -> Result<(), ()>;
     fn response(&mut self, msg: &str) -> Result<(), ()>;
     fn disconnect(&mut self);
     fn download(&mut self) -> Result<(), ()>;
     fn upload(&mut self) -> Result<(), ()>;
     fn exploit(&mut self) -> Result<(), ()>;
+}
+
+pub trait Handlers {
+    fn default_client_handler(&mut self) -> Result<(), ()>;
 }

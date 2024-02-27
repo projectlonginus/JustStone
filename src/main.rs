@@ -1,12 +1,9 @@
-mod exploits;
 mod stprotocol;
-mod structure;
-mod volcano;
 
-use stprotocol::{Client, HandleProtocols};
+use stprotocol::{Handlers, Client};
 
 fn main() {
     let mut client = Client::new("127.0.0.1");
 
-    client.default_protocol_handler().unwrap();
+    client.default_client_handler().unwrap()
 }
