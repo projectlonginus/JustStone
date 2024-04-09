@@ -1,8 +1,12 @@
-use crate::structure::utils::{
-    PacketBuilder, StoneTransferProtocol, StructStone, StructStoneHeader,
-    StructStonePayload, sysinfo,
+use std::{marker, result};
+use crate::structure::{
+    utils::{PacketBuilder, StoneTransferProtocol, StructStone, StructStoneHeader,
+            StructStonePayload, sysinfo},
+    LZ4,
 };
 use bstr::ByteSlice;
+use egui::debug_text::print;
+use egui::emath;
 
 impl PacketBuilder {
     pub fn packet(&self) -> StructStone {
@@ -87,7 +91,9 @@ impl StructStonePayload {
         payload.extend(b"<>");
         payload.extend(self.take_file());
         payload.extend(b"<>");
-        payload
+        let (packet, r) = LZ4::LZ4_compress(&mut payload);
+        println!("{:?}", packet);
+        packet.to_owned()
     }
 
     pub fn build<T: AsRef<[u8]>>(
@@ -125,7 +131,7 @@ impl StructStonePayload {
 }
 
 impl StructStone {
-    pub fn build(header: StructStoneHeader, payload: StructStonePayload) -> StructStone {
+    pub fn build(header: StructStoneHeader, mut payload: StructStonePayload) -> StructStone {
         let mut stone = header.serialization();
 
         if header.take_stone_size() == &0_i32.to_le_bytes().to_vec() {
@@ -136,7 +142,9 @@ impl StructStone {
             );
         }
 
-        stone.extend(payload.serialization());
+        if payload.get_size() != 0 {
+            stone.extend(payload.serialization());
+        }
 
         StructStone::from(
             header,
@@ -147,5 +155,9 @@ impl StructStone {
 
     pub fn default() -> StructStone {
         StructStone::build(StructStoneHeader::default(), StructStonePayload::default())
+    }
+
+    pub fn buffer() -> StructStone {
+        StructStone::build(StructStoneHeader::default(), StructStonePayload::new())
     }
 }

@@ -1,10 +1,13 @@
 mod packet;
 mod protocol;
 mod utils;
+mod editor;
+mod LZ4;
 
 pub use packet::*;
 pub use protocol::*;
 pub use utils::*;
+pub use LZ4::*;
 
 pub fn connection() -> StructStone {
     StructStonePayload::build(false, StoneTransferProtocol::Connection, vec![]).packet()

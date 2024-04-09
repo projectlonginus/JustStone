@@ -1,6 +1,15 @@
 use std::net::TcpStream;
-use crate::exploit::Exploits;
+use std::collections::{BTreeMap, HashMap, HashSet};
+use crate::malware::Exploits;
 use crate::structure::{Detector, StructStone};
+
+pub trait PacketProcessing {
+    fn take_packet<T>(&self) -> T;
+
+    fn get_packet<T>(&self) -> T;
+
+    fn set_packet<T>(&mut self, packet: T) -> T;
+}
 
 #[derive(Debug)]
 pub struct Session {
@@ -13,6 +22,13 @@ pub struct Client {
     pub session: Session,
     pub exploits: Exploits,
 }
+
+#[derive(Debug)]
+pub struct ProtocolEditor {
+    session: Session,
+    exploits: Exploits,
+}
+
 
 impl Session {
     pub fn take_packet(&self) -> &StructStone {
@@ -72,19 +88,19 @@ impl Client {
 }
 
 pub trait HandleSession {
-    fn send(&mut self) -> Result<(), ()>;
+    fn send(&mut self) -> Result<&StructStone, &StructStone>;
     fn recv(&mut self, buffer_size: usize) -> Vec<u8>;
-    fn receiving(&mut self, buffer: StructStone) -> &StructStone;
+    fn receiving(&mut self, buffer: StructStone) -> StructStone;
 }
 
 pub trait HandleProtocols {
-    fn response(&mut self, msg: &str) -> Result<(), ()>;
+    fn response(&mut self, msg: &str) -> Result<&StructStone, &StructStone>;
     fn disconnect(&mut self);
-    fn download(&mut self) -> Result<(), ()>;
-    fn upload(&mut self) -> Result<(), ()>;
-    fn exploit(&mut self) -> Result<(), ()>;
+    fn download(&mut self) -> Result<&StructStone, &StructStone>;
+    fn upload(&mut self) -> Result<&StructStone, &StructStone>;
+    fn exploit(&mut self) -> Result<&StructStone, &StructStone>;
 }
 
 pub trait Handlers {
-    fn default_client_handler(&mut self) -> Result<(), ()>;
+    fn default_client_handler(&mut self);
 }

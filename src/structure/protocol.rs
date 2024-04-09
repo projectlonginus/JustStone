@@ -20,18 +20,18 @@ impl StoneTransferProtocol {
     pub fn to_vec(&self) -> Vec<u8> {
         {
             match self {
-                StoneTransferProtocol::Connection => vec![0, 0, 0, 0].into(),
-                StoneTransferProtocol::Handshake => vec![1, 0, 0, 0].into(),
-                StoneTransferProtocol::HealthCheck => vec![4, 0, 0, 0].into(),
-                StoneTransferProtocol::Disconnect => vec![5, 0, 0, 0].into(),
+                StoneTransferProtocol::Connection => vec![0, 0, 0, 0],
+                StoneTransferProtocol::Handshake => vec![1, 0, 0, 0],
+                StoneTransferProtocol::HealthCheck => vec![4, 0, 0, 0],
+                StoneTransferProtocol::Disconnect => vec![5, 0, 0, 0],
 
-                StoneTransferProtocol::ExecuteCmd => vec![2, 0, 0, 0].into(),
-                StoneTransferProtocol::Upload => vec![7, 0, 0, 0].into(),
-                StoneTransferProtocol::Download => vec![8, 0, 0, 0].into(),
-                StoneTransferProtocol::Response => vec![3, 0, 0, 0].into(),
+                StoneTransferProtocol::ExecuteCmd => vec![2, 0, 0, 0],
+                StoneTransferProtocol::Upload => vec![7, 0, 0, 0],
+                StoneTransferProtocol::Download => vec![8, 0, 0, 0],
+                StoneTransferProtocol::Response => vec![3, 0, 0, 0],
 
-                StoneTransferProtocol::Unknown => vec![0, 0, 0, 1].into(),
-                _ => vec![0, 0, 0, 2].into(),
+                StoneTransferProtocol::Unknown => vec![0, 0, 0, 1],
+                _ => vec![0, 0, 0, 2],
             }
         }
     }

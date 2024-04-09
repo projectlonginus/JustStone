@@ -1,5 +1,5 @@
 use json::{object, JsonValue};
-use std::fmt::Debug;
+use std::fmt::{Debug, Write};
 use sysinfo::System;
 
 pub struct StructRawStonePayload {
@@ -14,7 +14,7 @@ pub struct StructStonePayload {
     sysinfo: Vec<u8>,
     command_input: Vec<u8>,
     response: Vec<u8>,
-    file: Vec<u8>, // pub stone_chain: StoneChain,
+    file: Vec<u8>,
 }
 
 #[derive(Debug, Clone)]
@@ -216,16 +216,16 @@ pub trait Detector {
 
 impl Detector for StructStone {
     fn display(&self) {
-        println!(
-            "Header: \n    Status: {:?}\n    Type: {:?}\n    Size: {:?}\nPayload: \n    System information: {:?}\n    Command input:    {:?}\n    Response:    {:?}\n    file:    {:?}\n",
-            self.header.stone_status,
-            StoneTransferProtocol::type_check(&self.header.stone_type),
-            self.get_size(),
-            self.payload.sysinfo,
-            self.payload.command_input,
-            self.payload.response,
-            self.payload.file
-        )
+        let mut output = String::new();
+        writeln!(output, "Header: \n    Status: {:?}\n    Type: {:?}\n    Size: {:?}\nPayload: \n    System information: {:?}\n    Command input:    {:?}\n    Response:    {:?}\n    file:    {:?}\n",
+                 self.header.stone_status,
+                 StoneTransferProtocol::type_check(&self.header.stone_type),
+                 self.get_size(),
+                 self.payload.sysinfo,
+                 self.payload.command_input,
+                 self.payload.response,
+                 self.payload.file).unwrap();
+        print!("{}", output)
     }
     fn get_type(&self) -> StoneTransferProtocol {
         StoneTransferProtocol::type_check(&self.header.stone_type)
