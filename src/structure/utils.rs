@@ -3,6 +3,8 @@ use std::fmt::{Debug, Write};
 use json::{JsonValue, object};
 use sysinfo::System;
 
+use crate::structure::packet::PACKET_DELIMITER;
+
 pub struct StructRawStonePayload {
     sysinfo: String,
     command_input: String,
@@ -48,6 +50,19 @@ pub enum StoneTransferProtocol {
     Unknown,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum StatusCode {
+    Normal,
+    // 압축 x 암호화 x
+    Compressed,
+    // 압축 o 암호화 x
+    Secured,
+    // 압축 x 암호화 o
+    SCPacket,
+    // 압축 o 암호화 o
+    Modulated,   // 패킷이 변조되거나 손상됨
+}
+
 #[derive(Debug, Clone)]
 pub struct PacketBuilder {
     compression: bool,
@@ -55,8 +70,13 @@ pub struct PacketBuilder {
     output: StructStonePayload,
 }
 
+pub trait ProtocolCodec {
+    fn to_vec(&self) -> Vec<u8>;
+    fn to_string(&self) -> String;
+}
+
 impl PacketBuilder {
-    pub fn encipher(&self) -> &bool {
+    pub fn is_compression(&self) -> &bool {
         &self.compression
     }
 
@@ -90,109 +110,72 @@ impl PacketBuilder {
 }
 
 pub trait TypeManager {
-    fn deserialization<T>(&self) -> T
-        where
-            T: Debug
-            + Sized
-            + Clone
-            + From<Vec<u8>>
-            + From<StructStonePayload>
-            + From<StructStoneHeader>
-            + From<StructStone>
-            + From<JsonValue>
-            + From<String>;
-
-    fn serialization<T>(&self) -> T
-        where
-            T: Debug
-            + Sized
-            + Clone
-            + From<Vec<u8>>
-            + From<StructStonePayload>
-            + From<StructStoneHeader>
-            + From<StructStone>
-            + From<JsonValue>
-            + From<String>;
+    fn to_json(&self) -> JsonValue;
+    fn to_vec(&self) -> Vec<u8>;
 }
 
 impl TypeManager for StructRawStonePayload {
-    fn deserialization<T>(&self) -> T
-        where
-            T: From<JsonValue>,
-    {
+    fn to_json(&self) -> JsonValue {
         return object! {
             sysinfo: self.sysinfo.clone(),
             command_input: self.command_input.clone(),
             response: self.response.clone(),
             file: self.file.clone()
         }
-            .into();
     }
 
-    fn serialization<T>(&self) -> T
-        where
-            T: From<StructStonePayload>,
-    {
+    fn to_vec(&self) -> Vec<u8> {
         let sysinfo = self.sysinfo.as_bytes().to_vec();
         let command_input = self.command_input.as_bytes().to_vec();
         let response = self.response.as_bytes().to_vec();
         let file = self.file.as_bytes().to_vec();
 
-        StructStonePayload {
-            sysinfo,
-            command_input,
-            response,
-            file,
-        }
-            .into()
+        StructStonePayload::from(sysinfo, command_input, response, file).to_vec()
     }
 }
 
 impl TypeManager for StructStoneHeader {
-    fn deserialization<T>(&self) -> T
-        where
-            T: From<JsonValue>,
-    {
+    fn to_json(&self) -> JsonValue {
         let mut array = [0; std::mem::size_of::<usize>()];
         array.copy_from_slice(&self.stone_size);
 
         return object! {
-            stone_status: if self.stone_status == vec![0,0,0,0] {
-                    false
-                } else { true },
-            stone_type: StoneTransferProtocol::type_check(&self.stone_type).to_string(),
-            stone_size: usize::from_le_bytes(array),
+            stone_status: StatusCode::type_check(self.take_stone_status()).to_string(),
+            stone_type: StoneTransferProtocol::type_check(self.take_stone_type()).to_string(),
+            stone_size: usize::from_le_bytes(array)
         }
-            .into();
     }
 
-    fn serialization<T>(&self) -> T
-        where
-            T: Debug + From<StructStoneHeader>,
-    {
-        todo!()
+    fn to_vec(&self) -> Vec<u8> {
+        let mut header: Vec<u8> = Vec::new();
+        header.extend(self.take_stone_status());
+        header.extend(self.take_stone_type());
+        header.extend(self.take_stone_size());
+        header
     }
 }
 
 impl TypeManager for StructStonePayload {
-    fn deserialization<T>(&self) -> T
-        where
-            T: From<JsonValue>,
-    {
+    fn to_json(&self) -> JsonValue {
         return object! {
             sysinfo: String::from_utf8(self.sysinfo.clone()).unwrap(),
             command_input: String::from_utf8(self.command_input.clone()).unwrap(),
             response: String::from_utf8(self.response.clone()).unwrap(),
             file: String::from_utf8(self.file.clone()).unwrap()
         }
-            .into();
     }
 
-    fn serialization<T>(&self) -> T
-        where
-            T: Debug + From<StructStoneHeader>,
-    {
-        todo!()
+    fn to_vec(&self) -> Vec<u8> {
+        let mut payload: Vec<u8> = Vec::new();
+        payload.extend(self.take_sysinfo());
+        payload.extend(PACKET_DELIMITER);
+        payload.extend(self.take_command_input());
+        payload.extend(PACKET_DELIMITER);
+        payload.extend(self.take_response());
+        payload.extend(PACKET_DELIMITER);
+        payload.extend(self.take_file());
+        payload.extend(PACKET_DELIMITER);
+        payload
     }
 }
 
@@ -219,8 +202,11 @@ pub trait Detector {
 impl Detector for StructStone {
     fn display(&self) {
         let mut output = String::new();
-        writeln!(output, "Header: \n    Status: {:?}\n    Type: {:?}\n    Size: {:?}\nPayload: \n    System information: {:?}\n    Command input:    {:?}\n    Response:    {:?}\n    file:    {:?}\n",
-                 self.header.stone_status,
+        writeln!(output, "Header: \n    \
+        Status: {:?}\n    Type: {:?}\n    Size: {:?}\n\
+        Payload: \n    System information: {:?}\n    Command input:    {:?}\n    Response:    {:?}\
+        \n    file:    {:?}\n",
+                 StatusCode::type_check(&self.header.stone_status),
                  StoneTransferProtocol::type_check(&self.header.stone_type),
                  self.get_size(),
                  self.payload.sysinfo,
@@ -242,33 +228,20 @@ impl Detector for StructStone {
         ]);
         return length as usize;
     }
-
     fn take_sysinfo(&self) -> &Vec<u8> { &self.payload.sysinfo }
-
     fn take_command(&self) -> &Vec<u8> {
         &self.payload.command_input
     }
-
     fn take_response(&self) -> &Vec<u8> { &self.payload.response }
-
     fn take_file(&self) -> &Vec<u8> { &self.payload.file }
-
     fn get_sysinfo(&self) -> Vec<u8> { self.payload.sysinfo.clone() }
-
     fn get_command(&self) -> Vec<u8> { self.payload.command_input.clone() }
-
     fn get_response(&self) -> Vec<u8> { self.payload.response.clone() }
-
     fn get_file(&self) -> Vec<u8> { self.payload.file.clone() }
-
     fn take_header(&self) -> &StructStoneHeader { &self.header }
-
     fn take_payload(&self) -> &StructStonePayload { &self.payload }
-
     fn get_header(&self) -> StructStoneHeader { self.header.clone() }
-
     fn get_payload(&self) -> StructStonePayload { self.payload.clone() }
-
     fn get_stone(&self) -> &[u8] { self.stone.as_slice() }
     fn is_compression(&self) -> bool {
         self.header.is_compression()
@@ -336,9 +309,8 @@ impl StructStoneHeader {
         &self.stone_size
     }
     pub fn is_compression(&self) -> bool {
-        println!("{:?}", self.stone_status == [0, 0, 0, 1]);
-        match self.stone_status {
-            [0, 0, 0, 1] => true,
+        match self.stone_status[..] {
+            [1, 0, 0, 0] => true,
             _ => false
         }
     }
@@ -371,14 +343,14 @@ impl StructStonePayload {
         }
     }
 
-    pub fn get_size(&mut self) -> usize {
+    pub fn get_size(&self) -> usize {
         return self.sysinfo.len()
             + self.command_input.len()
             + self.response.len()
             + self.file.len();
     }
 
-    pub fn is_empty(&mut self) -> bool {
+    pub fn is_empty(&self) -> bool {
         if self.get_size() == 0 {
             return true;
         }
@@ -413,6 +385,17 @@ impl StructStonePayload {
 
 
 impl StructStone {
+    pub fn set(&mut self, source: StructStone) {
+        self.header = source.header;
+        self.payload = source.payload;
+        self.stone = source.stone;
+    }
+    pub fn set_header() {
+        todo!() // 헤더 편집기능 추가
+    }
+    pub fn set_payload() {
+        todo!() // 페이로드 편집기능 추가
+    }
     pub fn from(header: StructStoneHeader, payload: StructStonePayload, stone: Vec<u8>) -> StructStone {
         StructStone {
             header,
@@ -420,7 +403,6 @@ impl StructStone {
             stone,
         }
     }
-
     pub fn new() -> StructStone {
         StructStone {
             header: StructStoneHeader::new(),

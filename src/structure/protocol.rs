@@ -1,3 +1,5 @@
+use crate::structure::ProtocolCodec;
+use crate::structure::utils::StatusCode;
 use crate::structure::utils::StoneTransferProtocol;
 
 impl StoneTransferProtocol {
@@ -16,27 +18,40 @@ impl StoneTransferProtocol {
             _ => StoneTransferProtocol::Unknown,
         }
     }
+}
 
-    pub fn to_vec(&self) -> Vec<u8> {
-        {
-            match self {
-                StoneTransferProtocol::Connection => vec![0, 0, 0, 0],
-                StoneTransferProtocol::Handshake => vec![1, 0, 0, 0],
-                StoneTransferProtocol::HealthCheck => vec![4, 0, 0, 0],
-                StoneTransferProtocol::Disconnect => vec![5, 0, 0, 0],
+impl StatusCode {
+    pub fn type_check(vec: &Vec<u8>) -> StatusCode {
+        match vec.as_slice() {
+            &[0, 0, 0, 0] => StatusCode::Normal,
+            &[1, 0, 0, 0] => StatusCode::Compressed,
+            &[2, 0, 0, 0] => StatusCode::Secured,
+            &[3, 0, 0, 0] => StatusCode::SCPacket,
+            _ => StatusCode::Modulated
+        }
+    }
+}
 
-                StoneTransferProtocol::ExecuteCmd => vec![2, 0, 0, 0],
-                StoneTransferProtocol::Upload => vec![7, 0, 0, 0],
-                StoneTransferProtocol::Download => vec![8, 0, 0, 0],
-                StoneTransferProtocol::Response => vec![3, 0, 0, 0],
+impl ProtocolCodec for StoneTransferProtocol {
+    fn to_vec(&self) -> Vec<u8>
+    {
+        match self {
+            StoneTransferProtocol::Connection => vec![0, 0, 0, 0],
+            StoneTransferProtocol::Handshake => vec![1, 0, 0, 0],
+            StoneTransferProtocol::HealthCheck => vec![4, 0, 0, 0],
+            StoneTransferProtocol::Disconnect => vec![5, 0, 0, 0],
 
-                StoneTransferProtocol::Unknown => vec![0, 0, 0, 1],
-                _ => vec![0, 0, 0, 2],
-            }
+            StoneTransferProtocol::ExecuteCmd => vec![2, 0, 0, 0],
+            StoneTransferProtocol::Upload => vec![7, 0, 0, 0],
+            StoneTransferProtocol::Download => vec![8, 0, 0, 0],
+            StoneTransferProtocol::Response => vec![3, 0, 0, 0],
+
+            StoneTransferProtocol::Unknown => vec![],
+            _ => vec![],
         }
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         match self {
             StoneTransferProtocol::Connection => "Connection".to_string(),
             StoneTransferProtocol::Handshake => "Handshake".to_string(),
@@ -50,6 +65,28 @@ impl StoneTransferProtocol {
 
             StoneTransferProtocol::Unknown => "Unknown".to_string(),
             _ => "Unknown".to_string(),
+        }
+    }
+}
+
+impl ProtocolCodec for StatusCode {
+    fn to_vec(&self) -> Vec<u8> {
+        match self {
+            StatusCode::Normal => vec![0, 0, 0, 0],
+            StatusCode::Secured => vec![1, 0, 0, 0],
+            StatusCode::Compressed => vec![2, 0, 0, 0],
+            StatusCode::SCPacket => vec![3, 0, 0, 0],
+            _ => vec![]
+        }
+    }
+
+    fn to_string(&self) -> String {
+        match self {
+            StatusCode::Normal => "Normal".to_string(),
+            StatusCode::Secured => "Secured".to_string(),
+            StatusCode::Compressed => "Compressed".to_string(),
+            StatusCode::SCPacket => "SCPacket".to_string(),
+            _ => "".to_string()
         }
     }
 }

@@ -1,16 +1,17 @@
 use bstr::ByteSlice;
 
+use crate::structure::{CompressHandler, Detector, ProtocolCodec, TypeManager};
 use crate::structure::utils::{PacketBuilder, StoneTransferProtocol, StructStone, StructStoneHeader,
                               StructStonePayload, sysinfo};
 
-const PACKET_DELIMITER: &str = "࿕";
+pub const PACKET_DELIMITER: &[u8; 2] = b"\r\n";
 
 impl PacketBuilder {
     pub fn packet(&self) -> StructStone {
         let mut output = self.output();
         StructStone::build(
             StructStoneHeader::build(
-                self.encipher(),
+                self.is_compression(),
                 self.protocol(),
                 output.get_size(),
             ),
@@ -32,21 +33,13 @@ impl StructStoneHeader {
         }
     }
 
-    fn serialization(&self) -> Vec<u8> {
-        let mut header: Vec<u8> = Vec::new();
-        header.extend(self.take_stone_status());
-        header.extend(self.take_stone_type());
-        header.extend(self.take_stone_size());
-        header
-    }
-
     pub fn build(
         compression: &bool,
         protocol: &StoneTransferProtocol,
         size: usize,
     ) -> StructStoneHeader {
         let stone_status: Vec<u8> = match &compression {
-            true => vec![0, 0, 0, 1],
+            true => vec![1, 0, 0, 0],
             false => vec![0, 0, 0, 0],
         };
         let stone_type: Vec<u8> = protocol.to_vec();
@@ -78,45 +71,37 @@ impl StructStonePayload {
         )
     }
 
-    fn serialization(&self) -> Vec<u8> {
-        let mut payload: Vec<u8> = Vec::new();
-        payload.extend(self.take_sysinfo());
-        payload.extend(PACKET_DELIMITER.bytes());
-        payload.extend(self.take_command_input());
-        payload.extend(PACKET_DELIMITER.bytes());
-        payload.extend(self.take_response());
-        payload.extend(PACKET_DELIMITER.bytes());
-        payload.extend(self.take_file());
-        payload.extend(PACKET_DELIMITER.bytes());
-        payload
-    }
-
     pub fn build<T: AsRef<[u8]>>(
         compression: bool,
         protocol: StoneTransferProtocol,
         payload: T,
     ) -> PacketBuilder {
+        let mut sysinfo = sysinfo().as_bytes().to_vec();
+        let mut vec_payload = payload.as_ref().to_vec();
+        if compression {
+            sysinfo.lz4_compress();
+            vec_payload.lz4_compress();
+        }
         let output = match protocol {
             StoneTransferProtocol::Response | StoneTransferProtocol::ExecuteCmd => StructStonePayload::from(
-                sysinfo().as_bytes().to_vec(),
+                sysinfo,
                 vec![],
-                payload.as_ref().to_vec(),
+                vec_payload,
                 vec![],
             ),
             StoneTransferProtocol::Upload | StoneTransferProtocol::Download => StructStonePayload::from(
                 if protocol == StoneTransferProtocol::Download {
-                    sysinfo().as_bytes().to_vec()
+                    sysinfo
                 } else {
                     vec![]
                 },
                 vec![],
                 vec![],
-                payload.as_ref().to_vec(),
+                vec_payload,
             ),
             StoneTransferProtocol::Disconnect => Self::new(),
             _ => StructStonePayload::default(),
         };
-
         PacketBuilder::from(
             compression,
             protocol,
@@ -127,31 +112,14 @@ impl StructStonePayload {
 
 impl StructStone {
     pub fn build(header: StructStoneHeader, mut payload: StructStonePayload) -> StructStone {
-        let mut stone = header.serialization();
-
-        if header.take_stone_size() == &0_i32.to_le_bytes().to_vec() {
-            return StructStone::from(
-                header,
-                payload,
-                stone,
-            );
+        let mut stone: Vec<u8> = header.to_vec();
+        if header.take_stone_size().as_slice() == &0_i32.to_le_bytes() {
+            return StructStone::from(header, payload, stone);
         }
-
         if !payload.is_empty() {
-            let mut temp_payload = payload.serialization();
-
-            stone.extend(match header.is_compression() {
-                true => crate::structure::LZ4::lz4_compress(&mut temp_payload).0,
-                false => &mut temp_payload,
-            });
+            stone.extend(payload.to_vec());
         }
-
-
-        StructStone::from(
-            header,
-            payload,
-            stone,
-        )
+        StructStone::from(header, payload, stone)
     }
 
     pub fn default() -> StructStone {

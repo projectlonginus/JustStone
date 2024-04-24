@@ -10,7 +10,7 @@ dependencies = [
  "egui",
  "encoding_rs",
  "json",
- "lz4",
+ "lz4_flex",
  "sysinfo",
  "winreg",
 ]
@@ -65,12 +65,6 @@ dependencies = [
  "regex-automata",
  "serde",
 ]
-
-[[package]]
-name = "cc"
-version = "1.0.92"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2678b2e3449475e95b0aa6f9b506a28e61b3dc8996592b983695e8ebb58a8b41"
 
 [[package]]
 name = "cfg-if"
@@ -184,23 +178,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "lz4"
-version = "1.24.0"
+name = "lz4_flex"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e9e2dd86df36ce760a60f6ff6ad526f7ba1f14ba0356f8254fb6905e6494df1"
+checksum = "5827b976d911b5d2e42b2ccfc7c0d2461a1414e8280436885218762fc529b3f8"
 dependencies = [
- "libc",
- "lz4-sys",
-]
-
-[[package]]
-name = "lz4-sys"
-version = "1.9.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57d27b317e207b10f69f5e75494119e391a96f48861ae870d1da6edac98ca900"
-dependencies = [
- "cc",
- "libc",
+ "twox-hash",
 ]
 
 [[package]]
@@ -348,6 +331,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 
 [[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
 name = "syn"
 version = "2.0.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -378,6 +367,16 @@ name = "ttf-parser"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17f77d76d837a7830fe1d4f12b7b4ba4192c1888001c7164257e4bc6d21d96b4"
+
+[[package]]
+name = "twox-hash"
+version = "1.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
+dependencies = [
+ "cfg-if",
+ "static_assertions",
+]
 
 [[package]]
 name = "unicode-ident"

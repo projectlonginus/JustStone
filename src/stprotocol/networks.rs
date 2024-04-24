@@ -52,7 +52,6 @@ impl HandleSession for Session {
 
     fn recv(&mut self, buffer_size: usize) -> Vec<u8> {
         let mut buffer: Vec<u8> = vec![0; buffer_size];
-
         match self.take_socket().read_exact(&mut buffer) {
             Ok(_) => buffer_size,
             Err(_) => buffer_size,
@@ -72,7 +71,6 @@ impl HandleSession for Session {
             self.set_packet(StructStone::build(buffer.get_header(), payload));
             return self.get_packet();
         }
-
         let header = StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고
         return self.receiving(StructStone::build(header, payload)); // 새로운 헤더를 재귀함수로 입력함 이 경우 재귀함수에서 if buffer.header.stone_size != vec![12,0,0,0] 문에 걸려서 페이로드를 수신받게 됨
     }
