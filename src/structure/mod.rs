@@ -29,10 +29,5 @@ pub fn upload(file: Vec<u8>) -> StructStone {
 }
 
 pub fn exploit(output: Vec<u8>) -> StructStone {
-    let mut a = StructStonePayload::build(true, StoneTransferProtocol::ExecuteCmd, output).packet();
-    match a.lz4_decompress() {
-        Err(err) => {println!("{:?}", err)}
-        _ => {}
-    }
-    a
+    StructStonePayload::build(false, StoneTransferProtocol::ExecuteCmd, output).packet();
 }
