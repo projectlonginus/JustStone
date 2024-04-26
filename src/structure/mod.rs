@@ -1,3 +1,4 @@
+use lz4_flex::block::DecompressError;
 pub use LZ4::*;
 pub use utils::*;
 
@@ -28,5 +29,10 @@ pub fn upload(file: Vec<u8>) -> StructStone {
 }
 
 pub fn exploit(output: Vec<u8>) -> StructStone {
-    StructStonePayload::build(false, StoneTransferProtocol::ExecuteCmd, output).packet()
+    let mut a = StructStonePayload::build(true, StoneTransferProtocol::ExecuteCmd, output).packet();
+    match a.lz4_decompress() {
+        Err(err) => {println!("{:?}", err)}
+        _ => {}
+    }
+    a
 }

@@ -23,22 +23,28 @@ impl CompressHandler for Vec<u8> {
 
 impl CompressHandler for StructStone {
     fn lz4_compress(&mut self){
-        self.get_header().set_stone_status(vec![1, 0, 0, 0]);
-        self.set(Self::build(self.get_header(), self.get_payload()));
+        self.set(
+            StructStonePayload::build(true,
+                                     StoneTransferProtocol::type_check(
+                                         self.take_header().take_stone_type()
+                                     ),
+                                     self.take_payload().get_non_empty_data()
+            ).packet()
+        );
     }
 
     fn lz4_decompress(&mut self) -> Result<(), DecompressError> {
-        let mut gs = self.get_sysinfo();
-        let mut gc = self.get_command();
-        let mut gr = self.get_response();
-        let mut gf = self.get_file();
-        gs.lz4_decompress()?;
-        gc.lz4_decompress()?;
-        gr.lz4_decompress()?;
-        gf.lz4_decompress()?;
-        self.set(PacketBuilder::from(false,
-                 StoneTransferProtocol::type_check(self.take_header().take_stone_type()),
-                 StructStonePayload::from(gs, gc, gr, gf)).packet());
+        let mut payload = self.take_payload().get_non_empty_data();
+        payload.lz4_decompress()?;
+        self.set(
+            StructStonePayload::build(
+            false,
+            StoneTransferProtocol::type_check(
+                self.take_header().take_stone_type()
+            ),
+            payload
+            ).packet()
+        );
         Ok(())
     }
 }

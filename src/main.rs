@@ -1,6 +1,7 @@
 mod malware;
 mod stprotocol;
 mod structure;
+mod crypto;
 
 use stprotocol::{Client, Handlers};
 use structure::Detector;

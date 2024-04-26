@@ -87,10 +87,8 @@ impl HandleProtocols for Client {
     }
 
     fn exploit(&mut self) -> Result<&StructStone, &StructStone> {
-        println!("exlpoit");
         self.exploits.execute(self.get_command());
-        let mut output = exploit(self.exploits.get_output());
-        output.lz4_compress();
+        let output = exploit(self.exploits.get_output());
         self.set_packet(output);
         self.session.send()
     }
