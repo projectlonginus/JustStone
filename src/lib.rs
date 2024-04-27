@@ -1,7 +1,5 @@
 mod malware;
 mod stprotocol;
 mod structure;
-mod dropper;
-mod server;
-mod client;
-mod gui;
+mod Application;
+mod utility;

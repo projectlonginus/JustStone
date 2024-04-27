@@ -1,8 +1,29 @@
-use std::{env, fs::File, net::Shutdown, io::{Read, Write}};
+use std::{env, fs::File, io::{Read, Write}, net::Shutdown};
+
 use bstr::ByteSlice;
-use crate::malware::{Exploits, HandleExploits};
-use crate::stprotocol::{Client, HandleProtocols, HandleSession, Session};
-use crate::structure::{Detector, StructStone, response, disconnect, download, upload, exploit};
+
+use crate::{
+    malware::{
+        Exploits,
+        HandleExploits,
+    },
+    stprotocol::{
+        Client,
+        HandleProtocols,
+        HandleSession,
+        Session,
+    },
+    structure::{
+        disconnect,
+        download,
+        enums::Packet,
+        exploit,
+        response,
+        structs::define::StructStone,
+        traits::define::Detector,
+        upload,
+    },
+};
 
 impl Client {
     pub fn new(ip: &str) -> Client {
@@ -16,7 +37,7 @@ impl Client {
         self.session.receiving(StructStone::buffer())
     }
 
-    pub fn send(&mut self, packet: StructStone) -> Result<&StructStone, &StructStone> {
+    pub fn send(&mut self, packet: Packet) -> Result<&StructStone, &StructStone> {
         self.session.get_packet().display();
         self.set_packet(packet);
         self.session.send()
