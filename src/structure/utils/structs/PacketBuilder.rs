@@ -1,6 +1,6 @@
-use crate::{
-    structure::enums::StoneTransferProtocol,
-    structure::structs::define::{PacketBuilder, StructStonePayload},
+use crate::structure::{
+    enums::StoneTransferProtocol,
+    structs::define::{PacketBuilder, StructStonePayload},
 };
 
 impl PacketBuilder {

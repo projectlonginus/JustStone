@@ -1,7 +1,9 @@
-use crate::{
-    structure::utils::enums::StatusCode,
-    structure::utils::enums::StoneTransferProtocol,
-    structure::utils::traits::define::ProtocolCodec,
+use crate::structure::utils::{
+    enums::{
+        StatusCode,
+        StoneTransferProtocol,
+    },
+    traits::define::ProtocolCodec,
 };
 
 impl StoneTransferProtocol {

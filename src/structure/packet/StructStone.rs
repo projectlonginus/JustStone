@@ -1,6 +1,6 @@
-use crate::{
-    structure::structs::define::{StructStone, StructStoneHeader, StructStonePayload},
-    structure::traits::define::TypeManager,
+use crate::structure::{
+    structs::define::{StructStone, StructStoneHeader, StructStonePayload},
+    traits::define::TypeManager,
 };
 
 impl StructStone {

@@ -1,6 +1,6 @@
-use crate::{
-    structure::structs::define::StructStoneHeader,
-    structure::traits::define::ProtocolCodec,
+use crate::structure::{
+    structs::define::StructStoneHeader,
+    traits::define::ProtocolCodec,
 };
 
 impl StructStoneHeader {

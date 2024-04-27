@@ -1,11 +1,18 @@
 use json::{JsonValue, object};
 
-use crate::{
-    structure::enums::{StatusCode, StoneTransferProtocol},
-    structure::packet::StructStonePayload::PACKET_DELIMITER,
-    structure::structs::define::{StructRawStonePayload, StructStoneHeader, StructStonePayload},
-    structure::traits::define::TypeManager,
-    structure::utils::traits::define::ProtocolCodec,
+use crate::structure::{
+    enums::{
+        StatusCode,
+        StoneTransferProtocol,
+    },
+    packet::StructStonePayload::PACKET_DELIMITER,
+    structs::define::{
+        StructRawStonePayload,
+        StructStoneHeader,
+        StructStonePayload,
+    },
+    traits::define::TypeManager,
+    utils::traits::define::ProtocolCodec,
 };
 
 impl TypeManager for StructRawStonePayload {

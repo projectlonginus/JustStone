@@ -1,3 +1,3 @@
-mod Detector;
-mod TypeManager;
 pub mod define;
+mod TypeManager;
+mod Detector;

@@ -2,8 +2,10 @@ use bstr::ByteSlice;
 use sysinfo::System;
 
 use crate::{
-    structure::enums::StoneTransferProtocol,
-    structure::structs::define::{PacketBuilder, StructStonePayload},
+    structure::{
+        enums::StoneTransferProtocol,
+        structs::define::{PacketBuilder, StructStonePayload},
+    },
     utility::LZ4::CompressHandler,
 };
 

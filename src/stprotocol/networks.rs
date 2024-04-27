@@ -1,7 +1,9 @@
 use std::{
     io::{Read, Write},
-    net::Shutdown,
-    net::TcpStream,
+    net::{
+        Shutdown,
+        TcpStream,
+    },
     thread,
     time::Duration,
     u8,
@@ -11,10 +13,15 @@ use utils::Session;
 
 use crate::{
     stprotocol::{HandleSession, utils},
-    structure::connection,
-    structure::structs::define::StructStone,
-    structure::structs::define::StructStonePayload,
-    structure::traits::define::Detector,
+    structure::{
+        connection,
+        enums::{Packet, StoneTransferProtocol},
+        structs::define::{
+            StructStone,
+            StructStonePayload,
+        },
+        traits::define::Detector,
+    },
 };
 
 impl Session {
@@ -49,11 +56,19 @@ impl Session {
 
 impl HandleSession for Session {
     fn encryption(&mut self) -> std::io::Result<()> {
-        todo!() // 패킷 암호화 기능
+        match self.take_packet() {
+            Packet::StructStone { header, .. } => {
+                match StoneTransferProtocol::type_check(&header.stone_type) {
+                    StoneTransferProtocol::Connection => self.set_packet(self.secure_packet().expect("Packet::secure_packet()")),
+                    _ => Ok(()),
+                }
+            }
+            _ => Ok(())
+        }
     }
 
     fn decryption(&mut self) -> std::io::Result<()> {
-        todo!() // 패킷 복호화 기능
+        Ok(())
     }
 
     fn send(&mut self) -> Result<&StructStone, &StructStone> {
@@ -85,8 +100,8 @@ impl HandleSession for Session {
         if buffer_size != 12 {
             // 만약 수신받은 데이터의 크기가 12 바이트가 아니라면
             payload = StructStonePayload::load(self.recv(buffer_size)); // 페이로드 크기만큼 데이터를 받고 구조체로 변환하여 빈 페이로드 구조체에 저장
-            self.set_packet(StructStone::build(buffer.get_header(), payload));
-            return self.get_packet();
+            self.set_packet(Packet::from(StructStone::build(buffer.get_header(), payload)));
+            return Packet::to_packet_type(self.take_packet()).expect("Packet::to_packet_type(self.take_packet())");
         }
 
         let header = crate::structure::structs::define::StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고

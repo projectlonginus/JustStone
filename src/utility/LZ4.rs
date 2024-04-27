@@ -1,9 +1,9 @@
 use lz4_flex::block::{compress_prepend_size, decompress_size_prepended, DecompressError};
 
-use crate::{
-    structure::enums::StoneTransferProtocol,
-    structure::structs::define::{StructStone, StructStonePayload},
-    structure::traits::define::Detector,
+use crate::structure::{
+    enums::StoneTransferProtocol,
+    structs::define::{StructStone, StructStonePayload},
+    traits::define::Detector,
 };
 
 pub trait CompressHandler {

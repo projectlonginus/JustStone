@@ -2,9 +2,9 @@ pub use networks::*;
 pub use protocol::*;
 pub use utils::*;
 
-use crate::{
-    structure::enums::StoneTransferProtocol,
-    structure::traits::define::Detector,
+use crate::structure::{
+    enums::StoneTransferProtocol,
+    traits::define::Detector,
 };
 
 mod networks;

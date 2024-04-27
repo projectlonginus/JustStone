@@ -1,8 +1,8 @@
 use json::JsonValue;
 
-use crate::{
-    structure::enums::StoneTransferProtocol,
-    structure::structs::define::{StructStoneHeader, StructStonePayload},
+use crate::structure::{
+    enums::StoneTransferProtocol,
+    structs::define::{StructStoneHeader, StructStonePayload},
 };
 
 pub trait ProtocolCodec {
@@ -32,5 +32,6 @@ pub trait Detector {
     fn get_header(&self) -> StructStoneHeader;
     fn get_payload(&self) -> StructStonePayload;
     fn get_stone(&self) -> &[u8];
+    fn take_stone(&self) -> &[u8];
     fn is_compression(&self) -> bool;
 }
