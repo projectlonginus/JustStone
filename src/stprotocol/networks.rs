@@ -9,8 +9,13 @@ use std::{
 
 use utils::Session;
 
-use crate::stprotocol::{HandleSession, utils};
-use crate::structure::{connection, Detector, StructStone, StructStoneHeader, StructStonePayload};
+use crate::{
+    stprotocol::{HandleSession, utils},
+    structure::connection,
+    structure::structs::define::StructStone,
+    structure::structs::define::StructStonePayload,
+    structure::traits::define::Detector,
+};
 
 impl Session {
     pub fn new(address: &str) -> Session {
@@ -43,7 +48,19 @@ impl Session {
 }
 
 impl HandleSession for Session {
+    fn encryption(&mut self) -> std::io::Result<()> {
+        todo!() // 패킷 암호화 기능
+    }
+
+    fn decryption(&mut self) -> std::io::Result<()> {
+        todo!() // 패킷 복호화 기능
+    }
+
     fn send(&mut self) -> Result<&StructStone, &StructStone> {
+        if self.is_encryption() {
+            self.encryption().expect("Packet encryption failed.");
+        }
+
         match self.take_socket().write_all(self.take_packet().get_stone()) {
             Ok(_) => Ok(self.take_packet()),
             Err(_) => Err(self.take_packet()),
@@ -71,7 +88,8 @@ impl HandleSession for Session {
             self.set_packet(StructStone::build(buffer.get_header(), payload));
             return self.get_packet();
         }
-        let header = StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고
-        return self.receiving(StructStone::build(header, payload)); // 새로운 헤더를 재귀함수로 입력함 이 경우 재귀함수에서 if buffer.header.stone_size != vec![12,0,0,0] 문에 걸려서 페이로드를 수신받게 됨
+
+        let header = crate::structure::structs::define::StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고
+        return self.receiving(StructStone::build(header, payload)); // 새로운 헤더를 재귀함수로 입력함 이 경우 재귀함수에서 buffer_size != 12 문에 걸려서 페이로드를 수신받게 됨
     }
 }

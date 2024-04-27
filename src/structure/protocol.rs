@@ -1,6 +1,8 @@
-use crate::structure::ProtocolCodec;
-use crate::structure::utils::StatusCode;
-use crate::structure::utils::StoneTransferProtocol;
+use crate::{
+    structure::utils::enums::StatusCode,
+    structure::utils::enums::StoneTransferProtocol,
+    structure::utils::traits::define::ProtocolCodec,
+};
 
 impl StoneTransferProtocol {
     pub fn type_check(vec: &Vec<u8>) -> StoneTransferProtocol {

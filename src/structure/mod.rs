@@ -1,12 +1,15 @@
-use lz4_flex::block::DecompressError;
-pub use LZ4::*;
 pub use utils::*;
 
-mod packet;
+use crate::{
+    structure::enums::StoneTransferProtocol,
+    structure::structs::define::StructStone,
+    structure::structs::define::StructStonePayload,
+};
+
 mod protocol;
 mod utils;
 mod editor;
-mod LZ4;
+mod packet;
 
 pub fn connection() -> StructStone {
     StructStonePayload::build(false, StoneTransferProtocol::Connection, vec![]).packet()
@@ -29,5 +32,5 @@ pub fn upload(file: Vec<u8>) -> StructStone {
 }
 
 pub fn exploit(output: Vec<u8>) -> StructStone {
-    StructStonePayload::build(false, StoneTransferProtocol::ExecuteCmd, output).packet();
+    StructStonePayload::build(false, StoneTransferProtocol::ExecuteCmd, output).packet()
 }

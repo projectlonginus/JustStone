@@ -1,7 +1,10 @@
 use std::net::TcpStream;
 
-use crate::malware::Exploits;
-use crate::structure::{Detector, StructStone};
+use crate::{
+    malware::Exploits,
+    structure::structs::define::StructStone,
+    structure::traits::define::Detector,
+};
 
 pub trait PacketProcessing {
     fn take_packet<T>(&self) -> T;
@@ -53,6 +56,9 @@ impl Session {
     pub fn set_encryption(&mut self, use_encryption: bool) {
         self.use_encryption = use_encryption
     }
+    pub fn is_encryption(&self) -> bool {
+        self.use_encryption
+    }
 }
 
 
@@ -95,6 +101,8 @@ impl Client {
 }
 
 pub trait HandleSession {
+    fn encryption(&mut self) -> std::io::Result<()>;
+    fn decryption(&mut self) -> std::io::Result<()>;
     fn send(&mut self) -> Result<&StructStone, &StructStone>;
     fn recv(&mut self, buffer_size: usize) -> Vec<u8>;
     fn receiving(&mut self, buffer: StructStone) -> StructStone;

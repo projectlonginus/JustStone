@@ -1,8 +1,22 @@
-use std::{env, fs::File, net::Shutdown, io::{Read, Write}};
+use std::{env, fs::File, io::{Read, Write}, net::Shutdown};
+
 use bstr::ByteSlice;
-use crate::malware::{Exploits, HandleExploits};
-use crate::stprotocol::{Client, HandleProtocols, HandleSession, Session};
-use crate::structure::{Detector, StructStone, response, disconnect, download, upload, exploit, CompressHandler};
+
+use crate::{
+    malware::Exploits,
+    malware::HandleExploits,
+    stprotocol::Client,
+    stprotocol::HandleProtocols,
+    stprotocol::HandleSession,
+    stprotocol::Session,
+    structure::disconnect,
+    structure::download,
+    structure::exploit,
+    structure::response,
+    structure::structs::define::StructStone,
+    structure::traits::define::Detector,
+    structure::upload,
+};
 
 impl Client {
     pub fn new(ip: &str) -> Client {

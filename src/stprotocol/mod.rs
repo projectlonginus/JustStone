@@ -1,12 +1,16 @@
+pub use networks::*;
+pub use protocol::*;
+pub use utils::*;
+
+use crate::{
+    structure::enums::StoneTransferProtocol,
+    structure::traits::define::Detector,
+};
+
 mod networks;
 mod protocol;
 mod utils;
 mod editor;
-
-pub use networks::*;
-pub use protocol::*;
-pub use utils::*;
-use crate::structure::{StoneTransferProtocol, Detector};
 
 impl Handlers for Client {
     fn default_client_handler(&mut self) {
