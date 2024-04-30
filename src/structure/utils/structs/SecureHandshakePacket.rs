@@ -3,9 +3,9 @@ use crate::structure::structs::define::SecureHandshakePacket;
 impl SecureHandshakePacket {
     pub fn new() -> SecureHandshakePacket {
         SecureHandshakePacket {
-            encrypt_data_block_length: vec![],
             handshake_type: vec![],
             encrypt_type: vec![],
+            encrypt_data_block_length: vec![],
             encrypted_packet: vec![],
         }
     }

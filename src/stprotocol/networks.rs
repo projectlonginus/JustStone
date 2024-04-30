@@ -71,7 +71,7 @@ impl HandleSession for Session {
         Ok(())
     }
 
-    fn send(&mut self) -> Result<&StructStone, &StructStone> {
+    fn send(&mut self) -> Result<&Packet, &Packet> {
         if self.is_encryption() {
             self.encryption().expect("Packet encryption failed.");
         }
