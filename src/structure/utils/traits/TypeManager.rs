@@ -47,13 +47,13 @@ impl TypeManager for StructStonePayload {
 
     fn to_vec(&self) -> Vec<u8> {
         let mut payload: Vec<u8> = Vec::new();
-        payload.extend(self.take_sysinfo());
+        payload.extend(&self.sysinfo);
         payload.extend(PACKET_DELIMITER);
-        payload.extend(self.take_command_input());
+        payload.extend(&self.command_input);
         payload.extend(PACKET_DELIMITER);
-        payload.extend(self.take_response());
+        payload.extend(&self.response);
         payload.extend(PACKET_DELIMITER);
-        payload.extend(self.take_file());
+        payload.extend(&self.file);
         payload.extend(PACKET_DELIMITER);
         payload
     }
@@ -65,17 +65,17 @@ impl TypeManager for StructStoneHeader {
         array.copy_from_slice(&self.stone_size);
 
         return object! {
-            stone_status: StatusCode::type_check(self.take_stone_status()).to_string(),
-            stone_type: StoneTransferProtocol::type_check(self.take_stone_type()).to_string(),
+            stone_status: StatusCode::type_check(&self.stone_status).to_string(),
+            stone_type: StoneTransferProtocol::type_check(&self.stone_type).to_string(),
             stone_size: usize::from_le_bytes(array)
         };
     }
 
     fn to_vec(&self) -> Vec<u8> {
         let mut header: Vec<u8> = Vec::new();
-        header.extend(self.take_stone_status());
-        header.extend(self.take_stone_type());
-        header.extend(self.take_stone_size());
+        header.extend(&self.stone_status);
+        header.extend(&self.stone_type);
+        header.extend(&self.stone_size);
         header
     }
 }

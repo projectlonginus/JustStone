@@ -1,13 +1,19 @@
+use crate::structure::enums::EncryptType;
+
+#[derive(Clone, Debug)]
 pub struct SecureHandshakePacket {
     pub(crate) encrypt_data_block_length: Vec<u8>,
     pub(crate) handshake_type: Vec<u8>,
     pub(crate) encrypt_type: Vec<u8>,
-    pub(crate) encrypted_packet: Vec<u8>,
+    pub(crate) encrypted_packet: StructStone,
+    pub(crate) secure_stone: Vec<u8>,
 }
 
+#[derive(Clone, Debug)]
 pub struct SecurePacket {
     pub(crate) encrypt_data_block_length: Vec<u8>,
-    pub(crate) encrypted_packet: Vec<u8>,
+    pub(crate) encrypted_packet: StructStone,
+    pub(crate) secure_stone: Vec<u8>,
 }
 
 pub struct StructRawStonePayload {
@@ -42,6 +48,7 @@ pub struct StructStone {
 #[derive(Debug, Clone)]
 pub struct PacketBuilder {
     pub(crate) compression: bool,
+    pub(crate) encryption: EncryptType,
     pub(crate) protocol: crate::structure::enums::StoneTransferProtocol,
     pub(crate) output: StructStonePayload,
 }

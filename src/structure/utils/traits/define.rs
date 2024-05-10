@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use json::JsonValue;
 
 use crate::structure::{
@@ -34,4 +36,5 @@ pub trait Detector {
     fn get_stone(&self) -> &[u8];
     fn take_stone(&self) -> &[u8];
     fn is_compression(&self) -> bool;
+    fn is_encrypted(&self) -> bool;
 }

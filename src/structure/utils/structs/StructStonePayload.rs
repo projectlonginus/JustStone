@@ -51,20 +51,4 @@ impl StructStonePayload {
             _ => vec![]
         }
     }
-
-    pub fn take_sysinfo(&self) -> &Vec<u8> {
-        &self.sysinfo
-    }
-
-    pub fn take_command_input(&self) -> &Vec<u8> {
-        &self.command_input
-    }
-
-    pub fn take_response(&self) -> &Vec<u8> {
-        &self.response
-    }
-
-    pub fn take_file(&self) -> &Vec<u8> {
-        &self.file
-    }
 }

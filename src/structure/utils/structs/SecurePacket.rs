@@ -1,19 +1,21 @@
-use crate::structure::structs::define::SecurePacket;
+use crate::structure::structs::define::{SecurePacket, StructStone};
 
 impl SecurePacket {
     pub fn new() -> SecurePacket {
         SecurePacket {
-            encrypt_data_block_length: vec![],
-            encrypted_packet: vec![],
+            encrypt_data_block_length: vec![0, 0, 0, 0, 0, 0],
+            encrypted_packet: StructStone::new(),
+            secure_stone: vec![],
         }
     }
 
-    pub fn set(encrypt_data_block_length: usize, encrypted_packet: Vec<u8>) -> SecurePacket {
+    pub fn set(&self, encrypt_data_block_length: usize, encrypted_packet: StructStone) -> SecurePacket {
         let mut data_size: Vec<u8> = encrypt_data_block_length.to_le_bytes().to_vec();
-        data_size.resize(4, 0);
-        SecurePacket {
+        data_size.resize(6, 0);
+        Self {
             encrypt_data_block_length: data_size,
-            encrypted_packet,
+            encrypted_packet: encrypted_packet.to_owned(),
+            secure_stone: encrypted_packet.stone.to_owned(),
         }
     }
 }
