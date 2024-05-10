@@ -3,7 +3,10 @@ pub use protocol::*;
 pub use utils::*;
 
 use crate::structure::{
-    enums::StoneTransferProtocol,
+    enums::{
+        Packet,
+        StoneTransferProtocol,
+    },
     traits::define::Detector,
 };
 
@@ -45,8 +48,8 @@ impl Handlers for Client {
                     break;
                 } // 만약 서버의 응답이 Disconnect 일 경우 연결을 종료한다
 
-                _ => self.send(packet), //만약 위의 응답 타입을 제외한 응답을 보낼경우 기본응답 전송
-            }.unwrap().display();
+                _ => self.send(Packet::from(packet)), //만약 위의 응답 타입을 제외한 응답을 보낼경우 기본응답 전송
+            }.unwrap().display()
         }
     }
 }

@@ -3,10 +3,10 @@ use rand::rngs::ThreadRng;
 use rsa::{RsaPrivateKey, RsaPublicKey};
 
 pub struct RsaCrypto {
-    public_key: RsaPublicKey,
-    private_key: RsaPrivateKey,
     plaintext: Vec<u8>,
     ciphertext: Vec<u8>,
+    private_key: RsaPrivateKey,
+    public_key: RsaPublicKey,
     rng: ThreadRng,
 }
 
@@ -33,22 +33,16 @@ pub trait AesCrypto {
 }
 
 impl AesGcmSivCrypto {
-    pub fn new() -> AesGcmSivCrypto {
-        AesGcmSivCrypto {
-            plaintext: vec![],
-            ciphertext: vec![],
-            key: Default::default(),
-            cipher: Default::default(),
-            nonce: Default::default(),
-        }
-    }
     pub fn default() -> AesGcmSivCrypto {
+        let key = Aes256GcmSiv::generate_key(&mut OsRng);
+        let mut buf = [0u8; 12];
+        getrandom::getrandom(&mut buf).expect("getrandom::getrandom(&mut buf)");
         let mut crypto = AesGcmSivCrypto {
             plaintext: vec![],
             ciphertext: vec![],
-            key: Default::default(),
-            cipher: Default::default(),
-            nonce: Default::default(),
+            key,
+            cipher: Aes256GcmSiv::new(&key),
+            nonce: *Nonce::from_slice(&buf[..]),
         };
         crypto.set_key();
         crypto.set_cipher();
@@ -94,26 +88,16 @@ impl AesGcmSivCrypto {
 }
 
 impl RsaCrypto {
-    pub fn new() -> RsaCrypto {
+    pub fn default() -> RsaCrypto {
+        let mut rng = rand::thread_rng();
+        let pvt_key = RsaPrivateKey::new(&mut rng, 2048).expect("RsaPrivateKey::new(&mut rng, bit)");
         RsaCrypto {
-            public_key: Default::default(),
-            private_key: Default::default(),
             plaintext: vec![],
             ciphertext: vec![],
-            rng: Default::default(),
+            public_key: RsaPublicKey::from(&pvt_key),
+            private_key: pvt_key,
+            rng,
         }
-    }
-    pub fn default() -> AesGcmSivCrypto {
-        let mut crypto = RsaCrypto {
-            public_key: Default::default(),
-            private_key: Default::default(),
-            plaintext: vec![],
-            ciphertext: vec![],
-            rng: Default::default(),
-        };
-        crypto.set_keys(2048).expect("secure.set_keys(2048)");
-        crypto.set_cipher();
-        crypto
     }
     pub fn set_plaintext(&mut self, source: Vec<u8>) {
         self.plaintext = source
@@ -123,9 +107,8 @@ impl RsaCrypto {
     }
     pub fn set_keys(&mut self, bit: usize) -> std::io::Result<()> {
         self.rng = rand::thread_rng();
-        self.private_key = RsaPrivateKey::new(&mut self.rng, bit).
-            expect("RsaPrivateKey::new(&mut rng, bit)");
-        self.set_public_key(RsaPublicKey::from(&self.private_key));
+        self.private_key = RsaPrivateKey::new(&mut self.rng, bit).expect("RsaPrivateKey::new(&mut rng, bit)");
+        self.public_key = RsaPublicKey::from(&self.private_key);
         Ok(())
     }
     pub fn set_public_key(&mut self, public_key: RsaPublicKey) {

@@ -1,4 +1,5 @@
 use crate::structure::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
+use crate::structure::traits::define::Detector;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum StoneTransferProtocol {
@@ -40,25 +41,31 @@ pub enum EncryptType {
     RSA,
     AesCbc,
     AesGcm,
-    AesGcmSib,
+    AesGcmSiv,
+    NotEncryption,
 }
 
 #[derive(Debug, Clone)]
 pub enum Packet {
     StructStone {
-        header: crate::structure::structs::define::StructStoneHeader,
-        payload: crate::structure::structs::define::StructStonePayload,
-        stone: Vec<u8>,
-    },
-    SecureHandshakePacket {
-        encrypt_data_block_length: Vec<u8>,
-        handshake_type: Vec<u8>,
-        encrypt_type: Vec<u8>,
-        encrypted_packet: Vec<u8>,
+        payload: StructStone
+        // header: crate::structure::structs::define::StructStoneHeader,
+        // payload: crate::structure::structs::define::StructStonePayload,
+        // stone: Vec<u8>,
     },
     SecurePacket {
-        encrypt_data_block_length: Vec<u8>,
-        encrypted_packet: Vec<u8>,
+        payload: SecurePacket
+        // encrypt_data_block_length: Vec<u8>,
+        // encrypted_packet: StructStone,
+        // secure_stone: Vec<u8>,
+    },
+    SecureHandshakePacket {
+        payload: SecureHandshakePacket
+        // encrypt_data_block_length: Vec<u8>,
+        // handshake_type: Vec<u8>,
+        // encrypt_type: Vec<u8>,
+        // encrypted_packet: StructStone,
+        // secure_stone: Vec<u8>,
     },
 }
 
@@ -67,12 +74,27 @@ pub enum PacketError {
     NotStructStone,
     NotSecurePacket,
     NotSecureHandshakePacket,
+    UnexpectedError(String),
+}
+
+#[derive(Debug)]
+pub enum HeaderError {
+    StatusIsNot4Bytes,
+    TypeIsNot4Bytes,
+    SizeIsNot4Bytes,
+}
+
+#[derive(Debug)]
+pub enum ParseError {
+    SizeIsNot4Bytes,
+    SizeIsNot2Bytes,
+    Unimplemented(String),
 }
 
 impl Packet {
-    pub fn to_packet_type<T>(&self) -> Result<T, PacketError>
+    pub fn unwrap<T>(self) -> Result<T, PacketError>
         where
-            T: for<'a> TryFrom<&'a Packet>,
+            T: TryFrom<Packet, Error=PacketError>,
     {
         T::try_from(self)
     }
@@ -83,76 +105,66 @@ impl Packet {
     {
         packet.into()
     }
+    pub fn payload(&self) -> Option<&dyn Detector> {
+        match self {
+            Packet::StructStone { payload } => Some(payload),
+            Packet::SecurePacket { payload } => Some(payload),
+            Packet::SecureHandshakePacket { payload } => Some(payload),
+            _ => None,
+        }
+    }
 }
 
-impl TryFrom<&Packet> for StructStone {
+impl TryFrom<Packet> for StructStone {
     type Error = PacketError;
-    fn try_from(packet: &Packet) -> Result<Self, Self::Error> {
+    fn try_from(packet: Packet) -> Result<Self, Self::Error> {
         match packet {
-            Packet::StructStone { header, payload, stone } => Ok(StructStone {
-                header: header.to_owned(),
-                payload: payload.to_owned(),
-                stone: stone.to_owned(),
-            }),
+            Packet::StructStone { payload } => Ok(payload),
             _ => Err(PacketError::NotStructStone),
         }
     }
 }
 
-impl TryFrom<&Packet> for SecurePacket {
+impl TryFrom<Packet> for SecurePacket {
     type Error = PacketError;
-    fn try_from(packet: &Packet) -> Result<Self, Self::Error> {
+    fn try_from(packet: Packet) -> Result<Self, Self::Error> {
         match packet {
-            Packet::SecurePacket { encrypt_data_block_length, encrypted_packet } => Ok(SecurePacket {
-                encrypt_data_block_length: encrypt_data_block_length.to_owned(),
-                encrypted_packet: encrypted_packet.to_owned(),
-            }),
+            Packet::SecurePacket { payload } => Ok(payload),
             _ => Err(PacketError::NotSecurePacket),
         }
     }
 }
 
-impl TryFrom<&Packet> for SecureHandshakePacket {
+impl TryFrom<Packet> for SecureHandshakePacket {
     type Error = PacketError;
-    fn try_from(packet: &Packet) -> Result<Self, Self::Error> {
+    fn try_from(packet: Packet) -> Result<Self, Self::Error> {
         match packet {
-            Packet::SecureHandshakePacket { encrypt_data_block_length, handshake_type, encrypt_type, encrypted_packet } => Ok(SecureHandshakePacket {
-                encrypt_data_block_length: encrypt_data_block_length.to_owned(),
-                handshake_type: handshake_type.to_owned(),
-                encrypt_type: encrypt_type.to_owned(),
-                encrypted_packet: encrypted_packet.to_owned(),
-            }),
+            Packet::SecureHandshakePacket { payload } => Ok(payload),
             _ => Err(PacketError::NotSecureHandshakePacket),
         }
     }
 }
 
 impl From<StructStone> for Packet {
-    fn from(packet: StructStone) -> Self {
+    fn from(payload: StructStone) -> Self {
         Packet::StructStone {
-            header: packet.header,
-            payload: packet.payload,
-            stone: packet.stone,
+            payload,
         }
     }
 }
 
 impl From<SecurePacket> for Packet {
-    fn from(packet: SecurePacket) -> Self {
+    fn from(payload: SecurePacket) -> Self {
         Packet::SecurePacket {
-            encrypt_data_block_length: packet.encrypt_data_block_length,
-            encrypted_packet: packet.encrypted_packet,
+            payload,
         }
     }
 }
 
 impl From<SecureHandshakePacket> for Packet {
-    fn from(packet: SecureHandshakePacket) -> Self {
+    fn from(payload: SecureHandshakePacket) -> Self {
         Packet::SecureHandshakePacket {
-            encrypt_data_block_length: packet.encrypt_data_block_length,
-            handshake_type: packet.handshake_type,
-            encrypt_type: packet.encrypt_type,
-            encrypted_packet: packet.encrypted_packet,
+            payload,
         }
     }
 }

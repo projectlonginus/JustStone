@@ -8,6 +8,7 @@ use crate::{
     },
     utility::LZ4::CompressHandler,
 };
+use crate::structure::enums::EncryptType;
 
 pub const PACKET_DELIMITER: &[u8; 2] = b"\r\n";
 
@@ -60,6 +61,7 @@ impl StructStonePayload {
 
     pub fn build<T: AsRef<[u8]>>(
         compression: bool,
+        encryption: EncryptType,
         protocol: StoneTransferProtocol,
         payload: T,
     ) -> PacketBuilder {
@@ -84,7 +86,7 @@ impl StructStonePayload {
             StoneTransferProtocol::Disconnect => StructStonePayload::default(),
             _ => StructStonePayload::default(),
         };
-        PacketBuilder::from(compression, protocol, output)
+        PacketBuilder::from(compression, encryption, protocol, output)
     }
 
     pub fn default() -> StructStonePayload {

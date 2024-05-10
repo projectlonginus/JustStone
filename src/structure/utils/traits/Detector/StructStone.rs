@@ -9,10 +9,16 @@ use crate::structure::{
 impl Detector for StructStone {
     fn display(&self) {
         let mut output = String::new();
-        writeln!(output, "Header: \n    \
-        Status: {:?}\n    Type: {:?}\n    Size: {:?}\n\
-        Payload: \n    System information: {:?}\n    Command input:    {:?}\n    Response:    {:?}\
-        \n    file:    {:?}\n",
+        writeln!(output, "\
+        Header: \n\
+            Status: {:?}\n\
+            Type:   {:?}\n\
+            Size:   {:?}\n\
+        Payload: \n\
+            System information: {:?}\n\
+            Command input:      {:?}\n\
+            Response:           {:?}\n\
+            file:               {:?}\n",
                  StatusCode::type_check(&self.header.stone_status),
                  StoneTransferProtocol::type_check(&self.header.stone_type),
                  self.get_size(),
@@ -55,5 +61,8 @@ impl Detector for StructStone {
     }
     fn is_compression(&self) -> bool {
         self.header.is_compression()
+    }
+    fn is_encrypted(&self) -> bool {
+        self.header.is_encrypted()
     }
 }
