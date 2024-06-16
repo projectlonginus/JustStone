@@ -1,11 +1,18 @@
 use crate::structure::{
-    enums::StoneTransferProtocol,
+    enums::{
+        EncryptType,
+        StoneTransferProtocol,
+    },
     structs::define::{PacketBuilder, StructStonePayload},
 };
 
 impl PacketBuilder {
     pub fn is_compression(&self) -> &bool {
         &self.compression
+    }
+
+    pub fn encryption(&self) -> &EncryptType {
+        &self.encryption
     }
 
     pub fn protocol(&self) -> &StoneTransferProtocol {
@@ -19,6 +26,7 @@ impl PacketBuilder {
     pub fn default() -> PacketBuilder {
         PacketBuilder {
             compression: false,
+            encryption: EncryptType::AesGcmSiv,
             protocol: StoneTransferProtocol::Unknown,
             output: StructStonePayload::default(),
         }
@@ -26,11 +34,13 @@ impl PacketBuilder {
 
     pub fn from(
         compression: bool,
+        encryption: EncryptType,
         protocol: StoneTransferProtocol,
         output: StructStonePayload,
     ) -> PacketBuilder {
         PacketBuilder {
             compression,
+            encryption,
             protocol,
             output,
         }

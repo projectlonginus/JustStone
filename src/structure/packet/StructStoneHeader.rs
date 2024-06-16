@@ -22,7 +22,7 @@ impl StructStoneHeader {
         size: usize,
     ) -> StructStoneHeader {
         let stone_status: Vec<u8> = match &compression {
-            true => vec![1, 0, 0, 0],
+            true => vec![0, 0, 0, 1],
             false => vec![0, 0, 0, 0],
         };
         let stone_type: Vec<u8> = protocol.to_vec();

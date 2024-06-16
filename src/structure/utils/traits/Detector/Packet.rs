@@ -1,55 +1,167 @@
-use crate::structure::enums::{Packet, StatusCode, StoneTransferProtocol};
-use crate::structure::structs::define::{StructStoneHeader, StructStonePayload};
-use crate::structure::traits::define::Detector;
+use std::fmt::Debug;
+
+use crate::structure::{
+    enums::{
+        Packet,
+        StoneTransferProtocol,
+    },
+    enums::PacketError,
+    structs::define::{
+        StructStoneHeader,
+        StructStonePayload,
+    },
+    traits::define::Detector,
+};
 
 impl Detector for Packet {
     fn display(&self) {
-        let mut output = String::new();
-        writeln!(output, "Header: \n    \
-        Status: {:?}\n    Type: {:?}\n    Size: {:?}\n\
-        Payload: \n    System information: {:?}\n    Command input:    {:?}\n    Response:    {:?}\
-        \n    file:    {:?}\n",
-                 StatusCode::type_check(&self.header.stone_status),
-                 StoneTransferProtocol::type_check(&self.header.stone_type),
-                 self.get_size(),
-                 self.payload.sysinfo,
-                 self.payload.command_input,
-                 self.payload.response,
-                 self.payload.file).unwrap();
-        print!("{}", output)
+        if let Some(payload) = self.payload() {
+            payload.display();
+        } else {
+            println!("{:?}", PacketError::UnexpectedError("UnexpectedError".to_string()));
+        }
     }
+
     fn get_type(&self) -> StoneTransferProtocol {
-        StoneTransferProtocol::type_check(&self.header.stone_type)
+        if let Some(payload) = self.payload() {
+            payload.get_type()
+        } else {
+            StoneTransferProtocol::Unknown
+        }
     }
+
     fn get_size(&self) -> usize {
-        let length_bytes: &[u8] = &self.header.stone_size;
-        let length = u32::from_le_bytes([
-            length_bytes[0],
-            length_bytes[1],
-            length_bytes[2],
-            length_bytes[3],
-        ]);
-        return length as usize;
+        if let Some(payload) = self.payload() {
+            payload.get_size()
+        } else {
+            0
+        }
     }
-    fn take_sysinfo(&self) -> &Vec<u8> { &self.payload.sysinfo }
-    fn take_command(&self) -> &Vec<u8> {
-        &self.payload.command_input
+
+    fn take_sysinfo(&self) -> Option<&Vec<u8>> {
+        if let Some(payload) = self.payload() {
+            payload.take_sysinfo()
+        } else {
+            None
+        }
     }
-    fn take_response(&self) -> &Vec<u8> { &self.payload.response }
-    fn take_file(&self) -> &Vec<u8> { &self.payload.file }
-    fn get_sysinfo(&self) -> Vec<u8> { self.payload.sysinfo.clone() }
-    fn get_command(&self) -> Vec<u8> { self.payload.command_input.clone() }
-    fn get_response(&self) -> Vec<u8> { self.payload.response.clone() }
-    fn get_file(&self) -> Vec<u8> { self.payload.file.clone() }
-    fn take_header(&self) -> &StructStoneHeader { &self.header }
-    fn take_payload(&self) -> &StructStonePayload { &self.payload }
-    fn get_header(&self) -> StructStoneHeader { self.header.clone() }
-    fn get_payload(&self) -> StructStonePayload { self.payload.clone() }
-    fn get_stone(&self) -> &[u8] { self.stone.as_slice() }
-    fn take_stone(&self) -> &[u8] {
-        &self.stone.as_slice()
+
+    fn take_command(&self) -> Option<&Vec<u8>> {
+        if let Some(payload) = self.payload() {
+            payload.take_command()
+        } else {
+            None
+        }
     }
+
+    fn take_response(&self) -> Option<&Vec<u8>> {
+        if let Some(payload) = self.payload() {
+            payload.take_response()
+        } else {
+            None
+        }
+    }
+
+    fn take_file(&self) -> Option<&Vec<u8>> {
+        if let Some(payload) = self.payload() {
+            payload.take_file()
+        } else {
+            None
+        }
+    }
+
+    fn get_sysinfo(&self) -> Vec<u8> {
+        if let Some(payload) = self.payload() {
+            payload.get_sysinfo()
+        } else {
+            vec![]
+        }
+    }
+
+    fn get_command(&self) -> Vec<u8> {
+        if let Some(payload) = self.payload() {
+            payload.get_command()
+        } else {
+            vec![]
+        }
+    }
+
+    fn get_response(&self) -> Vec<u8> {
+        if let Some(payload) = self.payload() {
+            payload.get_response()
+        } else {
+            vec![]
+        }
+    }
+
+    fn get_file(&self) -> Vec<u8> {
+        if let Some(payload) = self.payload() {
+            payload.get_file()
+        } else {
+            vec![]
+        }
+    }
+
+    fn take_header(&self) -> Option<&StructStoneHeader> {
+        if let Some(payload) = self.payload() {
+            payload.take_header()
+        } else {
+            None
+        }
+    }
+
+    fn take_payload(&self) -> Option<&StructStonePayload> {
+        if let Some(payload) = self.payload() {
+            payload.take_payload()
+        } else {
+            None
+        }
+    }
+
+    fn get_header(&self) -> StructStoneHeader {
+        if let Some(payload) = self.payload() {
+            payload.get_header()
+        } else {
+            StructStoneHeader::new()
+        }
+    }
+
+    fn get_payload(&self) -> StructStonePayload {
+        if let Some(payload) = self.payload() {
+            payload.get_payload()
+        } else {
+            StructStonePayload::new()
+        }
+    }
+
+    fn get_stone(&self) -> Option<&[u8]> {
+        if let Some(payload) = self.payload() {
+            payload.get_stone()
+        } else {
+            None
+        }
+    }
+
+    fn take_stone(&self) -> Option<&[u8]> {
+        if let Some(payload) = self.payload() {
+            payload.take_stone()
+        } else {
+            None
+        }
+    }
+
     fn is_compression(&self) -> bool {
-        self.header.is_compression()
+        if let Some(payload) = self.payload() {
+            payload.is_compression()
+        } else {
+            false
+        }
+    }
+    fn is_encrypted(&self) -> bool {
+        if let Some(payload) = self.payload() {
+            payload.is_encrypted()
+        } else {
+            false
+        }
     }
 }
