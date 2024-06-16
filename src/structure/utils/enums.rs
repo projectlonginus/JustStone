@@ -47,26 +47,26 @@ pub enum EncryptType {
 
 #[derive(Debug, Clone)]
 pub enum Packet {
-    StructStone {
-        payload: StructStone
+    StructStone(
+        StructStone
         // header: crate::structure::structs::define::StructStoneHeader,
         // payload: crate::structure::structs::define::StructStonePayload,
         // stone: Vec<u8>,
-    },
-    SecurePacket {
-        payload: SecurePacket
+    ),
+    SecurePacket(
+        SecurePacket
         // encrypt_data_block_length: Vec<u8>,
         // encrypted_packet: StructStone,
         // secure_stone: Vec<u8>,
-    },
-    SecureHandshakePacket {
-        payload: SecureHandshakePacket
+    ),
+    SecureHandshakePacket(
+        SecureHandshakePacket
         // encrypt_data_block_length: Vec<u8>,
         // handshake_type: Vec<u8>,
         // encrypt_type: Vec<u8>,
         // encrypted_packet: StructStone,
         // secure_stone: Vec<u8>,
-    },
+    ),
 }
 
 #[derive(Debug)]
@@ -107,9 +107,9 @@ impl Packet {
     }
     pub fn payload(&self) -> Option<&dyn Detector> {
         match self {
-            Packet::StructStone { payload } => Some(payload),
-            Packet::SecurePacket { payload } => Some(payload),
-            Packet::SecureHandshakePacket { payload } => Some(payload),
+            Packet::StructStone(payload) => Some(payload),
+            Packet::SecurePacket(payload) => Some(payload),
+            Packet::SecureHandshakePacket(payload) => Some(payload),
             _ => None,
         }
     }
@@ -119,7 +119,7 @@ impl TryFrom<Packet> for StructStone {
     type Error = PacketError;
     fn try_from(packet: Packet) -> Result<Self, Self::Error> {
         match packet {
-            Packet::StructStone { payload } => Ok(payload),
+            Packet::StructStone(payload) => Ok(payload),
             _ => Err(PacketError::NotStructStone),
         }
     }
@@ -129,7 +129,7 @@ impl TryFrom<Packet> for SecurePacket {
     type Error = PacketError;
     fn try_from(packet: Packet) -> Result<Self, Self::Error> {
         match packet {
-            Packet::SecurePacket { payload } => Ok(payload),
+            Packet::SecurePacket(payload) => Ok(payload),
             _ => Err(PacketError::NotSecurePacket),
         }
     }
@@ -139,7 +139,7 @@ impl TryFrom<Packet> for SecureHandshakePacket {
     type Error = PacketError;
     fn try_from(packet: Packet) -> Result<Self, Self::Error> {
         match packet {
-            Packet::SecureHandshakePacket { payload } => Ok(payload),
+            Packet::SecureHandshakePacket(payload) => Ok(payload),
             _ => Err(PacketError::NotSecureHandshakePacket),
         }
     }
@@ -147,25 +147,25 @@ impl TryFrom<Packet> for SecureHandshakePacket {
 
 impl From<StructStone> for Packet {
     fn from(payload: StructStone) -> Self {
-        Packet::StructStone {
+        Packet::StructStone(
             payload,
-        }
+        )
     }
 }
 
 impl From<SecurePacket> for Packet {
     fn from(payload: SecurePacket) -> Self {
-        Packet::SecurePacket {
+        Packet::SecurePacket(
             payload,
-        }
+        )
     }
 }
 
 impl From<SecureHandshakePacket> for Packet {
     fn from(payload: SecureHandshakePacket) -> Self {
-        Packet::SecureHandshakePacket {
+        Packet::SecureHandshakePacket(
             payload,
-        }
+        )
     }
 }
 
