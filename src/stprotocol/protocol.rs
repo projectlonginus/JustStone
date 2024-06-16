@@ -60,7 +60,7 @@ impl HandleProtocols for Client {
     }
 
     fn download(&mut self) -> std::io::Result<&Packet> {
-        let file_arr: &[u8] = self.take_file().as_slice();
+        let file_arr: &[u8] = self.take_file().unwrap().as_slice();
         let mut fields: Vec<&[u8]> = file_arr.split_str("<name_end>").collect();
 
         let path = format!(

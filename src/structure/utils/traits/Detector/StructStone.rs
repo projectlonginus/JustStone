@@ -41,23 +41,23 @@ impl Detector for StructStone {
         ]);
         return length as usize;
     }
-    fn take_sysinfo(&self) -> &Vec<u8> { &self.payload.sysinfo }
-    fn take_command(&self) -> &Vec<u8> {
-        &self.payload.command_input
+    fn take_sysinfo(&self) -> Option<&Vec<u8>> { Option::from(&self.payload.sysinfo) }
+    fn take_command(&self) -> Option<&Vec<u8>> {
+        Option::from(&self.payload.command_input)
     }
-    fn take_response(&self) -> &Vec<u8> { &self.payload.response }
-    fn take_file(&self) -> &Vec<u8> { &self.payload.file }
+    fn take_response(&self) -> Option<&Vec<u8>> { Option::from(&self.payload.response) }
+    fn take_file(&self) -> Option<&Vec<u8>> { Option::from(&self.payload.file) }
     fn get_sysinfo(&self) -> Vec<u8> { self.payload.sysinfo.clone() }
     fn get_command(&self) -> Vec<u8> { self.payload.command_input.clone() }
     fn get_response(&self) -> Vec<u8> { self.payload.response.clone() }
     fn get_file(&self) -> Vec<u8> { self.payload.file.clone() }
-    fn take_header(&self) -> &StructStoneHeader { &self.header }
-    fn take_payload(&self) -> &StructStonePayload { &self.payload }
+    fn take_header(&self) -> Option<&StructStoneHeader> { Option::from(&self.header) }
+    fn take_payload(&self) -> Option<&StructStonePayload> { Option::from(&self.payload) }
     fn get_header(&self) -> StructStoneHeader { self.header.clone() }
     fn get_payload(&self) -> StructStonePayload { self.payload.clone() }
-    fn get_stone(&self) -> &[u8] { self.stone.as_slice() }
-    fn take_stone(&self) -> &[u8] {
-        &self.stone.as_slice()
+    fn get_stone(&self) -> Option<&[u8]> { Option::from(self.stone.as_slice()) }
+    fn take_stone(&self) -> Option<&[u8]> {
+        Option::from(self.stone.as_slice())
     }
     fn is_compression(&self) -> bool {
         self.header.is_compression()

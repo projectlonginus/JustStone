@@ -85,17 +85,17 @@ impl Client {
         self.session.set_packet(packet)
     }
 
-    pub fn take_sysinfo(&self) -> &Vec<u8> { self.session.take_packet().take_sysinfo() }
+    pub fn take_sysinfo(&self) -> Option<&Vec<u8>> { self.session.take_packet().take_sysinfo() }
 
-    pub fn take_command(&self) -> &Vec<u8> {
+    pub fn take_command(&self) -> Option<&Vec<u8>> {
         self.session.take_packet().take_command()
     }
 
-    pub fn take_response(&self) -> &Vec<u8> {
+    pub fn take_response(&self) -> Option<&Vec<u8>> {
         self.session.take_packet().take_response()
     }
 
-    pub fn take_file(&self) -> &Vec<u8> {
+    pub fn take_file(&self) -> Option<&Vec<u8>> {
         self.session.take_packet().take_file()
     }
 

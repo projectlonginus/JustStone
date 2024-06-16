@@ -1,7 +1,8 @@
 use std::{
     io::{Read, Write},
     net::TcpStream,
-    u8,
+    u8
+    ,
 };
 
 use utils::Session;
@@ -27,7 +28,7 @@ impl Session {
                 _ => StructStonePayload::build(false, NotEncryption, Connection, vec![]).raw_packet()
             };
             socket
-                .write_all(packet.get_stone())
+                .write_all(packet.get_stone().unwrap())
                 .expect("TODO: panic message");
             Session::set(NotEncryption, socket, Packet::from(packet))
         } else {
@@ -39,7 +40,7 @@ impl Session {
 impl HandleSession for Session {
     fn encryption(&mut self) -> std::io::Result<()> {
         match self.take_packet() {
-            Packet::StructStone { payload } => {
+            Packet::StructStone(payload) => {
                 match &payload.get_type() {
                     Connection => todo!(),
                     _ => Ok(()),
@@ -58,7 +59,7 @@ impl HandleSession for Session {
             self.encryption().expect("Packet encryption failed.");
         }
 
-        match self.take_socket().write_all(self.take_packet().get_stone()) {
+        match self.take_socket().write_all(self.take_packet().get_stone().unwrap()) {
             _ => Ok(self.take_packet()),
         }
     }
@@ -67,7 +68,7 @@ impl HandleSession for Session {
         let mut buffer: Vec<u8> = vec![0; buffer_size];
         match self.take_socket().read_exact(&mut buffer) {
             Ok(_) => buffer_size,
-            Err(_) => buffer_size,
+            Err(e) => panic!(e)
         };
 
         buffer

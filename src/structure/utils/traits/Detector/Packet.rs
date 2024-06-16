@@ -12,7 +12,6 @@ use crate::structure::{
     },
     traits::define::Detector,
 };
-use crate::structure::structs::define::StructStone;
 
 impl Detector for Packet {
     fn display(&self) {
@@ -39,35 +38,35 @@ impl Detector for Packet {
         }
     }
 
-    fn take_sysinfo(&self) -> &Vec<u8> {
+    fn take_sysinfo(&self) -> Option<&Vec<u8>> {
         if let Some(payload) = self.payload() {
             payload.take_sysinfo()
         } else {
-            &vec![]
+            None
         }
     }
 
-    fn take_command(&self) -> &Vec<u8> {
+    fn take_command(&self) -> Option<&Vec<u8>> {
         if let Some(payload) = self.payload() {
             payload.take_command()
         } else {
-            &vec![]
+            None
         }
     }
 
-    fn take_response(&self) -> &Vec<u8> {
+    fn take_response(&self) -> Option<&Vec<u8>> {
         if let Some(payload) = self.payload() {
             payload.take_response()
         } else {
-            &vec![]
+            None
         }
     }
 
-    fn take_file(&self) -> &Vec<u8> {
+    fn take_file(&self) -> Option<&Vec<u8>> {
         if let Some(payload) = self.payload() {
             payload.take_file()
         } else {
-            &vec![]
+            None
         }
     }
 
@@ -103,19 +102,19 @@ impl Detector for Packet {
         }
     }
 
-    fn take_header(&self) -> &StructStoneHeader {
+    fn take_header(&self) -> Option<&StructStoneHeader> {
         if let Some(payload) = self.payload() {
             payload.take_header()
         } else {
-            &StructStoneHeader::new()
+            None
         }
     }
 
-    fn take_payload(&self) -> &StructStonePayload {
+    fn take_payload(&self) -> Option<&StructStonePayload> {
         if let Some(payload) = self.payload() {
             payload.take_payload()
         } else {
-            &StructStonePayload::new()
+            None
         }
     }
 
@@ -135,19 +134,19 @@ impl Detector for Packet {
         }
     }
 
-    fn get_stone(&self) -> &[u8] {
+    fn get_stone(&self) -> Option<&[u8]> {
         if let Some(payload) = self.payload() {
             payload.get_stone()
         } else {
-            StructStone::new().get_stone()
+            None
         }
     }
 
-    fn take_stone(&self) -> &[u8] {
+    fn take_stone(&self) -> Option<&[u8]> {
         if let Some(payload) = self.payload() {
             payload.take_stone()
         } else {
-            &StructStone::new().take_stone()
+            None
         }
     }
 
