@@ -6,14 +6,12 @@ pub struct SecureHandshakePacket {
     pub(crate) handshake_type: Vec<u8>,
     pub(crate) encrypt_type: Vec<u8>,
     pub(crate) encrypted_packet: StructStone,
-    pub(crate) secure_stone: Vec<u8>,
 }
 
 #[derive(Clone, Debug)]
 pub struct SecurePacket {
     pub(crate) encrypt_data_block_length: Vec<u8>,
     pub(crate) encrypted_packet: StructStone,
-    pub(crate) secure_stone: Vec<u8>,
 }
 
 pub struct StructRawStonePayload {

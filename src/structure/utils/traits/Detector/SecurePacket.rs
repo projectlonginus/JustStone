@@ -18,16 +18,16 @@ impl Detector for SecurePacket {
         let mut output = String::new();
         let header = &self.encrypted_packet.header;
         let payload = &self.encrypted_packet.payload;
-        writeln!(output, "\
-            Header: \n\
-                Status: {:?}\n\
-                Type:   {:?}\n\
-                Size:   {:?}\n\
-            Payload: \n\
-                System information: {:?}\n\
-                Command input:      {:?}\n\
-                Response:           {:?}\n\
-                file:               {:?}\n",
+        writeln!(output, "
+            Header:
+                Status: {:?}
+                Type:   {:?}
+                Size:   {:?}
+            Payload:
+                System information: {:?}
+                Command input:      {:?}
+                Response:           {:?}
+                file:               {:?}",
                  StatusCode::type_check(&header.stone_status),
                  StoneTransferProtocol::type_check(&header.stone_type),
                  self.get_size(),

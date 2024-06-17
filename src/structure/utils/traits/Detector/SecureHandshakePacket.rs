@@ -1,15 +1,19 @@
 use std::fmt::Write;
 
-use crate::structure::{
-    enums::StoneTransferProtocol,
-    structs::define::{
-        SecureHandshakePacket,
-        StructStoneHeader,
-        StructStonePayload,
-    },
-    traits::define::Detector,
+use crate::{
+    structure::{
+        enums::{
+            StoneTransferProtocol,
+            StatusCode
+        },
+        structs::define::{
+            SecureHandshakePacket,
+            StructStoneHeader,
+            StructStonePayload,
+        },
+        traits::define::Detector,
+    }
 };
-use crate::structure::enums::StatusCode;
 
 impl Detector for SecureHandshakePacket {
     fn display(&self) {
@@ -17,18 +21,18 @@ impl Detector for SecureHandshakePacket {
         let header = &self.encrypted_packet.header;
         let payload = &self.encrypted_packet.payload;
 
-        writeln!(output, "\
-        handshake_type: {:?}\n\
-        encrypt_type:   {:?}\n\
-            Header: \n\
-                Status: {:?}\n\
-                Type:   {:?}\n\
-                Size:   {:?}\n\
-            Payload: \n\
-                System information: {:?}\n\
-                Command input:      {:?}\n\
-                Response:           {:?}\n\
-                file:               {:?}\n",
+        writeln!(output, "
+        handshake_type: {:?}
+        encrypt_type:   {:?}
+            Header:
+                Status: {:?}
+                Type:   {:?}
+                Size:   {:?}
+            Payload:
+                System information: {:?}
+                Command input:      {:?}
+                Response:           {:?}
+                file:               {:?}",
                  self.handshake_type,
                  self.encrypt_type,
                  StatusCode::type_check(&header.stone_status),

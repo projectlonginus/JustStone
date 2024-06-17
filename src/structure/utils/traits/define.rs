@@ -5,6 +5,10 @@ use crate::structure::{
     structs::define::{StructStoneHeader, StructStonePayload},
 };
 
+pub trait Builder {
+
+}
+
 pub trait ProtocolCodec {
     fn to_vec(&self) -> Vec<u8>;
     fn to_string(&self) -> String;

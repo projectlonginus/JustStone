@@ -8,7 +8,6 @@ impl SecureHandshakePacket {
             handshake_type: vec![0, 0],
             encrypt_type: vec![0, 0, 0, 0],
             encrypted_packet: StructStone::new(),
-            secure_stone: vec![],
         }
     }
 
@@ -21,8 +20,7 @@ impl SecureHandshakePacket {
             encrypt_data_block_length: data_size,
             handshake_type,
             encrypt_type,
-            encrypted_packet: encrypted_packet.to_owned(),
-            secure_stone: encrypted_packet.stone.to_owned(),
+            encrypted_packet,
         })
     }
 }

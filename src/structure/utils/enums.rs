@@ -1,7 +1,7 @@
 use crate::structure::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
 use crate::structure::traits::define::Detector;
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum StoneTransferProtocol {
     Connection,
     Handshake,
@@ -36,7 +36,7 @@ pub enum HandshakeType {
     DiffieHellman,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EncryptType {
     RSA,
     AesCbc,
@@ -76,13 +76,14 @@ pub enum PacketError {
     NotSecureHandshakePacket,
     UnexpectedError(String),
 }
-
+#[derive(Debug)]
 pub enum HeaderError {
     StatusIsNot4Bytes,
     TypeIsNot4Bytes,
     SizeIsNot4Bytes,
 }
 
+#[derive(Debug)]
 pub enum ParseError {
     SizeIsNot4Bytes,
     SizeIsNot2Bytes,

@@ -7,6 +7,8 @@ use crate::{
             EncryptType,
             EncryptType::NotEncryption,
             Packet,
+            HandshakeType,
+            ParseError
         },
         structs::define::StructStone,
         traits::define::Detector,
@@ -26,11 +28,11 @@ pub trait PacketProcessing {
 }
 
 pub struct Session {
+    handshake_type: HandshakeType,
     encryption: EncryptType,
     socket: TcpStream,
     packet: Packet,
-    aes_cipher: AesGcmSivCrypto,
-    rsa_cipher: RsaCrypto,
+    cipher: Cipher
 }
 
 pub struct Client {
@@ -38,11 +40,17 @@ pub struct Client {
     pub exploits: Exploits,
 }
 
+pub(crate) struct Cipher {
+    aes: AesGcmSivCrypto,
+    rsa: RsaCrypto
+}
+
 pub struct ProtocolEditor {
     session: Session,
     exploits: Exploits,
 }
 
+type SResult<T> = std::io::Result<T>;
 
 impl Session {
     pub fn take_packet(&self) -> &Packet {
@@ -57,15 +65,22 @@ impl Session {
     pub fn take_socket(&self) -> &TcpStream {
         &self.socket
     }
-    pub fn set(encryption: EncryptType, socket: TcpStream, packet: Packet) -> Session {
+    pub fn set(handshake_type: HandshakeType, encryption: EncryptType, socket: TcpStream, packet: Packet) -> Session {
         match &packet {
             Packet::StructStone { .. } |
             Packet::SecureHandshakePacket { .. } |
             Packet::SecurePacket { .. }
             => {
-                Session { encryption, socket, packet, aes_cipher: AesGcmSivCrypto::default(), rsa_cipher: RsaCrypto::default() }
+                let cipher = Cipher {  aes: AesGcmSivCrypto::default(), rsa: RsaCrypto::default()  };
+                Session { handshake_type, encryption, socket, packet, cipher }
             }
         }
+    }
+    pub fn take_handshake_type(&self) -> &HandshakeType {
+        &self.handshake_type
+    }
+    pub fn set_handshake(&mut self, handshake_type: HandshakeType) {
+        self.handshake_type = handshake_type
     }
     pub fn set_encryption(&mut self, encryption: EncryptType) {
         self.encryption = encryption
@@ -113,26 +128,28 @@ impl Client {
         self.session.take_packet().get_file()
     }
     pub fn use_encrypt(&mut self, encryption: EncryptType) {
-        self.session.aes_cipher.setup().expect("self.session.aes_cipher.setup()");
-        self.session.rsa_cipher.setup().expect("self.session.rsa_cipher.setup()");
+        self.session.cipher.aes.setup().expect("self.session.aes_cipher.setup()");
+        self.session.cipher.rsa.setup().expect("self.session.rsa_cipher.setup()");
         self.session.set_encryption(encryption)
     }
 }
 
+
 pub trait HandleSession {
-    fn encryption(&mut self) -> std::io::Result<()>;
-    fn decryption(&mut self) -> std::io::Result<()>;
-    fn send(&mut self) -> std::io::Result<&Packet>;
+    fn new(address: &str) -> Session;
+    fn encryption(&mut self) -> Result<(), ParseError>;
+    fn decryption(&mut self) -> Result<(), ParseError>;
+    fn send(&mut self) -> SResult<&Packet>;
     fn recv(&mut self, buffer_size: usize) -> Vec<u8>;
     fn receiving(&mut self, buffer: StructStone) -> Packet;
 }
 
 pub trait HandleProtocols {
-    fn response(&mut self, msg: &str) -> std::io::Result<&Packet>;
+    fn response(&mut self, msg: &str) -> SResult<&Packet>;
     fn disconnect(&mut self);
-    fn download(&mut self) -> std::io::Result<&Packet>;
-    fn upload(&mut self) -> std::io::Result<&Packet>;
-    fn exploit(&mut self) -> std::io::Result<&Packet>;
+    fn download(&mut self) -> SResult<&Packet>;
+    fn upload(&mut self) -> SResult<&Packet>;
+    fn exploit(&mut self) -> SResult<&Packet>;
 }
 
 pub trait Handlers {

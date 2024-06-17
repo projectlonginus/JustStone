@@ -25,6 +25,8 @@ use crate::{
     },
 };
 
+type Result<T> = std::io::Result<T>;
+
 impl Client {
     pub fn new(ip: &str) -> Client {
         Client {
@@ -37,15 +39,14 @@ impl Client {
         self.session.receiving(StructStone::buffer())
     }
 
-    pub fn send(&mut self, packet: Packet) -> std::io::Result<&Packet> {
-        self.session.get_packet().display();
+    pub fn send(&mut self, packet: Packet) -> Result<&Packet> {
         self.set_packet(packet);
         self.session.send()
     }
 }
 
 impl HandleProtocols for Client {
-    fn response(&mut self, msg: &str) -> std::io::Result<&Packet> {
+    fn response(&mut self, msg: &str) -> Result<&Packet> {
         self.set_packet(response(msg));
         self.session.send()
     }
@@ -59,7 +60,7 @@ impl HandleProtocols for Client {
             .expect("TODO: panic message");
     }
 
-    fn download(&mut self) -> std::io::Result<&Packet> {
+    fn download(&mut self) -> Result<&Packet> {
         let file_arr: &[u8] = self.take_file().unwrap().as_slice();
         let mut fields: Vec<&[u8]> = file_arr.split_str("<name_end>").collect();
 
@@ -87,7 +88,7 @@ impl HandleProtocols for Client {
         self.session.send()
     }
 
-    fn upload(&mut self) -> std::io::Result<&Packet> {
+    fn upload(&mut self) -> Result<&Packet> {
         let path = match String::from_utf8(self.get_file()) {
             Ok(ok) => ok,
             Err(_) => return self.response("File Not Found"),
@@ -107,7 +108,7 @@ impl HandleProtocols for Client {
         self.session.send()
     }
 
-    fn exploit(&mut self) -> std::io::Result<&Packet> {
+    fn exploit(&mut self) -> Result<&Packet> {
         self.exploits.execute(self.get_command());
         let output = exploit(self.exploits.get_output());
         self.set_packet(output);

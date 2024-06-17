@@ -10,23 +10,25 @@ impl Detector for StructStone {
     fn display(&self) {
         let mut output = String::new();
         writeln!(output, "\
-        Header: \n\
-            Status: {:?}\n\
-            Type:   {:?}\n\
-            Size:   {:?}\n\
-        Payload: \n\
-            System information: {:?}\n\
-            Command input:      {:?}\n\
-            Response:           {:?}\n\
-            file:               {:?}\n",
+        Header:
+        Status: {:?}
+        Type:   {:?}
+        Size:   {:?}\n\
+        Payload:
+        System information: {:?}
+        Command input:      {:?}
+        Response:           {:?}
+        file:               {:?}",
                  StatusCode::type_check(&self.header.stone_status),
                  StoneTransferProtocol::type_check(&self.header.stone_type),
                  self.get_size(),
                  self.payload.sysinfo,
                  self.payload.command_input,
                  self.payload.response,
-                 self.payload.file).unwrap();
-        print!("{}", output)
+                 self.payload.file
+        ).unwrap();
+        print!("{}", output);
+        output.clear()
     }
     fn get_type(&self) -> StoneTransferProtocol {
         StoneTransferProtocol::type_check(&self.header.stone_type)

@@ -11,46 +11,67 @@ use crate::{
     stprotocol::{HandleSession, utils},
     structure::{
         connection,
-        enums::{EncryptType::NotEncryption, Packet, StoneTransferProtocol::Connection},
+        enums::{
+            EncryptType::NotEncryption,
+            Packet,
+            StoneTransferProtocol::Connection,
+            HandshakeType,
+            ParseError,
+            EncryptType
+        },
         structs::define::{
             StructStone,
             StructStonePayload,
+            SecureHandshakePacket,
+            SecurePacket,
         },
         traits::define::Detector,
-    },
+    }
 };
 
-impl Session {
-    pub fn new(address: &str) -> Session {
+impl HandleSession for Session {
+    fn new(address: &str) -> Session {
         if let Ok(mut socket) = TcpStream::connect(address) {
             let packet = match Packet::unwrap(connection()) {
                 Ok(p) => p,
-                _ => StructStonePayload::build(false, NotEncryption, Connection, vec![]).raw_packet()
+                _ => {StructStonePayload::build(false, NotEncryption, Connection, vec![]).raw_packet()}
             };
             socket
                 .write_all(packet.get_stone().unwrap())
                 .expect("TODO: panic message");
-            Session::set(NotEncryption, socket, Packet::from(packet))
+            Session::set(HandshakeType::RSA, NotEncryption, socket, Packet::from(packet))
         } else {
             Self::new(address)
         }
     }
-}
 
-impl HandleSession for Session {
-    fn encryption(&mut self) -> std::io::Result<()> {
-        match self.take_packet() {
-            Packet::StructStone(payload) => {
-                match &payload.get_type() {
-                    Connection => todo!(),
-                    _ => Ok(()),
+    fn encryption(&mut self) -> Result<(), ParseError> {
+        let encryption = if  self.is_encryption() { EncryptType::AesGcmSiv } else { return Err(ParseError::Unimplemented("".to_string())) };
+        let packet = match self.take_packet() {
+            Packet::StructStone(packet) => packet.clone(),
+            _ => return Err(ParseError::Unimplemented("".to_string()))
+        };
+
+        let encrypted_packet = match packet.get_type() {
+            Connection => {
+                match SecureHandshakePacket::build(packet, self.take_handshake_type(), &encryption) {
+                    Ok(result) => Packet::from(result),
+                    Err(error) => return Err(error)
                 }
             }
-            _ => Ok(())
-        }
+            _ => {
+                match SecurePacket::build(packet, &encryption) {
+                    Ok(result) => Packet::from(result),
+                    Err(error) => return Err(error)
+                }
+            },
+        };
+
+        self.set_packet(encrypted_packet);
+        Ok(())
     }
 
-    fn decryption(&mut self) -> std::io::Result<()> {
+    fn decryption(&mut self) -> Result<(), ParseError> {
         Ok(())
     }
 

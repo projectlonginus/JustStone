@@ -26,7 +26,7 @@ impl PacketBuilder {
     pub fn default() -> PacketBuilder {
         PacketBuilder {
             compression: false,
-            encryption: EncryptType::AesGcmSiv,
+            encryption: EncryptType::NotEncryption,
             protocol: StoneTransferProtocol::Unknown,
             output: StructStonePayload::default(),
         }

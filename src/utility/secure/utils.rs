@@ -3,32 +3,24 @@ use rand::rngs::ThreadRng;
 use rsa::{RsaPrivateKey, RsaPublicKey};
 
 pub struct RsaCrypto {
-    plaintext: Vec<u8>,
-    ciphertext: Vec<u8>,
     private_key: RsaPrivateKey,
     public_key: RsaPublicKey,
     rng: ThreadRng,
 }
 
 pub struct AesGcmSivCrypto {
-    plaintext: Vec<u8>,
-    ciphertext: Vec<u8>,
     key: Key<Aes256GcmSiv>,
     cipher: Aes256GcmSiv,
     nonce: Nonce,
 }
 
 pub trait AesCrypto {
-    fn set_plaintext(&mut self, source: Vec<u8>);
-    fn set_ciphertext(&mut self, source: Vec<u8>);
     fn set_key(&mut self);
     fn set_cipher(&mut self);
     fn set_nonce(&mut self) -> Result<(), getrandom::Error>;
     fn take_key(&self) -> &Key<Aes256GcmSiv>;
     fn take_cipher(&self) -> &Aes256GcmSiv;
     fn take_nonce(&self) -> &Nonce;
-    fn take_plaintext(&self) -> &Vec<u8>;
-    fn take_ciphertext(&self) -> &Vec<u8>;
     fn get_cipher(&self) -> Aes256GcmSiv;
 }
 
@@ -38,8 +30,6 @@ impl AesGcmSivCrypto {
         let mut buf = [0u8; 12];
         getrandom::getrandom(&mut buf).expect("getrandom::getrandom(&mut buf)");
         let mut crypto = AesGcmSivCrypto {
-            plaintext: vec![],
-            ciphertext: vec![],
             key,
             cipher: Aes256GcmSiv::new(&key),
             nonce: *Nonce::from_slice(&buf[..]),
@@ -48,12 +38,6 @@ impl AesGcmSivCrypto {
         crypto.set_cipher();
         crypto.set_nonce().expect("secure.set_nonce()");
         crypto
-    }
-    pub fn set_plaintext(&mut self, source: Vec<u8>) {
-        self.plaintext = source
-    }
-    pub fn set_ciphertext(&mut self, source: Vec<u8>) {
-        self.ciphertext = source
     }
     pub fn set_key(&mut self) {
         self.key = Aes256GcmSiv::generate_key(&mut OsRng);
@@ -76,12 +60,6 @@ impl AesGcmSivCrypto {
     pub fn take_nonce(&self) -> &Nonce {
         &self.nonce
     }
-    pub fn take_plaintext(&self) -> &Vec<u8> {
-        &self.plaintext
-    }
-    pub fn take_ciphertext(&self) -> &Vec<u8> {
-        &self.ciphertext
-    }
     pub fn get_cipher(&self) -> Aes256GcmSiv {
         self.cipher.clone()
     }
@@ -92,18 +70,10 @@ impl RsaCrypto {
         let mut rng = rand::thread_rng();
         let pvt_key = RsaPrivateKey::new(&mut rng, 2048).expect("RsaPrivateKey::new(&mut rng, bit)");
         RsaCrypto {
-            plaintext: vec![],
-            ciphertext: vec![],
             public_key: RsaPublicKey::from(&pvt_key),
             private_key: pvt_key,
             rng,
         }
-    }
-    pub fn set_plaintext(&mut self, source: Vec<u8>) {
-        self.plaintext = source
-    }
-    pub fn set_ciphertext(&mut self, source: Vec<u8>) {
-        self.ciphertext = source
     }
     pub fn set_keys(&mut self, bit: usize) -> std::io::Result<()> {
         self.rng = rand::thread_rng();
@@ -119,12 +89,6 @@ impl RsaCrypto {
     }
     pub fn take_private_key(&self) -> &RsaPrivateKey {
         &self.private_key
-    }
-    pub fn take_plaintext(&self) -> &Vec<u8> {
-        &self.plaintext
-    }
-    pub fn take_ciphertext(&self) -> &Vec<u8> {
-        &self.ciphertext
     }
     pub fn get_rng(&self) -> ThreadRng {
         self.rng.clone()

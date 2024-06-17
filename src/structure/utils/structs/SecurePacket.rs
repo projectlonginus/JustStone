@@ -5,7 +5,6 @@ impl SecurePacket {
         SecurePacket {
             encrypt_data_block_length: vec![0, 0, 0, 0, 0, 0],
             encrypted_packet: StructStone::new(),
-            secure_stone: vec![],
         }
     }
 
@@ -14,8 +13,7 @@ impl SecurePacket {
         data_size.resize(6, 0);
         Self {
             encrypt_data_block_length: data_size,
-            encrypted_packet: encrypted_packet.to_owned(),
-            secure_stone: encrypted_packet.stone.to_owned(),
+            encrypted_packet,
         }
     }
 }
