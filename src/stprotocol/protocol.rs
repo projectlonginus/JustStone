@@ -45,7 +45,7 @@ impl Client {
 
     pub fn secure(ip: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Client {
         Client {
-            session: Session::secure(format!("{}:{}", ip, 6974).as_str(), handshake_type, encrypt_type),
+ add             session: Session::secure(format!("{}:{}", ip, 6974).as_str(), handshake_type, encrypt_type),
             exploits: Exploits::default(),
         }
     }
