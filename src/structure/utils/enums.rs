@@ -1,10 +1,6 @@
-use crate::{
-    structure::{
-        utils::{
-            structs::define::{SecureHandshakePacket, SecurePacket, StructStone},
-            traits::define::Detector
-        }
-    }
+use crate::structure::utils::{
+    structs::define::{SecureHandshakePacket, SecurePacket, StructStone},
+    traits::define::Detector,
 };
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -43,7 +39,7 @@ pub enum HandshakeType {
     RSA,
     DiffieHellman,
     #[default]
-    NoHandshake
+    NoHandshake,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -53,7 +49,7 @@ pub enum EncryptType {
     AesGcm,
     AesGcmSiv,
     #[default]
-    NotEncryption,
+    NoEncryption,
 }
 
 #[derive(Debug, Clone)]
@@ -87,6 +83,7 @@ pub enum PacketError {
     NotSecureHandshakePacket,
     UnexpectedError(String),
 }
+
 #[derive(Debug)]
 pub enum HeaderError {
     StatusIsNot4Bytes,

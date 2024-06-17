@@ -12,28 +12,28 @@ use crate::{
     structure::{
         packet::{
             connection,
-            secure_connection
+            secure_connection,
         },
         utils::{
             enums::{
-                EncryptType::NotEncryption,
-                Packet,
-                StoneTransferProtocol::Connection,
+                EncryptType,
+                EncryptType::NoEncryption,
                 HandshakeType,
+                HandshakeType::{NoHandshake, RSA},
+                Packet,
                 ParseError,
-                EncryptType
+                StoneTransferProtocol::Connection,
             },
             structs::define::{
-                StructStone,
-                StructStonePayload,
                 SecureHandshakePacket,
                 SecurePacket,
+                StructStone,
+                StructStonePayload,
             },
-            traits::define::Detector
-        }
-    }
+            traits::define::Detector,
+        },
+    },
 };
-use crate::structure::utils::enums::HandshakeType::{NoHandshake, RSA};
 
 impl HandleSession for Session {
     fn new(address: &str, packet: Packet) -> std::io::Result<TcpStream> {
@@ -41,14 +41,14 @@ impl HandleSession for Session {
             Ok(mut socket) => {
                 socket.write_all(packet.clone().get_stone().unwrap())?;
                 Ok(socket)
-            },
+            }
             Err(e) => Err(e)
         }
     }
 
     fn normal(address: &str) -> Session {
         match Self::new(address, connection()) {
-            Ok(socket) => Session::set(NoHandshake, NotEncryption, socket, connection()),
+            Ok(socket) => Session::set(NoHandshake, NoEncryption, socket, connection()),
             Err(_) => panic!("normal connection error")
         }
     }
@@ -61,7 +61,7 @@ impl HandleSession for Session {
     }
 
     fn encryption(&mut self) -> Result<(), ParseError> {
-        let encryption = if  self.is_encryption() { EncryptType::AesGcmSiv } else { return Err(ParseError::Unimplemented("".to_string())) };
+        let encryption = if self.is_encryption() { EncryptType::AesGcmSiv } else { return Err(ParseError::Unimplemented("".to_string())); };
         let packet = match self.take_packet() {
             Packet::StructStone(packet) => packet.clone(),
             _ => return Err(ParseError::Unimplemented("".to_string()))
@@ -83,7 +83,7 @@ impl HandleSession for Session {
                     Ok(result) => Packet::from(result),
                     Err(error) => return Err(error)
                 }
-            },
+            }
         };
 
         self.set_packet(encrypted_packet);

@@ -59,7 +59,7 @@ impl PacketBuilder {
     pub fn load_builder(packet: &StructStone) -> PacketBuilder {
         let encryption = match packet.is_encryption() {
             true => EncryptType::AesGcmSiv,
-            false => EncryptType::NotEncryption
+            false => EncryptType::NoEncryption
         };
         PacketBuilder::from(packet.is_compression(), encryption, packet.get_type(), packet.get_payload())
     }

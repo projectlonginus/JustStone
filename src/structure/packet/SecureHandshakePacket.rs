@@ -21,6 +21,8 @@ impl SecureHandshakePacket {
     pub fn build(mut source: StructStone, handshake_type: &HandshakeType, encrypt_type: &EncryptType) -> Result<SecureHandshakePacket, ParseError> {
         let packet = SecureHandshakePacket::new();
 
+        println!("{:?}", encrypt_type);
+
         if encrypt_type != &EncryptType::AesGcmSiv {
             return Err(ParseError::Unimplemented("Encryption algorithms other than AesGcmSiv have not yet been implemented.".to_string()));
         }

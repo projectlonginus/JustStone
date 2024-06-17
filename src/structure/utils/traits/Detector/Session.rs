@@ -1,13 +1,14 @@
 use crate::{
     stprotocol::Session,
     structure::utils::{
-        enums::EncryptType::NotEncryption,
+        enums::{
+            EncryptType::NoEncryption,
+            StoneTransferProtocol,
+        },
+        structs::define::{StructStoneHeader, StructStonePayload},
         traits::define::Detector,
-    }
-    ,
+    },
 };
-use crate::structure::utils::enums::StoneTransferProtocol;
-use crate::structure::utils::structs::define::{StructStoneHeader, StructStonePayload};
 
 impl Detector for Session {
     fn display(&self) {
@@ -83,7 +84,7 @@ impl Detector for Session {
     }
 
     fn is_encryption(&self) -> bool {
-        if self.encryption == NotEncryption {
+        if self.encryption == NoEncryption {
             false
         } else {
             true
