@@ -38,5 +38,5 @@ pub trait Detector {
     fn get_stone(&self) -> Option<&[u8]>;
     fn take_stone(&self) -> Option<&[u8]>;
     fn is_compression(&self) -> bool;
-    fn is_encrypted(&self) -> bool;
+    fn is_encryption(&self) -> bool;
 }

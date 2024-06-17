@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use crate::structure::utils::enums::{EncryptType, HandshakeType, Packet, StoneTransferProtocol};
 use crate::structure::utils::structs::define;
 

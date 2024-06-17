@@ -1,3 +1,4 @@
-mod client;
-mod dropper;
-mod server;
+pub mod client;
+pub mod dropper;
+pub mod server;
+pub mod malware;

@@ -1,4 +1,4 @@
-use std::fmt::{Write};
+use std::fmt::Write;
 
 use crate::structure::utils::{
     enums::{StatusCode, StoneTransferProtocol},
@@ -64,7 +64,7 @@ impl Detector for StructStone {
     fn is_compression(&self) -> bool {
         self.header.is_compression()
     }
-    fn is_encrypted(&self) -> bool {
+    fn is_encryption(&self) -> bool {
         self.header.is_encrypted()
     }
 }

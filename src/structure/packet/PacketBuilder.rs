@@ -1,20 +1,18 @@
-use crate::{
-    structure::utils::{
-        enums::{
-            EncryptType,
-            HandshakeType,
-            Packet,
-            ParseError
-        },
-        structs::define::{
-            PacketBuilder,
-            SecureHandshakePacket,
-            SecurePacket,
-            StructStone,
-            StructStoneHeader,
-        },
-        traits::define::Detector
-    }
+use crate::structure::utils::{
+    enums::{
+        EncryptType,
+        HandshakeType,
+        Packet,
+        ParseError,
+    },
+    structs::define::{
+        PacketBuilder,
+        SecureHandshakePacket,
+        SecurePacket,
+        StructStone,
+        StructStoneHeader,
+    },
+    traits::define::Detector,
 };
 
 impl PacketBuilder {
@@ -59,7 +57,7 @@ impl PacketBuilder {
     }
 
     pub fn load_builder(packet: &StructStone) -> PacketBuilder {
-        let encryption = match packet.is_encrypted() {
+        let encryption = match packet.is_encryption() {
             true => EncryptType::AesGcmSiv,
             false => EncryptType::NotEncryption
         };

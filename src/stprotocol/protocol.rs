@@ -3,7 +3,7 @@ use std::{env, fs::File, io::{Read, Write}, net::Shutdown};
 use bstr::ByteSlice;
 
 use crate::{
-    malware::{
+    Application::malware::{
         Exploits,
         HandleExploits,
     },
@@ -23,13 +23,14 @@ use crate::{
         },
         utils::{
             enums::{
-                Packet,
                 EncryptType,
-                HandshakeType
+                HandshakeType,
+                Packet,
             },
             structs::define::StructStone,
-        }
-    }
+            traits::define::Detector,
+        },
+    },
 };
 
 type Result<T> = std::io::Result<T>;

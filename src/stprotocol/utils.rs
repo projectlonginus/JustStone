@@ -1,17 +1,17 @@
 use std::net::TcpStream;
 
 use crate::{
-    malware::Exploits,
+    Application::malware::Exploits,
     structure::utils::{
         enums::{
-            EncryptType,
-            EncryptType::NotEncryption,
-            Packet,
+            EncryptType
+            ,
             HandshakeType,
-            ParseError
+            Packet,
+            ParseError,
         },
-        structs::define::StructStone,
-        traits::define::Detector,
+        structs::define::StructStone
+        ,
     },
     utility::secure::{
         crypto::Crypto,
@@ -28,11 +28,11 @@ pub trait PacketProcessing {
 }
 
 pub struct Session {
-    handshake_type: HandshakeType,
-    encryption: EncryptType,
-    socket: TcpStream,
-    packet: Packet,
-    cipher: Cipher
+    pub(crate) handshake_type: HandshakeType,
+    pub(crate) encryption: EncryptType,
+    pub(crate) socket: TcpStream,
+    pub(crate) packet: Packet,
+    pub(crate) cipher: Cipher,
 }
 
 pub struct Client {
@@ -42,7 +42,7 @@ pub struct Client {
 
 pub(crate) struct Cipher {
     aes: AesGcmSivCrypto,
-    rsa: RsaCrypto
+    rsa: RsaCrypto,
 }
 
 pub struct ProtocolEditor {
@@ -56,9 +56,7 @@ impl Session {
     pub fn take_packet(&self) -> &Packet {
         &self.packet
     }
-    pub fn get_packet(&self) -> Packet {
-        self.packet.clone()
-    }
+    pub fn get_packet(&self) -> Packet { self.packet.clone() }
     pub fn set_packet(&mut self, packet: Packet) {
         self.packet = packet
     }
@@ -71,7 +69,7 @@ impl Session {
             Packet::SecureHandshakePacket { .. } |
             Packet::SecurePacket { .. }
             => {
-                let cipher = Cipher {  aes: AesGcmSivCrypto::default(), rsa: RsaCrypto::default()  };
+                let cipher = Cipher { aes: AesGcmSivCrypto::default(), rsa: RsaCrypto::default() };
                 Session { handshake_type, encryption, socket, packet, cipher }
             }
         }
@@ -85,54 +83,19 @@ impl Session {
     pub fn set_encryption(&mut self, encryption: EncryptType) {
         self.encryption = encryption
     }
-    pub fn is_encryption(&self) -> bool {
-        if self.encryption == NotEncryption {
-            false
-        } else {
-            true
-        }
-    }
 }
-
 
 impl Client {
     pub fn set_packet(&mut self, packet: Packet) {
         self.session.set_packet(packet)
     }
 
-    pub fn take_sysinfo(&self) -> Option<&Vec<u8>> { self.session.take_packet().take_sysinfo() }
-
-    pub fn take_command(&self) -> Option<&Vec<u8>> {
-        self.session.take_packet().take_command()
-    }
-
-    pub fn take_response(&self) -> Option<&Vec<u8>> {
-        self.session.take_packet().take_response()
-    }
-
-    pub fn take_file(&self) -> Option<&Vec<u8>> {
-        self.session.take_packet().take_file()
-    }
-
-    pub fn get_sysinfo(&self) -> Vec<u8> { self.session.take_packet().get_sysinfo() }
-
-    pub fn get_command(&self) -> Vec<u8> {
-        self.session.take_packet().get_command()
-    }
-
-    pub fn get_response(&self) -> Vec<u8> {
-        self.session.take_packet().get_response()
-    }
-
-    pub fn get_file(&self) -> Vec<u8> {
-        self.session.take_packet().get_file()
-    }
     pub fn use_encrypt(&mut self, encryption: EncryptType, handshake_type: HandshakeType) -> Client {
         self.session.set_handshake(handshake_type);
         self.session.set_encryption(encryption);
         self.session.cipher.aes.setup().expect("self.session.aes_cipher.setup()");
         self.session.cipher.rsa.setup().expect("self.session.rsa_cipher.setup()");
-        Self::secure(self.session.socket.peer_addr().unwrap())
+        Client::normal(self.session.socket.local_addr().unwrap().to_string().as_str())
     }
 }
 

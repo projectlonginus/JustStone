@@ -155,9 +155,9 @@ impl Detector for Packet {
             false
         }
     }
-    fn is_encrypted(&self) -> bool {
+    fn is_encryption(&self) -> bool {
         if let Some(payload) = self.payload() {
-            payload.is_encrypted()
+            payload.is_encryption()
         } else {
             false
         }
