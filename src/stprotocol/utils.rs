@@ -127,10 +127,11 @@ impl Client {
     pub fn get_file(&self) -> Vec<u8> {
         self.session.take_packet().get_file()
     }
-    pub fn use_encrypt(&mut self, encryption: EncryptType) {
+    pub fn use_encrypt(&mut self, encryption: EncryptType, handshake_type: HandshakeType) {
+        self.session.set_handshake(handshake_type);
+        self.session.set_encryption(encryption);
         self.session.cipher.aes.setup().expect("self.session.aes_cipher.setup()");
         self.session.cipher.rsa.setup().expect("self.session.rsa_cipher.setup()");
-        self.session.set_encryption(encryption)
     }
 }
 

@@ -17,7 +17,7 @@ use crate::{
 
 impl SecurePacket {
     pub fn build(mut source: StructStone, encrypt_type: &EncryptType) -> Result<SecurePacket, ParseError> {
-        let mut packet = SecurePacket::new();
+        let packet = SecurePacket::new();
         let mut encrypt_method = match encrypt_type {
             &EncryptType::AesGcmSiv => AesGcmSivCrypto::default(),
             _ => return Err(ParseError::Unimplemented("Encryption algorithms other than AesGcmSiv have not yet been implemented.".to_string()))

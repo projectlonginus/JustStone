@@ -19,7 +19,7 @@ use crate::{
 
 impl SecureHandshakePacket {
     pub fn build(mut source: StructStone, handshake_type: &HandshakeType, encrypt_type: &EncryptType) -> Result<SecureHandshakePacket, ParseError> {
-        let mut packet = SecureHandshakePacket::new();
+        let packet = SecureHandshakePacket::new();
 
         if encrypt_type != &EncryptType::AesGcmSiv {
             return Err(ParseError::Unimplemented("Encryption algorithms other than AesGcmSiv have not yet been implemented.".to_string()));

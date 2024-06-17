@@ -20,7 +20,6 @@ use crate::{
         exploit,
         response,
         structs::define::StructStone,
-        traits::define::Detector,
         upload,
     },
 };

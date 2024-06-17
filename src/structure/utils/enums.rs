@@ -109,7 +109,6 @@ impl Packet {
             Packet::StructStone(payload) => Some(payload),
             Packet::SecurePacket(payload) => Some(payload),
             Packet::SecureHandshakePacket(payload) => Some(payload),
-            _ => None,
         }
     }
 }
