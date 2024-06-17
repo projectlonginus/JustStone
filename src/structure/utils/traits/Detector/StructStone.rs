@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Write};
+use std::fmt::{Write};
 
 use crate::structure::{
     enums::{StatusCode, StoneTransferProtocol},

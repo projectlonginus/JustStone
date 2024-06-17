@@ -1,7 +1,7 @@
 use crate::structure::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
 use crate::structure::traits::define::Detector;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(PartialEq)]
 pub enum StoneTransferProtocol {
     Connection,
     Handshake,
@@ -30,13 +30,13 @@ pub enum StatusCode {
     Modulated,   // 패킷이 변조되거나 손상됨
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(PartialEq)]
 pub enum HandshakeType {
     RSA,
     DiffieHellman,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(PartialEq)]
 pub enum EncryptType {
     RSA,
     AesCbc,
@@ -77,14 +77,12 @@ pub enum PacketError {
     UnexpectedError(String),
 }
 
-#[derive(Debug)]
 pub enum HeaderError {
     StatusIsNot4Bytes,
     TypeIsNot4Bytes,
     SizeIsNot4Bytes,
 }
 
-#[derive(Debug)]
 pub enum ParseError {
     SizeIsNot4Bytes,
     SizeIsNot2Bytes,

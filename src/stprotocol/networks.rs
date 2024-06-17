@@ -68,7 +68,7 @@ impl HandleSession for Session {
         let mut buffer: Vec<u8> = vec![0; buffer_size];
         match self.take_socket().read_exact(&mut buffer) {
             Ok(_) => buffer_size,
-            Err(e) => panic!(e)
+            Err(e) => panic!("{}", e)
         };
 
         buffer

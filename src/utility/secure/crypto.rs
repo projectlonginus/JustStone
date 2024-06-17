@@ -1,7 +1,7 @@
 use aes_gcm_siv::aead::AeadMut;
 use rsa::Pkcs1v15Encrypt;
 
-use crate::utility::secure::utils::{AesCrypto, AesGcmSivCrypto, RsaCrypto};
+use crate::utility::secure::utils::{AesGcmSivCrypto, RsaCrypto};
 
 pub trait Crypto {
     fn setup(&mut self) -> std::io::Result<()>;

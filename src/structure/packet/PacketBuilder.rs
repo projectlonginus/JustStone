@@ -16,7 +16,7 @@ use crate::structure::{
 
 impl PacketBuilder {
     pub fn packet(&self) -> Packet {
-        let mut output = self.output();
+        let output = self.output();
         Packet::from(
             StructStone::build(
                 StructStoneHeader::build(
@@ -30,7 +30,7 @@ impl PacketBuilder {
     }
 
     pub fn raw_packet(&self) -> StructStone {
-        let mut output = self.output();
+        let output = self.output();
         StructStone::build(
             StructStoneHeader::build(
                 self.is_compression(),
@@ -43,15 +43,15 @@ impl PacketBuilder {
 
     pub fn handshake_packet(&self, handshake_type: HandshakeType) -> Result<Packet, ParseError> {
         match SecureHandshakePacket::build(self.raw_packet(), handshake_type, EncryptType::AesGcmSiv) {
-            Ok(Packet) => Ok(Packet::from(Packet)),
-            Err(Error) => Err(Error)
+            Ok(packet) => Ok(Packet::from(packet)),
+            Err(error) => Err(error)
         }
     }
 
     pub fn secure_packet(&self, encrypt_type: EncryptType) -> Result<Packet, ParseError> {
         match SecurePacket::build(self.raw_packet(), encrypt_type) {
-            Ok(Packet) => Ok(Packet::from(Packet)),
-            Err(Error) => Err(Error)
+            Ok(packet) => Ok(Packet::from(packet)),
+            Err(error) => Err(error)
         }
     }
 }
