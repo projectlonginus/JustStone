@@ -10,38 +10,53 @@ use utils::Session;
 use crate::{
     stprotocol::{HandleSession, utils},
     structure::{
-        connection,
-        enums::{
-            EncryptType::NotEncryption,
-            Packet,
-            StoneTransferProtocol::Connection,
-            HandshakeType,
-            ParseError,
-            EncryptType
+        packet::{
+            connection,
+            secure_connection
         },
-        structs::define::{
-            StructStone,
-            StructStonePayload,
-            SecureHandshakePacket,
-            SecurePacket,
-        },
-        traits::define::Detector,
+        utils::{
+            enums::{
+                EncryptType::NotEncryption,
+                Packet,
+                StoneTransferProtocol::Connection,
+                HandshakeType,
+                ParseError,
+                EncryptType
+            },
+            structs::define::{
+                StructStone,
+                StructStonePayload,
+                SecureHandshakePacket,
+                SecurePacket,
+            },
+            traits::define::Detector
+        }
     }
 };
+use crate::structure::utils::enums::HandshakeType::{NoHandshake, RSA};
 
 impl HandleSession for Session {
-    fn new(address: &str) -> Session {
-        if let Ok(mut socket) = TcpStream::connect(address) {
-            let packet = match Packet::unwrap(connection()) {
-                Ok(p) => p,
-                _ => {StructStonePayload::build(false, NotEncryption, Connection, vec![]).raw_packet()}
-            };
-            socket
-                .write_all(packet.get_stone().unwrap())
-                .expect("TODO: panic message");
-            Session::set(HandshakeType::RSA, NotEncryption, socket, Packet::from(packet))
-        } else {
-            Self::new(address)
+    fn new(address: &str, packet: Packet) -> std::io::Result<TcpStream> {
+        match TcpStream::connect(address) {
+            Ok(mut socket) => {
+                socket.write_all(packet.clone().get_stone().unwrap())?;
+                Ok(socket)
+            },
+            Err(e) => Err(e)
+        }
+    }
+
+    fn normal(address: &str) -> Session {
+        match Self::new(address, connection()) {
+            Ok(socket) => Session::set(NoHandshake, NotEncryption, socket, connection()),
+            Err(_) => panic!("normal connection error")
+        }
+    }
+
+    fn secure(address: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Session {
+        match Self::new(address, secure_connection(&handshake_type)) {
+            Ok(socket) => Session::set(handshake_type, encrypt_type, socket, secure_connection(&RSA)),
+            Err(_) => panic!("secure connection error")
         }
     }
 
@@ -52,14 +67,18 @@ impl HandleSession for Session {
             _ => return Err(ParseError::Unimplemented("".to_string()))
         };
 
+        println!("{:?}", packet.get_type());
+
         let encrypted_packet = match packet.get_type() {
             Connection => {
+                println!("핸드셰이크");
                 match SecureHandshakePacket::build(packet, self.take_handshake_type(), &encryption) {
                     Ok(result) => Packet::from(result),
                     Err(error) => return Err(error)
                 }
             }
             _ => {
+                println!("암호화");
                 match SecurePacket::build(packet, &encryption) {
                     Ok(result) => Packet::from(result),
                     Err(error) => return Err(error)
@@ -77,6 +96,7 @@ impl HandleSession for Session {
 
     fn send(&mut self) -> std::io::Result<&Packet> {
         if self.is_encryption() {
+            println!("암호화 할거임");
             self.encryption().expect("Packet encryption failed.");
         }
 
@@ -107,7 +127,7 @@ impl HandleSession for Session {
             return self.get_packet();
         }
 
-        let header = crate::structure::structs::define::StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고
+        let header = crate::structure::utils::structs::define::StructStoneHeader::load(self.recv(12)); //만함수 인자로 입력받은 헤더의 페이로드 크기가 12바이트 (기본 헤더 ) 라면 새로운 헤더 (12바이트 고정)을 수신받고
         return self.receiving(StructStone::build(header, payload)); // 새로운 헤더를 재귀함수로 입력함 이 경우 재귀함수에서 buffer_size != 12 문에 걸려서 페이로드를 수신받게 됨
     }
 }

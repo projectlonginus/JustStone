@@ -14,22 +14,37 @@ use crate::{
         Session,
     },
     structure::{
-        disconnect,
-        download,
-        enums::Packet,
-        exploit,
-        response,
-        structs::define::StructStone,
-        upload,
-    },
+        packet::{
+            disconnect,
+            download,
+            exploit,
+            response,
+            upload,
+        },
+        utils::{
+            enums::{
+                Packet,
+                EncryptType,
+                HandshakeType
+            },
+            structs::define::StructStone,
+        }
+    }
 };
 
 type Result<T> = std::io::Result<T>;
 
 impl Client {
-    pub fn new(ip: &str) -> Client {
+    pub fn normal(ip: &str) -> Client {
         Client {
-            session: Session::new(format!("{}:{}", ip, 6974).as_str()),
+            session: Session::normal(format!("{}:{}", ip, 6974).as_str()),
+            exploits: Exploits::default(),
+        }
+    }
+
+    pub fn secure(ip: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Client {
+        Client {
+            session: Session::secure(format!("{}:{}", ip, 6974).as_str(), handshake_type, encrypt_type),
             exploits: Exploits::default(),
         }
     }

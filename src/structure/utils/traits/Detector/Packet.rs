@@ -1,4 +1,4 @@
-use crate::structure::{
+use crate::structure::utils::{
     enums::{
         Packet,
         StoneTransferProtocol,

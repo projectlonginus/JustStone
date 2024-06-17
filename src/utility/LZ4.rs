@@ -1,11 +1,17 @@
 use lz4_flex::block::{compress_prepend_size, decompress_size_prepended, DecompressError};
 
-use crate::structure::{
-    enums::StoneTransferProtocol,
-    structs::define::{StructStone, StructStonePayload},
-    traits::define::Detector,
+use crate::{
+    structure::{
+        utils::{
+            enums::{
+                StoneTransferProtocol,
+                EncryptType
+            },
+            structs::define::{StructStone, StructStonePayload},
+            traits::define::Detector,
+        }
+    }
 };
-use crate::structure::enums::EncryptType;
 
 pub trait CompressHandler {
     fn lz4_compress(&mut self);

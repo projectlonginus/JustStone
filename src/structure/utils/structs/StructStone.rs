@@ -1,4 +1,4 @@
-use crate::structure::structs::define::{StructStone, StructStoneHeader, StructStonePayload};
+use crate::structure::utils::structs::define::{StructStone, StructStoneHeader, StructStonePayload};
 
 impl StructStone {
     pub fn set(&mut self, source: StructStone) {

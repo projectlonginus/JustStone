@@ -1,5 +1,5 @@
-pub mod define;
-mod TypeManager;
-mod Detector;
-mod TrtFrom;
-mod From;
+pub(crate) mod define;
+pub(crate)mod TypeManager;
+pub(crate)mod Detector;
+pub(crate)mod TrtFrom;
+pub(crate)mod From;

@@ -1,10 +1,15 @@
-use crate::structure::enums::{EncryptType, HandshakeType};
-use crate::structure::utils::{
-    enums::{
-        StatusCode,
-        StoneTransferProtocol,
-    },
-    traits::define::ProtocolCodec,
+use crate::{
+    structure::{
+        utils::{
+            enums::{
+                EncryptType,
+                HandshakeType,
+                StatusCode,
+                StoneTransferProtocol
+            },
+            traits::define::ProtocolCodec
+        }
+    }
 };
 
 impl StoneTransferProtocol {
@@ -104,6 +109,7 @@ impl ProtocolCodec for HandshakeType {
         match self {
             HandshakeType::RSA => { vec![0, 1] }
             HandshakeType::DiffieHellman => { vec![1, 0] }
+            HandshakeType::NoHandshake => { vec![0, 0] }
         }
     }
 
@@ -111,6 +117,7 @@ impl ProtocolCodec for HandshakeType {
         match self {
             HandshakeType::RSA => { "RSA".to_string() }
             HandshakeType::DiffieHellman => { "DiffieHellman".to_string() }
+            HandshakeType::NoHandshake => { "NoHandshake".to_string() }
         }
     }
 }

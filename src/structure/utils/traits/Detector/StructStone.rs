@@ -1,6 +1,6 @@
 use std::fmt::{Write};
 
-use crate::structure::{
+use crate::structure::utils::{
     enums::{StatusCode, StoneTransferProtocol},
     structs::define::{StructStone, StructStoneHeader, StructStonePayload},
     traits::define::Detector,

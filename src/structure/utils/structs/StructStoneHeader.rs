@@ -1,5 +1,11 @@
-use crate::structure::enums::HeaderError;
-use crate::structure::structs::define::StructStoneHeader;
+use crate::{
+    structure::{
+        utils::{
+            enums::HeaderError,
+            structs::define::StructStoneHeader
+        }
+    }
+};
 
 impl StructStoneHeader {
     pub fn from(stone_status: Vec<u8>, stone_type: Vec<u8>, stone_size: Vec<u8>) -> StructStoneHeader {

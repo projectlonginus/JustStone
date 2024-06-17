@@ -1,5 +1,5 @@
 use crate::{
-    structure::{
+    structure::utils::{
         enums::{
             EncryptType,
             HandshakeType,
@@ -28,6 +28,7 @@ impl SecureHandshakePacket {
         let mut handshake_method = match handshake_type {
             &HandshakeType::RSA => RsaCrypto::default(),
             &HandshakeType::DiffieHellman => return Err(ParseError::Unimplemented("The handshake method using DiffieHellman algorithm is still incomplete. Please use the RSA handshake method.".to_string())),
+            &HandshakeType::NoHandshake => return Err(ParseError::Unimplemented("No Handshake".to_string())),
         };
 
         source.stone = handshake_method.encrypt(source.stone);

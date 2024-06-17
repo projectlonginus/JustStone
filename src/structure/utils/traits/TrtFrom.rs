@@ -1,5 +1,11 @@
-use crate::structure::enums::{Packet, PacketError};
-use crate::structure::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
+use crate::{
+    structure::{
+        utils::{
+            enums::{Packet, PacketError},
+            structs::define::{SecureHandshakePacket, SecurePacket, StructStone}
+        }
+    }
+};
 
 impl TryFrom<Packet> for StructStone {
     type Error = PacketError;

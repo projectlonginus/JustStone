@@ -1,4 +1,4 @@
-use crate::structure::{
+use crate::structure::utils::{
     structs::define::StructStoneHeader,
     traits::define::ProtocolCodec,
 };
@@ -18,7 +18,7 @@ impl StructStoneHeader {
 
     pub fn build(
         compression: &bool,
-        protocol: &crate::structure::enums::StoneTransferProtocol,
+        protocol: &crate::structure::utils::enums::StoneTransferProtocol,
         size: usize,
     ) -> StructStoneHeader {
         let stone_status: Vec<u8> = match &compression {

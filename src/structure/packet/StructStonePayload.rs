@@ -3,12 +3,16 @@ use sysinfo::System;
 
 use crate::{
     structure::{
-        enums::StoneTransferProtocol,
-        structs::define::{PacketBuilder, StructStonePayload},
+        utils::{
+            enums::{
+                StoneTransferProtocol,
+                EncryptType
+            },
+            structs::define::{PacketBuilder, StructStonePayload},
+        }
     },
     utility::LZ4::CompressHandler,
 };
-use crate::structure::enums::EncryptType;
 
 pub const PACKET_DELIMITER: &[u8; 2] = b"\r\n";
 

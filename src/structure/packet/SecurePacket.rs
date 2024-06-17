@@ -1,5 +1,5 @@
 use crate::{
-    structure::{
+    structure::utils::{
         enums::{
             EncryptType,
             ParseError,

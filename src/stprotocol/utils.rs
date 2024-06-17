@@ -2,7 +2,7 @@ use std::net::TcpStream;
 
 use crate::{
     malware::Exploits,
-    structure::{
+    structure::utils::{
         enums::{
             EncryptType,
             EncryptType::NotEncryption,
@@ -127,17 +127,20 @@ impl Client {
     pub fn get_file(&self) -> Vec<u8> {
         self.session.take_packet().get_file()
     }
-    pub fn use_encrypt(&mut self, encryption: EncryptType, handshake_type: HandshakeType) {
+    pub fn use_encrypt(&mut self, encryption: EncryptType, handshake_type: HandshakeType) -> Client {
         self.session.set_handshake(handshake_type);
         self.session.set_encryption(encryption);
         self.session.cipher.aes.setup().expect("self.session.aes_cipher.setup()");
         self.session.cipher.rsa.setup().expect("self.session.rsa_cipher.setup()");
+        Self::secure(self.session.socket.peer_addr().unwrap())
     }
 }
 
 
 pub trait HandleSession {
-    fn new(address: &str) -> Session;
+    fn new(address: &str, packet: Packet) -> std::io::Result<TcpStream>;
+    fn normal(address: &str) -> Session;
+    fn secure(address: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Session;
     fn encryption(&mut self) -> Result<(), ParseError>;
     fn decryption(&mut self) -> Result<(), ParseError>;
     fn send(&mut self) -> SResult<&Packet>;

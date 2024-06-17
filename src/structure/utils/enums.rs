@@ -1,7 +1,13 @@
-use crate::structure::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
-use crate::structure::traits::define::Detector;
+use crate::{
+    structure::{
+        utils::{
+            structs::define::{SecureHandshakePacket, SecurePacket, StructStone},
+            traits::define::Detector
+        }
+    }
+};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum StoneTransferProtocol {
     Connection,
     Handshake,
@@ -14,11 +20,13 @@ pub enum StoneTransferProtocol {
     Upload,
     Download,
 
+    #[default]
     Unknown,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum StatusCode {
+    #[default]
     Normal,
     // 압축 x 암호화 x
     Compressed,
@@ -30,18 +38,21 @@ pub enum StatusCode {
     Modulated,   // 패킷이 변조되거나 손상됨
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Default)]
 pub enum HandshakeType {
     RSA,
     DiffieHellman,
+    #[default]
+    NoHandshake
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum EncryptType {
     RSA,
     AesCbc,
     AesGcm,
     AesGcmSiv,
+    #[default]
     NotEncryption,
 }
 

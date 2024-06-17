@@ -3,11 +3,11 @@ pub use protocol::*;
 pub use utils::*;
 
 use crate::structure::{
-    enums::{
+    utils::enums::{
         Packet,
         StoneTransferProtocol,
     },
-    traits::define::Detector,
+    utils::traits::define::Detector,
 };
 
 mod networks;

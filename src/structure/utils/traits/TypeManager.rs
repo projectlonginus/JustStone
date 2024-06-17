@@ -1,20 +1,27 @@
 use json::{JsonValue, object};
 
-use crate::structure::{
-    enums::{
-        StatusCode,
-        StoneTransferProtocol,
-    },
-    packet::StructStonePayload::PACKET_DELIMITER,
-    structs::define::{
-        StructRawStonePayload,
-        StructStoneHeader,
-        StructStonePayload,
-    },
-    traits::define::TypeManager,
-    utils::traits::define::ProtocolCodec,
+use crate::{
+    structure::{
+        packet::StructStonePayload::PACKET_DELIMITER,
+        utils::{
+            enums::{
+                StatusCode,
+                StoneTransferProtocol,
+            },
+            structs::define::{
+                StructRawStonePayload,
+                StructStoneHeader,
+                StructStonePayload,
+            },
+            traits::{
+                define::{
+                    TypeManager,
+                    ProtocolCodec
+                }
+            }
+        }
+    }
 };
-
 impl TypeManager for StructRawStonePayload {
     fn to_json(&self) -> JsonValue {
         return object! {

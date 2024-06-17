@@ -1,5 +1,5 @@
-use crate::structure::enums::Packet;
-use crate::structure::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
+use crate::structure::utils::enums::Packet;
+use crate::structure::utils::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
 
 impl From<StructStone> for Packet {
     fn from(payload: StructStone) -> Self {

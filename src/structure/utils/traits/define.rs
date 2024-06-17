@@ -1,6 +1,6 @@
 use json::JsonValue;
 
-use crate::structure::{
+use crate::structure::utils::{
     enums::StoneTransferProtocol,
     structs::define::{StructStoneHeader, StructStonePayload},
 };

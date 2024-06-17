@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use crate::{
-    structure::{
+    structure::utils::{
         enums::{
             StoneTransferProtocol,
             StatusCode
