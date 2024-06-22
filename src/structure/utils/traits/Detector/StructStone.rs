@@ -1,26 +1,30 @@
-use std::fmt::Write;
+use std::{
+    fmt::Write,
+    mem::replace
+};
 
 use crate::structure::utils::{
     enums::{StatusCode, StoneTransferProtocol},
     structs::define::{StructStone, StructStoneHeader, StructStonePayload},
     traits::define::Detector,
 };
+use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl Detector for StructStone {
     fn display(&self) {
         let mut output = String::new();
         writeln!(output, "\
         Header:
-        Status: {:?}
-        Type:   {:?}
+        Status: {:?} ({:?})
+        Type:   {:?} ({:?})
         Size:   {:?}\n\
         Payload:
         System information: {:?}
         Command input:      {:?}
         Response:           {:?}
         file:               {:?}",
-                 StatusCode::type_check(&self.header.stone_status),
-                 StoneTransferProtocol::type_check(&self.header.stone_type),
+                 StatusCode::get_type(&self.header.stone_status), self.header.stone_status,
+                 StoneTransferProtocol::get_type(&self.header.stone_type), self.header.stone_type,
                  self.get_size(),
                  self.payload.sysinfo,
                  self.payload.command_input,
@@ -31,35 +35,39 @@ impl Detector for StructStone {
         output.clear()
     }
     fn get_type(&self) -> StoneTransferProtocol {
-        StoneTransferProtocol::type_check(&self.header.stone_type)
+        StoneTransferProtocol::get_type(&self.header.stone_type)
     }
     fn get_size(&self) -> usize {
-        let length_bytes: &[u8] = &self.header.stone_size;
         let length = u32::from_le_bytes([
-            length_bytes[0],
-            length_bytes[1],
-            length_bytes[2],
-            length_bytes[3],
-        ]);
-        return length as usize;
+            self.header.stone_size[0],
+            self.header.stone_size[1],
+            self.header.stone_size[2],
+            self.header.stone_size[3],
+        ]) as usize;
+        usize::from(length)
     }
+
+    fn get_encryption(&mut self) -> EncryptionInfo {
+        EncryptionInfo::default()
+    }
+
+    fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.header, Default::default()) }
+    fn get_payload(&mut self) -> StructStonePayload { replace(&mut self.payload, Default::default()) }
+    fn get_sysinfo(&mut self) -> Vec<u8> { replace(&mut self.payload.sysinfo, Default::default()) }
+    fn get_command(&mut self) -> Vec<u8> { replace(&mut self.payload.command_input, Default::default()) }
+    fn get_response(&mut self) -> Vec<u8> { replace(&mut self.payload.response, Default::default()) }
+    fn get_file(&mut self) -> Vec<u8> { replace(&mut self.payload.file, Default::default()) }
+    fn get_stone(&mut self) -> Option<Vec<u8>> { Option::from(replace(&mut self.stone, Default::default())) }
+    fn take_header(&self) -> Option<&StructStoneHeader> { Option::from(&self.header) }
+    fn take_payload(&self) -> Option<&StructStonePayload> { Option::from(&self.payload) }
     fn take_sysinfo(&self) -> Option<&Vec<u8>> { Option::from(&self.payload.sysinfo) }
     fn take_command(&self) -> Option<&Vec<u8>> {
         Option::from(&self.payload.command_input)
     }
     fn take_response(&self) -> Option<&Vec<u8>> { Option::from(&self.payload.response) }
     fn take_file(&self) -> Option<&Vec<u8>> { Option::from(&self.payload.file) }
-    fn get_sysinfo(&self) -> Vec<u8> { self.payload.sysinfo.clone() }
-    fn get_command(&self) -> Vec<u8> { self.payload.command_input.clone() }
-    fn get_response(&self) -> Vec<u8> { self.payload.response.clone() }
-    fn get_file(&self) -> Vec<u8> { self.payload.file.clone() }
-    fn take_header(&self) -> Option<&StructStoneHeader> { Option::from(&self.header) }
-    fn take_payload(&self) -> Option<&StructStonePayload> { Option::from(&self.payload) }
-    fn get_header(&self) -> StructStoneHeader { self.header.clone() }
-    fn get_payload(&self) -> StructStonePayload { self.payload.clone() }
-    fn get_stone(&self) -> Option<&[u8]> { Option::from(self.stone.as_slice()) }
-    fn take_stone(&self) -> Option<&[u8]> {
-        Option::from(self.stone.as_slice())
+    fn take_stone(&self) -> Option<&Vec<u8>> {
+        Option::from(&self.stone)
     }
     fn is_compression(&self) -> bool {
         self.header.is_compression()

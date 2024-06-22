@@ -69,12 +69,18 @@ impl StructStonePayload {
         protocol: StoneTransferProtocol,
         payload: T,
     ) -> PacketBuilder {
-        let mut sysinfo = Self::sysinfo().as_bytes().to_vec();
+        println!("{:?}", encryption);
         let mut vec_payload = payload.as_ref().to_vec();
+        let mut sysinfo = match  encryption {
+            EncryptType::NoEncryption => Self::sysinfo().as_bytes().to_vec(),
+            _ => vec![]
+        };
+
         if compression {
             sysinfo.lz4_compress();
             vec_payload.lz4_compress();
         }
+        
         let output = match protocol {
             StoneTransferProtocol::Response | StoneTransferProtocol::ExecuteCmd => {
                 StructStonePayload::from(sysinfo, vec![], vec_payload, vec![])

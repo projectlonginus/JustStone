@@ -1,4 +1,4 @@
-use crate::structure::utils::enums::EncryptType;
+use crate::structure::utils::enums::{EncryptType, HandshakeType};
 
 #[derive(Clone, Debug, Default)]
 pub struct SecureHandshakePacket {
@@ -46,9 +46,16 @@ pub struct StructStone {
 }
 
 #[derive(Debug, Clone, Default)]
+pub struct EncryptionInfo {
+    pub(crate) Activated: bool,
+    pub(crate) Type: EncryptType,
+    pub(crate) Handshake_Type: HandshakeType
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct PacketBuilder {
     pub(crate) compression: bool,
-    pub(crate) encryption: EncryptType,
+    pub(crate) encryption: EncryptionInfo,
     pub(crate) protocol: crate::structure::utils::enums::StoneTransferProtocol,
     pub(crate) output: StructStonePayload,
 }

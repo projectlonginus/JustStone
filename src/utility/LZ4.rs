@@ -38,7 +38,7 @@ impl CompressHandler for StructStone {
         self.set(
             StructStonePayload::build(true,
                                       EncryptType::NoEncryption,
-                                      StoneTransferProtocol::type_check(&self.take_header().unwrap().stone_type),
+                                      StoneTransferProtocol::get_type(&self.take_header().unwrap().stone_type),
                                       self.take_payload().unwrap().get_non_empty_data(),
             ).raw_packet()
         );
@@ -51,7 +51,7 @@ impl CompressHandler for StructStone {
             StructStonePayload::build(
                 false,
                 EncryptType::NoEncryption,
-                StoneTransferProtocol::type_check(&self.take_header().unwrap().stone_type),
+                StoneTransferProtocol::get_type(&self.take_header().unwrap().stone_type),
                 payload,
             ).raw_packet()
         );

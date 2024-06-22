@@ -1,5 +1,6 @@
 use aes_gcm_siv::aead::AeadMut;
-use rsa::Pkcs1v15Encrypt;
+use rsa::Oaep;
+use sha2::Sha256;
 
 use crate::utility::secure::utils::{AesGcmSivCrypto, RsaCrypto};
 
@@ -21,29 +22,29 @@ impl Crypto for RsaCrypto {
         self.take_public_key()
             .encrypt(
                 &mut self.get_rng(),
-                Pkcs1v15Encrypt,
-                plaintext.as_slice(),
+                Oaep::new::<Sha256>(),
+                &plaintext[..],
             ).expect(
-            "self.take_public_key()\
-                    .encrypt(\
-                    &mut self.get_rng(), \
-                    Pkcs1v15Encrypt, \
-                    self.take_plaintext()\
-                    )"
+            "self.take_public_key()
+            .encrypt(
+                &mut self.get_rng(),
+                Oaep::new::<Sha256>(),
+                &plaintext[..],
+            )"
         )
     }
 
     fn decrypt(&mut self, ciphertext: Vec<u8>) -> Vec<u8> {
         self.take_private_key()
             .decrypt(
-                Pkcs1v15Encrypt,
-                ciphertext.as_slice(),
+                Oaep::new::<Sha256>(),
+                &ciphertext,
             ).expect("
                 self.take_private_key()
-                .decrypt(
-                    Pkcs1v15Encrypt,
-                    self.take_ciphertext()
-                )"
+            .decrypt(
+                Oaep::new::<Sha256>(),
+                &ciphertext,
+            )"
         )
     }
 }

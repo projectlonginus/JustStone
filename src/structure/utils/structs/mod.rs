@@ -6,3 +6,4 @@ pub(crate) mod StructStoneHeader;
 pub(crate) mod StructStonePayload;
 pub(crate) mod SecureHandshakePacket;
 pub(crate) mod SecurePacket;
+mod EncryptionInfo;

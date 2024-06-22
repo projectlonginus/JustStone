@@ -12,41 +12,23 @@ use crate::{
     }
 };
 
-impl StoneTransferProtocol {
-    pub fn type_check(vec: &Vec<u8>) -> StoneTransferProtocol {
-        match vec.as_slice() {
-            &[0, 0, 0, 0] => StoneTransferProtocol::Connection,
-            &[0, 0, 0, 1] => StoneTransferProtocol::Handshake,
-            &[0, 0, 1, 0] => StoneTransferProtocol::HealthCheck,
-            &[0, 0, 1, 1] => StoneTransferProtocol::Disconnect,
-
-            &[0, 1, 0, 0] => StoneTransferProtocol::ExecuteCmd,
-            &[0, 1, 0, 1] => StoneTransferProtocol::Upload,
-            &[0, 1, 1, 0] => StoneTransferProtocol::Download,
-            &[0, 1, 1, 1] => StoneTransferProtocol::Response,
-
-            _ => StoneTransferProtocol::Unknown,
-        }
-    }
-}
-
-impl StatusCode {
-    pub fn type_check(vec: &Vec<u8>) -> StatusCode {
-        match vec.as_slice() {
-            &[0, 0, 0, 0] => StatusCode::Normal,
-            &[0, 0, 0, 1] => StatusCode::Compressed,
-            &[0, 0, 1, 0] => StatusCode::Secured,
-            &[0, 0, 1, 1] => StatusCode::SCPacket,
-            _ => StatusCode::Modulated
-        }
-    }
-}
-
-impl EncryptType {}
-
-impl HandshakeType {}
-
 impl ProtocolCodec for StoneTransferProtocol {
+    fn get_type(vec: Vec<u8>) -> &dyn ProtocolCodec {
+        match vec {
+            [0, 0, 0, 0] => &StoneTransferProtocol::Connection,
+            [0, 0, 0, 1] => &StoneTransferProtocol::Handshake,
+            [0, 0, 1, 0] => &StoneTransferProtocol::HealthCheck,
+            [0, 0, 1, 1] => &StoneTransferProtocol::Disconnect,
+
+            [0, 1, 0, 0] => &StoneTransferProtocol::ExecuteCmd,
+            [0, 1, 0, 1] => &StoneTransferProtocol::Upload,
+            [0, 1, 1, 0] => &StoneTransferProtocol::Download,
+            [0, 1, 1, 1] => &StoneTransferProtocol::Response,
+
+            _ => &StoneTransferProtocol::Unknown,
+        }
+    }
+
     fn to_vec(&self) -> Vec<u8>
     {
         match self {
@@ -83,6 +65,16 @@ impl ProtocolCodec for StoneTransferProtocol {
 }
 
 impl ProtocolCodec for StatusCode {
+    fn get_type(vec: Vec<u8>) -> &dyn ProtocolCodec {
+        match vec {
+            [0, 0, 0, 0] => &StatusCode::Normal,
+            [0, 0, 0, 1] => &StatusCode::Compressed,
+            [0, 0, 1, 0] => &StatusCode::Secured,
+            [0, 0, 1, 1] => &StatusCode::SCPacket,
+            _ => &StatusCode::Modulated
+        }
+    }
+
     fn to_vec(&self) -> Vec<u8> {
         match self {
             StatusCode::Normal => vec![0, 0, 0, 0],
@@ -105,6 +97,14 @@ impl ProtocolCodec for StatusCode {
 }
 
 impl ProtocolCodec for HandshakeType {
+    fn get_type(vec: Vec<u8>) -> &dyn ProtocolCodec {
+        match vec {
+            [0,1] => &HandshakeType::RSA,
+            [1,0] => &HandshakeType::DiffieHellman,
+            [0,0] => &HandshakeType::NoHandshake,
+        }
+    }
+
     fn to_vec(&self) -> Vec<u8> {
         match self {
             HandshakeType::RSA => { vec![0, 1] }
@@ -124,6 +124,16 @@ impl ProtocolCodec for HandshakeType {
 
 
 impl ProtocolCodec for EncryptType {
+    fn get_type(vec: Vec<u8>) -> &dyn ProtocolCodec {
+        match vec {
+            [0, 0, 0, 1] => &EncryptType::RSA,
+            [0, 0, 1, 0] => &EncryptType::AesCbc,
+            [0, 0, 1, 1] => &EncryptType::AesGcm,
+            [0, 1, 0, 0] => &EncryptType::AesGcmSiv,
+            _ => { &EncryptType::NoEncryption }
+        }
+    }
+
     fn to_vec(&self) -> Vec<u8> {
         match self {
             EncryptType::RSA => { vec![0, 0, 0, 1] }

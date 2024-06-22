@@ -16,7 +16,7 @@ use crate::structure::utils::{
 };
 
 impl PacketBuilder {
-    pub fn packet(&self) -> Packet {
+    pub fn packet(&mut self) -> Packet {
         let output = self.output();
         Packet::from(
             StructStone::build(
@@ -30,7 +30,7 @@ impl PacketBuilder {
         )
     }
 
-    pub fn raw_packet(&self) -> StructStone {
+    pub fn raw_packet(&mut self) -> StructStone {
         let output = self.output();
         StructStone::build(
             StructStoneHeader::build(
@@ -42,10 +42,11 @@ impl PacketBuilder {
         )
     }
 
-    pub fn handshake_packet(&self, handshake_type: &HandshakeType) -> Result<Packet, ParseError> {
-        match SecureHandshakePacket::build(self.raw_packet(), handshake_type, &self.encryption) {
-            Ok(packet) => Ok(Packet::from(packet)),
-            Err(error) => Err(error)
+    pub fn handshake_packet(&self) -> Result<Packet, ParseError> {
+        self.raw_packet().payload.sysinfo = vec![];
+        match SecureHandshakePacket::build(self.raw_packet(), self.encryption()) {
+        Ok(packet) => Ok(Packet::from(packet)),
+        Err(error) => Err(error)
         }
     }
 
@@ -56,11 +57,7 @@ impl PacketBuilder {
         }
     }
 
-    pub fn load_builder(packet: &StructStone) -> PacketBuilder {
-        let encryption = match packet.is_encryption() {
-            true => EncryptType::AesGcmSiv,
-            false => EncryptType::NoEncryption
-        };
-        PacketBuilder::from(packet.is_compression(), encryption, packet.get_type(), packet.get_payload())
+    pub fn load_builder(packet: &mut Packet) -> PacketBuilder {
+        PacketBuilder::from(packet.is_compression(), packet.get_encryption(), packet.get_type(), packet.get_payload())
     }
 }

@@ -75,6 +75,7 @@ impl RsaCrypto {
             rng,
         }
     }
+
     pub fn set_keys(&mut self, bit: usize) -> std::io::Result<()> {
         self.rng = rand::thread_rng();
         self.private_key = RsaPrivateKey::new(&mut self.rng, bit).expect("RsaPrivateKey::new(&mut rng, bit)");

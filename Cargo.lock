@@ -16,6 +16,7 @@ dependencies = [
  "lz4_flex",
  "rand",
  "rsa",
+ "sha2",
  "sysinfo",
  "tokio",
  "uuid",
@@ -144,6 +145,15 @@ name = "bitflags"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf4b9d6a944f767f8e5e0db018570623c85f3d925ac718db4e06d0187adb21c1"
+
+[[package]]
+name = "block-buffer"
+version = "0.11.0-pre.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ded684142010808eb980d9974ef794da2bcf97d13396143b1515e9f0fb4a10e"
+dependencies = [
+ "crypto-common 0.2.0-pre.5",
+]
 
 [[package]]
 name = "bstr"
@@ -288,6 +298,7 @@ version = "0.11.0-pre.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "065d93ead7c220b85d5b4be4795d8398eac4ff68b5ee63895de0a3c1fb6edf25"
 dependencies = [
+ "block-buffer",
  "const-oid",
  "crypto-common 0.2.0-pre.5",
 ]
@@ -761,6 +772,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "sha2"
+version = "0.11.0-pre.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f33549bf3064b62478926aa89cbfc7c109aab66ae8f0d5d2ef839e482cc30d6"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "digest",
 ]
 
 [[package]]

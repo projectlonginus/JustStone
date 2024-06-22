@@ -34,7 +34,7 @@ pub enum StatusCode {
     Modulated,   // 패킷이 변조되거나 손상됨
 }
 
-#[derive(PartialEq, Default)]
+#[derive(PartialEq, Clone, Default, Debug)]
 pub enum HandshakeType {
     RSA,
     DiffieHellman,
@@ -112,11 +112,19 @@ impl Packet {
     {
         packet.into()
     }
-    pub fn payload(&self) -> Option<&dyn Detector> {
-        match self {
-            Packet::StructStone(payload) => Some(payload),
-            Packet::SecurePacket(payload) => Some(payload),
-            Packet::SecureHandshakePacket(payload) => Some(payload),
+    pub fn mutable_payload(&mut self) -> &mut dyn Detector {
+        return match self {
+            Packet::StructStone(packet) => packet as &mut dyn Detector,
+            Packet::SecurePacket(packet) => packet as &mut dyn Detector,
+            Packet::SecureHandshakePacket(packet) => packet as &mut dyn Detector,
+        }
+    }
+
+    pub fn payload(&self) -> &dyn Detector {
+        return match self {
+            Packet::StructStone(packet) => packet,
+            Packet::SecurePacket(packet) => packet,
+            Packet::SecureHandshakePacket(packet) => packet,
         }
     }
 }
