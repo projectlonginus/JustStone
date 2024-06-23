@@ -14,13 +14,14 @@ use crate::{
         }
     }
 };
+use crate::structure::utils::enums::StatusCode;
 
 pub trait Builder {
 
 }
 
 pub trait ProtocolCodec {
-    fn get_type(vec: Vec<u8>) -> &dyn ProtocolCodec;
+    fn get_type(vec: &Vec<u8>) -> Self;
     fn to_vec(&self) -> Vec<u8>;
     fn to_string(&self) -> String;
 }
@@ -32,9 +33,10 @@ pub trait TypeManager {
 
 pub trait Detector {
     fn display(&self);
+    fn get_status(&self) -> StatusCode;
     fn get_type(&self) -> StoneTransferProtocol;
     fn get_size(&self) -> usize;
-    fn get_encryption(&mut self) -> EncryptionInfo;
+    fn get_encryption(&self) -> EncryptionInfo;
     fn get_header(&mut self) -> StructStoneHeader;
     fn get_payload(&mut self) -> StructStonePayload;
     fn get_sysinfo(&mut self) -> Vec<u8>;

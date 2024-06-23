@@ -1,25 +1,33 @@
 use std::fmt::Write;
 use std::mem::replace;
 
-use crate::structure::utils::{
-    enums::{
-        StatusCode,
-        StoneTransferProtocol,
-    },
-    structs::define::{
-        SecureHandshakePacket,
-        StructStoneHeader,
-        StructStonePayload,
-    },
-    traits::define::Detector,
+use crate::{
+    structure::{
+        utils::{
+            structs::define::EncryptionInfo,
+            enums::{
+                StatusCode,
+                StoneTransferProtocol,
+            },
+            structs::define::{
+                SecureHandshakePacket,
+                StructStoneHeader,
+                StructStonePayload,
+            },
+            traits::{
+                define::{
+                    Detector,
+                    ProtocolCodec
+                }
+            }
+        }
+    }
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
+use crate::structure::utils::enums::{EncryptType, HandshakeType};
 
 impl Detector for SecureHandshakePacket {
     fn display(&self) {
         let mut output = String::new();
-        let header = &self.origin_packet.header;
-        let payload = &self.origin_packet.payload;
 
         writeln!(output, "
         handshake_type: {:?}
@@ -35,14 +43,19 @@ impl Detector for SecureHandshakePacket {
                 file:               {:?}",
                  self.handshake_type,
                  self.encrypt_type,
-                 StatusCode::get_type(&header.stone_status),
-                 StoneTransferProtocol::get_type(&header.stone_type),
+                 self.get_type(),
+                 self.get_type(),
                  self.get_size(),
-                 payload.sysinfo,
-                 payload.command_input,
-                 payload.response,
-                 payload.file).unwrap();
+                 self.take_sysinfo(),
+                 self.take_command(),
+                 self.take_response(),
+                 self.take_file()
+        ).unwrap();
         print!("{}", output)
+    }
+
+    fn get_status(&self) -> StatusCode {
+        StatusCode::get_type(&self.origin_packet.header.stone_status)
     }
 
     fn get_type(&self) -> StoneTransferProtocol {
@@ -65,8 +78,12 @@ impl Detector for SecureHandshakePacket {
         usize::from(length)
     }
 
-    fn get_encryption(&mut self) -> EncryptionInfo {
-        self.encrypt_type
+    fn get_encryption(&self) -> EncryptionInfo {
+        EncryptionInfo {
+            Activated: self.is_encryption(),
+            Type: EncryptType::get_type(&self.encrypt_type),
+            Handshake_Type: HandshakeType::get_type(&self.handshake_type),
+        }
     }
 
     fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.origin_packet.header, Default::default()) }

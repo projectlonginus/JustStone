@@ -13,6 +13,7 @@ use crate::{
     },
     utility::LZ4::CompressHandler,
 };
+use crate::structure::utils::structs::define::EncryptionInfo;
 
 pub const PACKET_DELIMITER: &[u8; 2] = b"\r\n";
 
@@ -65,13 +66,13 @@ impl StructStonePayload {
 
     pub fn build<T: AsRef<[u8]>>(
         compression: bool,
-        encryption: EncryptType,
+        encryption: EncryptionInfo,
         protocol: StoneTransferProtocol,
         payload: T,
     ) -> PacketBuilder {
         println!("{:?}", encryption);
         let mut vec_payload = payload.as_ref().to_vec();
-        let mut sysinfo = match  encryption {
+        let mut sysinfo = match  encryption.Type {
             EncryptType::NoEncryption => Self::sysinfo().as_bytes().to_vec(),
             _ => vec![]
         };

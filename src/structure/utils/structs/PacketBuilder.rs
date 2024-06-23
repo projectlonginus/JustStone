@@ -1,7 +1,6 @@
 use std::mem::replace;
 use crate::structure::utils::{
     enums::{
-        EncryptType,
         StoneTransferProtocol,
     },
     structs::define::{PacketBuilder, StructStonePayload},

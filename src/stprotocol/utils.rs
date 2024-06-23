@@ -20,14 +20,6 @@ use crate::{
 };
 use crate::structure::utils::structs::define::EncryptionInfo;
 
-pub trait PacketProcessing {
-    fn take_packet<T>(&self) -> T;
-
-    fn get_packet<T>(&self) -> T;
-
-    fn set_packet<T>(&mut self, packet: T) -> T;
-}
-
 pub struct Session {
     pub(crate) encryption: EncryptionInfo,
     pub(crate) socket: TcpStream,
@@ -112,6 +104,13 @@ impl Client {
     }
 }
 
+pub trait PacketProcessing {
+    fn take_packet<T>(&self) -> T;
+
+    fn get_packet<T>(&self) -> T;
+
+    fn set_packet<T>(&mut self, packet: T) -> T;
+}
 
 pub trait HandleSession {
     fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> std::io::Result<TcpStream>;

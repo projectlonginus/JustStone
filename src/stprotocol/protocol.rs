@@ -26,12 +26,16 @@ use crate::{
                 HandshakeType,
                 Packet,
             },
-            structs::define::StructStone,
+            structs::{
+                define::{
+                    StructStone,
+                    EncryptionInfo
+                }
+            },
             traits::define::Detector,
-        },
-    },
+        }
+    }
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 type Result<T> = std::io::Result<T>;
 

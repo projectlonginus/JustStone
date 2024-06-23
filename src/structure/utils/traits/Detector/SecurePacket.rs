@@ -1,20 +1,25 @@
 use std::fmt::Write;
 
-use crate::structure::utils::{
-    enums::{
-        StatusCode,
-        StoneTransferProtocol,
-    },
-    structs::define::{
-        SecurePacket,
-        StructStoneHeader,
-        StructStonePayload,
-    },
-    traits::define::Detector,
+use crate::{
+    structure::{
+        utils::{
+            structs::define::EncryptionInfo,
+            enums::{
+                StatusCode,
+                StoneTransferProtocol,
+            },
+            structs::define::{
+                SecurePacket,
+                StructStoneHeader,
+                StructStonePayload,
+            },
+            traits::define::Detector,
+            traits::define::ProtocolCodec
+        }
+    }
 };
 
 use std::mem::replace;
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl Detector for SecurePacket {
     fn display(&self) {
@@ -31,14 +36,18 @@ impl Detector for SecurePacket {
                 Command input:      {:?}
                 Response:           {:?}
                 file:               {:?}",
-                 StatusCode::get_type(&header.stone_status), header.stone_status,
-                 StoneTransferProtocol::get_type(&header.stone_type), header.stone_type,
+                 self.get_status(), header.stone_status,
+                 self.get_type(), header.stone_type,
                  self.get_size(),
                  payload.sysinfo,
                  payload.command_input,
                  payload.response,
                  payload.file).unwrap();
         print!("{}", output)
+    }
+
+    fn get_status(&self) -> StatusCode {
+        StatusCode::get_type(&self.origin_packet.header.stone_status)
     }
 
     fn get_type(&self) -> StoneTransferProtocol {
@@ -61,7 +70,7 @@ impl Detector for SecurePacket {
         usize::from(length)
     }
 
-    fn get_encryption(&mut self) -> EncryptionInfo {
+    fn get_encryption(&self) -> EncryptionInfo {
         todo!()
     }
 

@@ -1,6 +1,12 @@
 use stprotocol::{Client, Handlers};
-use structure::utils::enums::EncryptType::AesGcmSiv;
-use structure::utils::enums::HandshakeType::RSA;
+use structure::{
+    utils::{
+        enums::{
+            EncryptType::AesGcmSiv,
+            HandshakeType::RSA
+        }
+    }
+};
 
 mod Application;
 mod stprotocol;

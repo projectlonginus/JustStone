@@ -1,7 +1,5 @@
 use crate::structure::utils::{
     enums::{
-        EncryptType,
-        HandshakeType,
         Packet,
         ParseError,
     },
@@ -42,15 +40,15 @@ impl PacketBuilder {
         )
     }
 
-    pub fn handshake_packet(&self) -> Result<Packet, ParseError> {
+    pub fn handshake_packet(&mut self) -> Result<Packet, ParseError> {
         self.raw_packet().payload.sysinfo = vec![];
         match SecureHandshakePacket::build(self.raw_packet(), self.encryption()) {
-        Ok(packet) => Ok(Packet::from(packet)),
-        Err(error) => Err(error)
+            Ok(packet) => Ok(Packet::from(packet)),
+            Err(error) => Err(error)
         }
     }
 
-    pub fn secure_packet(&self) -> Result<Packet, ParseError> {
+    pub fn secure_packet(&mut self) -> Result<Packet, ParseError> {
         match SecurePacket::build(self.raw_packet(), &self.encryption) {
             Ok(packet) => Ok(Packet::from(packet)),
             Err(error) => Err(error)

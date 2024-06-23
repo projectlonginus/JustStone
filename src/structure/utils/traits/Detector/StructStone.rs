@@ -3,12 +3,17 @@ use std::{
     mem::replace
 };
 
-use crate::structure::utils::{
-    enums::{StatusCode, StoneTransferProtocol},
-    structs::define::{StructStone, StructStoneHeader, StructStonePayload},
-    traits::define::Detector,
+use crate::{
+    structure::{
+        utils::structs::define::EncryptionInfo,
+        utils::{
+            enums::{StatusCode, StoneTransferProtocol},
+            structs::define::{StructStone, StructStoneHeader, StructStonePayload},
+            traits::define::Detector,
+        },
+        utils::traits::define::ProtocolCodec
+    }
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl Detector for StructStone {
     fn display(&self) {
@@ -23,8 +28,8 @@ impl Detector for StructStone {
         Command input:      {:?}
         Response:           {:?}
         file:               {:?}",
-                 StatusCode::get_type(&self.header.stone_status), self.header.stone_status,
-                 StoneTransferProtocol::get_type(&self.header.stone_type), self.header.stone_type,
+                 self.get_status(), self.header.stone_status,
+                 self.get_type(), self.header.stone_type,
                  self.get_size(),
                  self.payload.sysinfo,
                  self.payload.command_input,
@@ -34,6 +39,11 @@ impl Detector for StructStone {
         print!("{}", output);
         output.clear()
     }
+
+    fn get_status(&self) -> StatusCode {
+        StatusCode::get_type(&self.header.stone_status)
+    }
+
     fn get_type(&self) -> StoneTransferProtocol {
         StoneTransferProtocol::get_type(&self.header.stone_type)
     }
@@ -47,7 +57,7 @@ impl Detector for StructStone {
         usize::from(length)
     }
 
-    fn get_encryption(&mut self) -> EncryptionInfo {
+    fn get_encryption(&self) -> EncryptionInfo {
         EncryptionInfo::default()
     }
 

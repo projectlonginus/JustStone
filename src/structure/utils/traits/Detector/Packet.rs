@@ -3,18 +3,22 @@ use crate::structure::utils::{
         Packet,
         StoneTransferProtocol,
     },
-    enums::PacketError,
     structs::define::{
         StructStoneHeader,
         StructStonePayload,
     },
     traits::define::Detector,
 };
+use crate::structure::utils::enums::StatusCode;
 use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl Detector for Packet {
     fn display(&self) {
         self.payload().display()
+    }
+
+    fn get_status(&self) -> StatusCode {
+        self.payload().get_status()
     }
 
     fn get_type(&self) -> StoneTransferProtocol {
@@ -25,7 +29,7 @@ impl Detector for Packet {
         self.payload().get_size()
     }
 
-    fn get_encryption(&mut self) -> EncryptionInfo {
+    fn get_encryption(&self) -> EncryptionInfo {
         self.payload().get_encryption()
     }
 

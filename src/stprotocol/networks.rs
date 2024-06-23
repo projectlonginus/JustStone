@@ -11,7 +11,7 @@ use crate::{
     structure::{
         packet::{connection, disconnect, secure_connection, secure_disconnect},
         utils::{
-            enums::{EncryptType, HandshakeType, Packet, ParseError, StoneTransferProtocol::Connection},
+            enums::{EncryptType, Packet, ParseError, StoneTransferProtocol::Connection},
             structs::define::{SecureHandshakePacket, SecurePacket, StructStone, StructStonePayload},
             traits::define::Detector,
         },
@@ -34,8 +34,8 @@ impl HandleSession for Session {
     }
 
     fn secure(address: IpAddr, encryption: EncryptionInfo) -> Session {
-        Self::new(SocketAddr::new(address, 6974), secure_connection(&encryption.Handshake_Type))
-            .map(|socket| Session::set(encryption, socket, secure_connection(&HandshakeType::RSA)))
+        Self::new(SocketAddr::new(address, 6974), secure_connection())
+            .map(|socket| Session::set(encryption, socket, secure_connection()))
             .unwrap_or_else(|error| panic!("secure connection error: {:?}", error))
     }
 
