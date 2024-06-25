@@ -23,9 +23,9 @@ static PORT:u16 = 6974;
 
 impl HandleSession for Session {
     fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> io::Result<(TcpStream,Packet)> {
+        packet.display();
         TcpStream::connect(address).and_then(|mut socket| {
             socket.write_all(packet.take_stone().unwrap())?;
-            packet.display();
             Ok((socket, packet))
         })
     }

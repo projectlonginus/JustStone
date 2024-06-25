@@ -22,7 +22,7 @@ impl Detector for StructStone {
         Header:
         Status: {:?} ({:?})
         Type:   {:?} ({:?})
-        Size:   {:?}\n\
+        Size:   {:?} ({:?})\n\
         Payload:
         System information: {:?}
         Command input:      {:?}
@@ -30,7 +30,7 @@ impl Detector for StructStone {
         file:               {:?}",
                  self.get_status(), self.header.stone_status,
                  self.get_type(), self.header.stone_type,
-                 self.get_size(),
+                 self.get_size(), self.header.stone_size.to_be_bytes(),
                  self.payload.sysinfo,
                  self.payload.command_input,
                  self.payload.response,
@@ -39,22 +39,12 @@ impl Detector for StructStone {
         print!("{}", output);
         output.clear()
     }
-
-    fn get_status(&self) -> StatusCode {
-        StatusCode::get_type(&self.header.stone_status)
-    }
-
-    fn get_type(&self) -> StoneTransferProtocol {
-        StoneTransferProtocol::get_type(&self.header.stone_type)
-    }
-    fn get_size(&self) -> usize {
-        self.header.stone_size as usize
-    }
-
+    fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.header.stone_status) }
+    fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.header.stone_type) }
+    fn get_size(&self) -> usize { self.header.stone_size as usize }
     fn get_encryption(&self) -> EncryptionInfo {
         EncryptionInfo::default()
     }
-
     fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.header, Default::default()) }
     fn get_payload(&mut self) -> StructStonePayload { replace(&mut self.payload, Default::default()) }
     fn get_sysinfo(&mut self) -> Vec<u8> { replace(&mut self.payload.sysinfo, Default::default()) }

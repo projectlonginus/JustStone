@@ -53,11 +53,9 @@ impl Detector for SecurePacket {
     fn get_type(&self) -> StoneTransferProtocol {
         StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type)
     }
-
     fn get_size(&self) -> usize {
         self.origin_packet.get_size()
     }
-
     fn get_encryption(&self) -> EncryptionInfo {
         todo!()
     }

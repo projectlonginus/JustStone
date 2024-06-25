@@ -80,7 +80,6 @@ impl TypeManager for StructStoneHeader {
         header.extend(&self.stone_status);
         header.extend(&self.stone_type);
         let size = self.stone_size.to_be_bytes();
-        println!("{:?}", size);
         header.extend(size);
         header
     }

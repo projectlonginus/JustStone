@@ -8,8 +8,7 @@ impl StructStoneHeader {
     pub fn load(packet: Vec<u8>) -> StructStoneHeader {
         let Status =  [packet[0], packet[1], packet[2], packet[3]];
         let Type   =  [packet[4], packet[5], packet[6], packet[7]];
-        let mut Size   =  0;
-        Size += for n in 8..11 { packet[n] };
+        let Size = u32::from_be_bytes([packet[8], packet[9], packet[10], packet[11]]);
 
         if StatusCode::get_type(&Status) == StatusCode::Modulated {
             return StructStoneHeader::default();
@@ -27,12 +26,11 @@ impl StructStoneHeader {
     ) -> StructStoneHeader {
         let mut header = StructStoneHeader::from(
             match &compression {
-                true => vec![0, 0, 0, 1],
-                false => vec![0, 0, 0, 0], },
+                true  => [0, 0, 0, 1],
+                false => [0, 0, 0, 0], },
             protocol.to_bytes(),
-            vec![],
+            0,
         );
-        println!("{:?}", size);
         header.set_stone_size(size);
         header
     }

@@ -25,6 +25,6 @@ impl SecurePacket {
         };
 
         source.stone = encrypt_method.encrypt(source.stone);
-        Ok(packet.set(source.stone.len(), source))
+        Ok(packet.set(encryption, source.stone.len(), source))
     }
 }
