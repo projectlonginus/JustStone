@@ -1,13 +1,11 @@
-pub use networks::*;
-pub use protocol::*;
 pub use utils::*;
 
 use crate::structure::{
-    enums::{
+    utils::enums::{
         Packet,
         StoneTransferProtocol,
     },
-    traits::define::Detector,
+    utils::traits::define::Detector,
 };
 
 mod networks;
@@ -28,7 +26,7 @@ impl Handlers for Client {
             match packet.get_type() {
                 StoneTransferProtocol::Connection => {
                     println!("Connection OK");
-                    Ok(&packet)
+                    Ok(packet)
                 }
                 // 서버의 응답 타입을 비교하여 보낼 요청을 생성함
                 StoneTransferProtocol::ExecuteCmd =>

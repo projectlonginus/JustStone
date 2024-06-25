@@ -1,4 +1,4 @@
-use crate::structure::structs::define::StructRawStonePayload;
+use crate::structure::utils::structs::define::StructRawStonePayload;
 
 impl StructRawStonePayload {
     pub fn from(sysinfo: String, command_input: String, response: String, file: String) -> StructRawStonePayload {

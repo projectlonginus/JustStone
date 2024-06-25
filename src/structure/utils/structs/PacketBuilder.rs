@@ -1,17 +1,18 @@
-use crate::structure::{
+use std::mem::replace;
+use crate::structure::utils::{
     enums::{
-        EncryptType,
         StoneTransferProtocol,
     },
     structs::define::{PacketBuilder, StructStonePayload},
 };
+use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl PacketBuilder {
     pub fn is_compression(&self) -> &bool {
         &self.compression
     }
 
-    pub fn encryption(&self) -> &EncryptType {
+    pub fn encryption(&self) -> &EncryptionInfo {
         &self.encryption
     }
 
@@ -19,22 +20,22 @@ impl PacketBuilder {
         &self.protocol
     }
 
-    pub fn output(&self) -> StructStonePayload {
-        self.output.clone()
+    pub fn output(&mut self) -> StructStonePayload {
+        replace(&mut self.output, Default::default())
     }
 
     pub fn default() -> PacketBuilder {
         PacketBuilder {
             compression: false,
-            encryption: EncryptType::AesGcmSiv,
-            protocol: StoneTransferProtocol::Unknown,
+            encryption: EncryptionInfo::default(),
+            protocol: StoneTransferProtocol::default(),
             output: StructStonePayload::default(),
         }
     }
 
     pub fn from(
         compression: bool,
-        encryption: EncryptType,
+        encryption: EncryptionInfo,
         protocol: StoneTransferProtocol,
         output: StructStonePayload,
     ) -> PacketBuilder {

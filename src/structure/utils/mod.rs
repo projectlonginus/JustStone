@@ -1,4 +1,4 @@
-pub mod structs;
-pub mod traits;
+pub(crate) mod structs;
+pub(crate) mod traits;
 pub mod enums;
 

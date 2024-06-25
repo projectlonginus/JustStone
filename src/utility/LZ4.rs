@@ -1,11 +1,10 @@
 use lz4_flex::block::{compress_prepend_size, decompress_size_prepended, DecompressError};
 
-use crate::structure::{
-    enums::StoneTransferProtocol,
+use crate::structure::utils::{
     structs::define::{StructStone, StructStonePayload},
     traits::define::Detector,
 };
-use crate::structure::enums::EncryptType;
+use crate::structure::utils::structs::define::EncryptionInfo;
 
 pub trait CompressHandler {
     fn lz4_compress(&mut self);
@@ -35,21 +34,21 @@ impl CompressHandler for StructStone {
     fn lz4_compress(&mut self) {
         self.set(
             StructStonePayload::build(true,
-                                      EncryptType::NotEncryption,
-                                      StoneTransferProtocol::type_check(&self.take_header().stone_type),
-                                      self.take_payload().get_non_empty_data(),
+                                      EncryptionInfo::no_encryption(),
+                                      self.get_type(),
+                                      self.take_payload().unwrap().get_non_empty_data(),
             ).raw_packet()
         );
     }
 
     fn lz4_decompress(&mut self) -> Result<(), DecompressError> {
-        let mut payload = self.take_payload().get_non_empty_data();
+        let mut payload = self.take_payload().unwrap().get_non_empty_data();
         payload.lz4_decompress()?;
         self.set(
             StructStonePayload::build(
                 false,
-                EncryptType::NotEncryption,
-                StoneTransferProtocol::type_check(&self.take_header().stone_type),
+                EncryptionInfo::no_encryption(),
+                self.get_type(),
                 payload,
             ).raw_packet()
         );

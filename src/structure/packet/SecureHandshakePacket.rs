@@ -1,5 +1,5 @@
 use crate::{
-    structure::{
+    structure::utils::{
         enums::{
             EncryptType,
             HandshakeType,
@@ -9,30 +9,31 @@ use crate::{
             SecureHandshakePacket,
             StructStone,
         },
-        traits::define::ProtocolCodec,
     },
     utility::secure::{
         crypto::Crypto,
         utils::RsaCrypto,
     },
 };
+use crate::structure::utils::enums::EncryptionFlag;
+use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl SecureHandshakePacket {
-    pub fn build(mut source: StructStone, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Result<SecureHandshakePacket, ParseError> {
-        let mut packet = SecureHandshakePacket::new();
+    pub fn build(mut source: StructStone, encryption_info: &EncryptionInfo) -> Result<SecureHandshakePacket, ParseError> {
+        let packet = SecureHandshakePacket::new();
+        let flag = EncryptionFlag::from_info(encryption_info);
 
-        if encrypt_type != EncryptType::AesGcmSiv {
-            return Err(ParseError::Unimplemented("Encryption algorithms other than AesGcmSiv have not yet been implemented.".to_string()));
+        if encryption_info.Type != EncryptType::AesGcmSiv {
+            return Err(ParseError::Unimplemented("EncryptionInfo algorithms other than AesGcmSiv have not yet been implemented.".to_string()));
         }
 
-        let mut handshake_method = match handshake_type {
+        let mut handshake_method = match encryption_info.Handshake_Type {
             HandshakeType::RSA => RsaCrypto::default(),
-            HandshakeType::DiffieHellman => return Err(ParseError::Unimplemented("The handshake method using DiffieHellman algorithm is still incomplete. Please use the RSA handshake method.".to_string()))
+            HandshakeType::DiffieHellman => return Err(ParseError::Unimplemented("The handshake method using DiffieHellman algorithm is still incomplete. Please use the RSA handshake method.".to_string())),
+            HandshakeType::NoHandshake => return Err(ParseError::Unimplemented("No Handshake".to_string())),
         };
 
-        handshake_method.set_plaintext(source.stone);
-        handshake_method.encrypt().expect("rsa.encrypt()");
-        source.stone = handshake_method.take_ciphertext().to_owned();
-        packet.set(handshake_method.take_ciphertext().len(), handshake_type.to_vec(), encrypt_type.to_vec(), source)
+        source.stone = handshake_method.encrypt(source.stone);
+        packet.set(source.stone.len(), flag, source)
     }
 }

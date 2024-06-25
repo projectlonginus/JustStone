@@ -1,28 +1,39 @@
-use crate::structure::enums::ParseError;
-use crate::structure::structs::define::{SecureHandshakePacket, StructStone};
+use std::mem::replace;
+use crate::{
+    structure::{
+        utils::{
+            enums::ParseError,
+            structs::define::{SecureHandshakePacket, StructStone}
+        }
+    }
+};
+use crate::structure::utils::enums::{EncryptionFlag, HeaderError};
+use crate::structure::utils::traits::define::ProtocolCodec;
 
 impl SecureHandshakePacket {
     pub fn new() -> SecureHandshakePacket {
         SecureHandshakePacket {
-            encrypt_data_block_length: vec![0, 0, 0, 0, 0, 0, 0, 0],
-            handshake_type: vec![0, 0],
-            encrypt_type: vec![0, 0, 0, 0],
-            encrypted_packet: StructStone::new(),
-            secure_stone: vec![],
+            encryption_flag:            [0,0,0,0],
+            encrypt_data_block_length:  0,
+            encrypted_packet:           Default::default(),
+            origin_packet:              StructStone::new(),
         }
     }
 
-    pub fn set(&self, encrypt_data_block_length: usize, handshake_type: Vec<u8>, encrypt_type: Vec<u8>, encrypted_packet: StructStone) -> Result<SecureHandshakePacket, ParseError> {
-        let mut data_size: Vec<u8> = encrypt_data_block_length.to_le_bytes().to_vec();
-        data_size.resize(8, 0);
-        if handshake_type.len() != 2 { return Err(ParseError::SizeIsNot2Bytes); }
-        if encrypt_type.len() != 4 { return Err(ParseError::SizeIsNot4Bytes); }
+    pub fn set(&self, encrypt_data_size: usize, encryption_flag: EncryptionFlag,mut origin_packet: StructStone) -> Result<SecureHandshakePacket, ParseError> {
         Ok(Self {
-            encrypt_data_block_length: data_size,
-            handshake_type,
-            encrypt_type,
-            encrypted_packet: encrypted_packet.to_owned(),
-            secure_stone: encrypted_packet.stone.to_owned(),
+            encryption_flag: encryption_flag.to_bytes(),
+            encrypt_data_block_length: encrypt_data_size as u32,
+            encrypted_packet: replace(&mut origin_packet.stone, Default::default()),
+            origin_packet,
         })
+    }
+
+    pub fn set_flag(&mut self, encryption_flag: EncryptionFlag) {
+        self.encryption_flag = encryption_flag.to_bytes();
+    }
+
+    pub fn set_size(&mut self, size: usize) {
+        self.encrypt_data_block_length = size as u32
     }
 }

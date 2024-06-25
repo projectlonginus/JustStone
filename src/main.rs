@@ -1,14 +1,20 @@
 use stprotocol::{Client, Handlers};
-use structure::enums::EncryptType::NotEncryption;
+use structure::{
+    utils::{
+        enums::{
+            EncryptType::AesGcmSiv,
+            HandshakeType::RSA
+        }
+    }
+};
 
-mod malware;
+mod Application;
 mod stprotocol;
 mod structure;
 mod utility;
 
 fn main() {
-    let mut client = Client::new("127.0.0.1");
-    client.use_encrypt(NotEncryption);
+    let mut client = Client::secure("127.0.0.1", RSA, AesGcmSiv);
 
     client.default_client_handler();
 }

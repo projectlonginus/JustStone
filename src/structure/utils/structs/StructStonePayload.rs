@@ -1,4 +1,4 @@
-use crate::structure::structs::define::StructStonePayload;
+use crate::structure::utils::structs::define::StructStonePayload;
 
 impl StructStonePayload {
     pub fn from(sysinfo: Vec<u8>, command_input: Vec<u8>, response: Vec<u8>, file: Vec<u8>) -> StructStonePayload {

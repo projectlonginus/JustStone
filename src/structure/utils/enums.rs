@@ -1,7 +1,11 @@
-use crate::structure::structs::define::{SecureHandshakePacket, SecurePacket, StructStone};
-use crate::structure::traits::define::Detector;
+use egui::ahash::{HashMap, HashMapExt};
+use crate::structure::utils::{
+    structs::define::{SecureHandshakePacket, SecurePacket, StructStone},
+    traits::define::Detector,
+};
+use crate::structure::utils::structs::define::EncryptionInfo;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum StoneTransferProtocol {
     Connection,
     Handshake,
@@ -14,59 +18,76 @@ pub enum StoneTransferProtocol {
     Upload,
     Download,
 
-    Unknown,
+    #[default]
+    Unknown, // 알수없는 패킷 유형
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum StatusCode {
+    #[default]
     Normal,
-    // 압축 x 암호화 x
+    // 압축 x 서몀 x
     Compressed,
-    // 압축 o 암호화 x
+    // 압축 o 서명 x
     Secured,
-    // 압축 x 암호화 o
+    // 압축 x 서명 o
     SCPacket,
-    // 압축 o 암호화 o
+    // 압축 o 서명 o
     Modulated,   // 패킷이 변조되거나 손상됨
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(PartialEq, Clone, Default, Debug)]
 pub enum HandshakeType {
     RSA,
     DiffieHellman,
+    #[default]
+    NoHandshake,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum EncryptType {
     RSA,
     AesCbc,
     AesGcm,
     AesGcmSiv,
-    NotEncryption,
+    #[default]
+    NoEncryption,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub enum EncryptionFlag { // 8바이트 길이 암호화 플레그
+    RAC, // 핸드셰이크: RSA, 패킷 암호화 알고리즘: AesCbc
+    RAG, // 핸드셰이크: RSA, 패킷 암호화 알고리즘: AesGcm
+    RAGS, // 핸드셰이크: RSA, 패킷 암호화 알고리즘: AesGcmSiv
+    DHAC, // 핸드셰이크: Diffie-Hellman, 패킷 암호화 알고리즘: AesCbc
+    DHAG, // 핸드셰이크: Diffie-Hellman, 패킷 암호화 알고리즘: AesGcm
+    DHAGS,// 핸드셰이크: Diffie-Hellman, 패킷 암호화 알고리즘: AesGcmSiv
+    #[default]
+    Unknown // 알수없는 암호화 유형
 }
 
 #[derive(Debug, Clone)]
 pub enum Packet {
-    StructStone {
-        payload: StructStone
+    StructStone(
+        StructStone
         // header: crate::structure::structs::define::StructStoneHeader,
         // payload: crate::structure::structs::define::StructStonePayload,
         // stone: Vec<u8>,
-    },
-    SecurePacket {
-        payload: SecurePacket
+    ),
+    SecurePacket(
+        SecurePacket
         // encrypt_data_block_length: Vec<u8>,
         // encrypted_packet: StructStone,
         // secure_stone: Vec<u8>,
-    },
-    SecureHandshakePacket {
-        payload: SecureHandshakePacket
+    ),
+    SecureHandshakePacket(
+        SecureHandshakePacket
         // encrypt_data_block_length: Vec<u8>,
         // handshake_type: Vec<u8>,
         // encrypt_type: Vec<u8>,
         // encrypted_packet: StructStone,
         // secure_stone: Vec<u8>,
-    },
+    ),
 }
 
 #[derive(Debug)]
@@ -105,68 +126,56 @@ impl Packet {
     {
         packet.into()
     }
-    pub fn payload(&self) -> Option<&dyn Detector> {
-        match self {
-            Packet::StructStone { payload } => Some(payload),
-            Packet::SecurePacket { payload } => Some(payload),
-            Packet::SecureHandshakePacket { payload } => Some(payload),
-            _ => None,
+    pub fn mutable_payload(&mut self) -> &mut dyn Detector {
+        return match self {
+            Packet::StructStone(packet) => packet as &mut dyn Detector,
+            Packet::SecurePacket(packet) => packet as &mut dyn Detector,
+            Packet::SecureHandshakePacket(packet) => packet as &mut dyn Detector,
+        }
+    }
+
+    pub fn payload(&self) -> &dyn Detector {
+        return match self {
+            Packet::StructStone(packet) => packet,
+            Packet::SecurePacket(packet) => packet,
+            Packet::SecureHandshakePacket(packet) => packet,
         }
     }
 }
 
-impl TryFrom<Packet> for StructStone {
-    type Error = PacketError;
-    fn try_from(packet: Packet) -> Result<Self, Self::Error> {
-        match packet {
-            Packet::StructStone { payload } => Ok(payload),
-            _ => Err(PacketError::NotStructStone),
+impl EncryptionFlag {
+
+    pub fn from_info(info: &EncryptionInfo) -> Self{
+        match (&info.Type,&info.Handshake_Type)  {
+            (EncryptType::AesGcmSiv, HandshakeType::RSA) => EncryptionFlag::RAGS,
+            (EncryptType::AesGcm, HandshakeType::RSA)  => EncryptionFlag::RAG,
+            (EncryptType::AesCbc, HandshakeType::RSA)  => EncryptionFlag::RAC,
+            (EncryptType::AesGcmSiv, HandshakeType::DiffieHellman)  => EncryptionFlag::DHAGS,
+            (EncryptType::AesGcm, HandshakeType::DiffieHellman)  => EncryptionFlag::DHAG,
+            (EncryptType::AesCbc, HandshakeType::DiffieHellman)  => EncryptionFlag::DHAC,
+            _ => { EncryptionFlag::Unknown }
         }
     }
-}
-
-impl TryFrom<Packet> for SecurePacket {
-    type Error = PacketError;
-    fn try_from(packet: Packet) -> Result<Self, Self::Error> {
-        match packet {
-            Packet::SecurePacket { payload } => Ok(payload),
-            _ => Err(PacketError::NotSecurePacket),
+    pub fn get_types(&self) -> EncryptionInfo {
+        let element = match self {
+            EncryptionFlag::RAGS    => (true, EncryptType::AesGcmSiv, HandshakeType::RSA),
+            EncryptionFlag::RAG     => (true, EncryptType::AesGcm,    HandshakeType::RSA),
+            EncryptionFlag::RAC     => (true, EncryptType::AesCbc,    HandshakeType::RSA),
+            EncryptionFlag::DHAGS   => (true, EncryptType::AesGcmSiv, HandshakeType::DiffieHellman),
+            EncryptionFlag::DHAG    => (true, EncryptType::AesGcm,    HandshakeType::DiffieHellman),
+            EncryptionFlag::DHAC    => (true, EncryptType::AesCbc,    HandshakeType::DiffieHellman),
+            _ => (false, EncryptType::NoEncryption, HandshakeType::NoHandshake)
+        };
+        EncryptionInfo {
+            Activated:      element.0,
+            Type:           element.1,
+            Handshake_Type: element.2,
         }
     }
-}
-
-impl TryFrom<Packet> for SecureHandshakePacket {
-    type Error = PacketError;
-    fn try_from(packet: Packet) -> Result<Self, Self::Error> {
-        match packet {
-            Packet::SecureHandshakePacket { payload } => Ok(payload),
-            _ => Err(PacketError::NotSecureHandshakePacket),
-        }
+    pub fn get_encryption_type(&self) -> EncryptType {
+        self.get_types().Type
+    }
+    pub fn get_handshake_type(&self) -> HandshakeType {
+        self.get_types().Handshake_Type
     }
 }
-
-impl From<StructStone> for Packet {
-    fn from(payload: StructStone) -> Self {
-        Packet::StructStone {
-            payload,
-        }
-    }
-}
-
-impl From<SecurePacket> for Packet {
-    fn from(payload: SecurePacket) -> Self {
-        Packet::SecurePacket {
-            payload,
-        }
-    }
-}
-
-impl From<SecureHandshakePacket> for Packet {
-    fn from(payload: SecureHandshakePacket) -> Self {
-        Packet::SecureHandshakePacket {
-            payload,
-        }
-    }
-}
-
-

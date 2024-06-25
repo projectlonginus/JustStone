@@ -1,14 +1,28 @@
-use std::fmt::Debug;
-
 use json::JsonValue;
 
-use crate::structure::{
-    enums::StoneTransferProtocol,
-    structs::define::{StructStoneHeader, StructStonePayload},
+use crate::{
+    structure::{
+        utils::{
+            enums::StoneTransferProtocol,
+            structs::{
+                define::{
+                    StructStoneHeader,
+                    StructStonePayload,
+                    EncryptionInfo
+                }
+            }
+        }
+    }
 };
+use crate::structure::utils::enums::StatusCode;
+
+pub trait Builder {
+
+}
 
 pub trait ProtocolCodec {
-    fn to_vec(&self) -> Vec<u8>;
+    fn get_type(vec: &[u8; 4]) -> Self;
+    fn to_bytes(&self) -> [u8; 4];
     fn to_string(&self) -> String;
 }
 
@@ -19,22 +33,24 @@ pub trait TypeManager {
 
 pub trait Detector {
     fn display(&self);
+    fn get_status(&self) -> StatusCode;
     fn get_type(&self) -> StoneTransferProtocol;
     fn get_size(&self) -> usize;
-    fn take_sysinfo(&self) -> &Vec<u8>;
-    fn take_command(&self) -> &Vec<u8>;
-    fn take_response(&self) -> &Vec<u8>;
-    fn take_file(&self) -> &Vec<u8>;
-    fn get_sysinfo(&self) -> Vec<u8>;
-    fn get_command(&self) -> Vec<u8>;
-    fn get_response(&self) -> Vec<u8>;
-    fn get_file(&self) -> Vec<u8>;
-    fn take_header(&self) -> &StructStoneHeader;
-    fn take_payload(&self) -> &StructStonePayload;
-    fn get_header(&self) -> StructStoneHeader;
-    fn get_payload(&self) -> StructStonePayload;
-    fn get_stone(&self) -> &[u8];
-    fn take_stone(&self) -> &[u8];
+    fn get_encryption(&self) -> EncryptionInfo;
+    fn get_header(&mut self) -> StructStoneHeader;
+    fn get_payload(&mut self) -> StructStonePayload;
+    fn get_sysinfo(&mut self) -> Vec<u8>;
+    fn get_command(&mut self) -> Vec<u8>;
+    fn get_response(&mut self) -> Vec<u8>;
+    fn get_file(&mut self) -> Vec<u8>;
+    fn get_stone(&mut self) -> Option<Vec<u8>>;
+    fn take_header(&self) -> Option<&StructStoneHeader>;
+    fn take_payload(&self) -> Option<&StructStonePayload>;
+    fn take_sysinfo(&self) -> Option<&Vec<u8>>;
+    fn take_command(&self) -> Option<&Vec<u8>>;
+    fn take_response(&self) -> Option<&Vec<u8>>;
+    fn take_file(&self) -> Option<&Vec<u8>>;
+    fn take_stone(&self) -> Option<&Vec<u8>>;
     fn is_compression(&self) -> bool;
-    fn is_encrypted(&self) -> bool;
+    fn is_encryption(&self) -> bool;
 }

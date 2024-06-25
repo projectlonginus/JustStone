@@ -1,20 +1,27 @@
 use json::{JsonValue, object};
 
-use crate::structure::{
-    enums::{
-        StatusCode,
-        StoneTransferProtocol,
-    },
-    packet::StructStonePayload::PACKET_DELIMITER,
-    structs::define::{
-        StructRawStonePayload,
-        StructStoneHeader,
-        StructStonePayload,
-    },
-    traits::define::TypeManager,
-    utils::traits::define::ProtocolCodec,
+use crate::{
+    structure::{
+        packet::StructStonePayload::PACKET_DELIMITER,
+        utils::{
+            enums::{
+                StatusCode,
+                StoneTransferProtocol,
+            },
+            structs::define::{
+                StructRawStonePayload,
+                StructStoneHeader,
+                StructStonePayload,
+            },
+            traits::{
+                define::{
+                    TypeManager,
+                    ProtocolCodec
+                }
+            }
+        }
+    }
 };
-
 impl TypeManager for StructRawStonePayload {
     fn to_json(&self) -> JsonValue {
         return object! {
@@ -61,13 +68,10 @@ impl TypeManager for StructStonePayload {
 
 impl TypeManager for StructStoneHeader {
     fn to_json(&self) -> JsonValue {
-        let mut array = [0; std::mem::size_of::<usize>()];
-        array.copy_from_slice(&self.stone_size);
-
         return object! {
-            stone_status: StatusCode::type_check(&self.stone_status).to_string(),
-            stone_type: StoneTransferProtocol::type_check(&self.stone_type).to_string(),
-            stone_size: usize::from_le_bytes(array)
+            stone_status: StatusCode::get_type(&self.stone_status).to_string(),
+            stone_type: StoneTransferProtocol::get_type(&self.stone_type).to_string(),
+            stone_size: self.stone_size
         };
     }
 
@@ -75,7 +79,8 @@ impl TypeManager for StructStoneHeader {
         let mut header: Vec<u8> = Vec::new();
         header.extend(&self.stone_status);
         header.extend(&self.stone_type);
-        header.extend(&self.stone_size);
+        let size = self.stone_size.to_be_bytes();
+        header.extend(size);
         header
     }
 }

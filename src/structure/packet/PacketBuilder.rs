@@ -1,7 +1,5 @@
-use crate::structure::{
+use crate::structure::utils::{
     enums::{
-        EncryptType,
-        HandshakeType,
         Packet,
         ParseError,
     },
@@ -12,11 +10,12 @@ use crate::structure::{
         StructStone,
         StructStoneHeader,
     },
+    traits::define::Detector,
 };
 
 impl PacketBuilder {
-    pub fn packet(&self) -> Packet {
-        let mut output = self.output();
+    pub fn packet(&mut self) -> Packet {
+        let output = self.output();
         Packet::from(
             StructStone::build(
                 StructStoneHeader::build(
@@ -29,8 +28,8 @@ impl PacketBuilder {
         )
     }
 
-    pub fn raw_packet(&self) -> StructStone {
-        let mut output = self.output();
+    pub fn raw_packet(&mut self) -> StructStone {
+        let output = self.output();
         StructStone::build(
             StructStoneHeader::build(
                 self.is_compression(),
@@ -41,17 +40,22 @@ impl PacketBuilder {
         )
     }
 
-    pub fn handshake_packet(&self, handshake_type: HandshakeType) -> Result<Packet, ParseError> {
-        match SecureHandshakePacket::build(self.raw_packet(), handshake_type, EncryptType::AesGcmSiv) {
-            Ok(Packet) => Ok(Packet::from(Packet)),
-            Err(Error) => Err(Error)
+    pub fn handshake_packet(&mut self) -> Result<Packet, ParseError> {
+        self.raw_packet().payload.sysinfo = vec![];
+        match SecureHandshakePacket::build(self.raw_packet(), self.encryption()) {
+            Ok(packet) => Ok(Packet::from(packet)),
+            Err(error) => Err(error)
         }
     }
 
-    pub fn secure_packet(&self, encrypt_type: EncryptType) -> Result<Packet, ParseError> {
-        match SecurePacket::build(self.raw_packet(), encrypt_type) {
-            Ok(Packet) => Ok(Packet::from(Packet)),
-            Err(Error) => Err(Error)
+    pub fn secure_packet(&mut self) -> Result<Packet, ParseError> {
+        match SecurePacket::build(self.raw_packet(), &self.encryption) {
+            Ok(packet) => Ok(Packet::from(packet)),
+            Err(error) => Err(error)
         }
+    }
+
+    pub fn load_builder(packet: &mut Packet) -> PacketBuilder {
+        PacketBuilder::from(packet.is_compression(), packet.get_encryption(), packet.get_type(), packet.get_payload())
     }
 }
