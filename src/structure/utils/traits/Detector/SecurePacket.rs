@@ -1,48 +1,45 @@
 use std::fmt::Write;
-
-use crate::{
-    structure::{
-        utils::{
-            structs::define::EncryptionInfo,
-            enums::{
-                StatusCode,
-                StoneTransferProtocol,
-            },
-            structs::define::{
-                SecurePacket,
-                StructStoneHeader,
-                StructStonePayload,
-            },
-            traits::define::Detector,
-            traits::define::ProtocolCodec
-        }
-    }
-};
-
 use std::mem::replace;
+
+use crate::structure::utils::{
+    enums::{
+        StatusCode,
+        StoneTransferProtocol,
+    },
+    structs::define::{
+        SecurePacket,
+        StructStoneHeader,
+        StructStonePayload,
+    },
+    structs::define::EncryptionInfo,
+    traits::define::Detector,
+    traits::define::ProtocolCodec
+};
+use crate::structure::utils::enums::EncryptionFlag;
 
 impl Detector for SecurePacket {
     fn display(&self) {
         let mut output = String::new();
-        let header = &self.origin_packet.header;
-        let payload = &self.origin_packet.payload;
         writeln!(output, "
-            Header:
-                Status: {:?} ({:?})
-                Type:   {:?} ({:?})
-                Size:   {:?}
-            Payload:
-                System information: {:?}
-                Command input:      {:?}
-                Response:           {:?}
-                file:               {:?}",
-                 self.get_status(), header.stone_status,
-                 self.get_type(), header.stone_type,
-                 self.get_size(),
-                 payload.sysinfo,
-                 payload.command_input,
-                 payload.response,
-                 payload.file).unwrap();
+        flag: {:?} ({:?})\n\
+        Header:
+        Status: {:?} ({:?})
+        Type:   {:?} ({:?})
+        Size:   {:?} ({:?})\n\
+        Payload:
+        System information: {:?}
+        Command input:      {:?}
+        Response:           {:?}
+        file:               {:?}\n",
+         EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
+         self.get_status(), self.origin_packet.header.stone_status,
+         self.get_type(), self.origin_packet.header.stone_type,
+         self.get_size() ,self.origin_packet.header.stone_size.to_be_bytes(),
+         self.take_sysinfo(),
+         self.take_command(),
+         self.take_response(),
+         self.take_file()
+        ).unwrap();
         print!("{}", output)
     }
 

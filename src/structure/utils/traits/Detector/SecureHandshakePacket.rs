@@ -1,71 +1,57 @@
 use std::fmt::Write;
 use std::mem::replace;
 
-use crate::{
-    structure::{
-        utils::{
-            structs::define::EncryptionInfo,
-            enums::{
-                StatusCode,
-                StoneTransferProtocol,
-            },
-            structs::define::{
-                SecureHandshakePacket,
-                StructStoneHeader,
-                StructStonePayload,
-            },
-            traits::{
-                define::{
-                    Detector,
-                    ProtocolCodec
-                }
-            }
-        }
+use crate::structure::utils::{
+    enums::{
+        StatusCode,
+        StoneTransferProtocol,
+    },
+    structs::define::{
+        SecureHandshakePacket,
+        StructStoneHeader,
+        StructStonePayload,
+    },
+    structs::define::EncryptionInfo,
+    traits::define::{
+        Detector,
+        ProtocolCodec
     }
 };
-use crate::structure::utils::enums::{EncryptionFlag, EncryptType, HandshakeType};
+use crate::structure::utils::enums::EncryptionFlag;
 
 impl Detector for SecureHandshakePacket {
     fn display(&self) {
         let mut output = String::new();
 
-        writeln!(output, "
-        flag: {:?}
-            Header:
-                Status: {:?} ({:?})
-                Type:   {:?} ({:?})
-                Size:   {:?}
-            Payload:
-                System information: {:?}
-                Command input:      {:?}
-                Response:           {:?}
-                file:               {:?}",
-                 EncryptionFlag::get_type(&self.encryption_flag),
-                 self.get_status(), self.origin_packet.header.stone_status,
-                 self.get_type(), self.origin_packet.header.stone_type,
-                 self.get_size(),
-                 self.take_sysinfo(),
-                 self.take_command(),
-                 self.take_response(),
-                 self.take_file()
+        writeln!(output, "\
+        flag: {:?} ({:?})\n\
+        Header:
+        Status: {:?} ({:?})
+        Type:   {:?} ({:?})
+        Size:   {:?} ({:?})\n\
+        Payload:
+        System information: {:?}
+        Command input:      {:?}
+        Response:           {:?}
+        file:               {:?}\n",
+         EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
+         self.get_status(), self.origin_packet.header.stone_status,
+         self.get_type(), self.origin_packet.header.stone_type,
+         self.get_size() ,self.origin_packet.header.stone_size.to_be_bytes(),
+         self.take_sysinfo(),
+         self.take_command(),
+         self.take_response(),
+         self.take_file()
         ).unwrap();
         print!("{}", output)
     }
 
-    fn get_status(&self) -> StatusCode {
-        StatusCode::get_type(&self.origin_packet.header.stone_status)
-    }
-
-    fn get_type(&self) -> StoneTransferProtocol {
-        StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type)
-    }
-
+    fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.origin_packet.header.stone_status) }
+    fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type) }
     fn get_size(&self) -> usize {
         self.origin_packet.get_size()
     }
-    fn get_encryption(&self) -> EncryptionInfo {
-        EncryptionFlag::get_type(&self.encryption_flag).get_types()
-    }
+    fn get_encryption(&self) -> EncryptionInfo { EncryptionFlag::get_type(&self.encryption_flag).get_types() }
     fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.origin_packet.header, Default::default()) }
     fn get_payload(&mut self) -> StructStonePayload { replace(&mut self.origin_packet.payload, Default::default()) }
     fn get_sysinfo(&mut self) -> Vec<u8> { replace(&mut self.origin_packet.payload.sysinfo, Default::default()) }
@@ -76,27 +62,19 @@ impl Detector for SecureHandshakePacket {
     fn take_header(&self) -> Option<&StructStoneHeader> {
         Option::from(&self.origin_packet.header)
     }
-    fn take_payload(&self) -> Option<&StructStonePayload> {
-        Option::from(&self.origin_packet.payload)
-    }
+    fn take_payload(&self) -> Option<&StructStonePayload> { Option::from(&self.origin_packet.payload) }
     fn take_sysinfo(&self) -> Option<&Vec<u8>> {
         Option::from(&self.origin_packet.payload.sysinfo)
     }
-    fn take_command(&self) -> Option<&Vec<u8>> {
-        Option::from(&self.origin_packet.payload.command_input)
-    }
-    fn take_response(&self) -> Option<&Vec<u8>> {
-        Option::from(&self.origin_packet.payload.response)
-    }
+    fn take_command(&self) -> Option<&Vec<u8>> { Option::from(&self.origin_packet.payload.command_input) }
+    fn take_response(&self) -> Option<&Vec<u8>> { Option::from(&self.origin_packet.payload.response) }
     fn take_file(&self) -> Option<&Vec<u8>> {
         Option::from(&self.origin_packet.payload.file)
     }
     fn take_stone(&self) -> Option<&Vec<u8>> {
         Option::from(&self.encrypted_packet)
     }
-    fn is_compression(&self) -> bool {
-        self.origin_packet.header.is_compression()
-    }
+    fn is_compression(&self) -> bool { self.origin_packet.header.is_compression() }
     fn is_encryption(&self) -> bool {
         self.origin_packet.header.is_signed()
     }

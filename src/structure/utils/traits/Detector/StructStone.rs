@@ -3,16 +3,14 @@ use std::{
     mem::replace
 };
 
-use crate::{
-    structure::{
-        utils::structs::define::EncryptionInfo,
-        utils::{
-            enums::{StatusCode, StoneTransferProtocol},
-            structs::define::{StructStone, StructStoneHeader, StructStonePayload},
-            traits::define::Detector,
-        },
-        utils::traits::define::ProtocolCodec
-    }
+use crate::structure::{
+    utils::{
+        enums::{StatusCode, StoneTransferProtocol},
+        structs::define::{StructStone, StructStoneHeader, StructStonePayload},
+        traits::define::Detector,
+    },
+    utils::structs::define::EncryptionInfo,
+    utils::traits::define::ProtocolCodec
 };
 
 impl Detector for StructStone {
@@ -27,14 +25,14 @@ impl Detector for StructStone {
         System information: {:?}
         Command input:      {:?}
         Response:           {:?}
-        file:               {:?}",
-                 self.get_status(), self.header.stone_status,
-                 self.get_type(), self.header.stone_type,
-                 self.get_size(), self.header.stone_size.to_be_bytes(),
-                 self.payload.sysinfo,
-                 self.payload.command_input,
-                 self.payload.response,
-                 self.payload.file
+        file:               {:?}\n",
+         self.get_status(), self.header.stone_status,
+         self.get_type(), self.header.stone_type,
+         self.get_size(), self.header.stone_size.to_be_bytes(),
+         self.take_sysinfo(),
+         self.take_command(),
+         self.take_response(),
+         self.take_file()
         ).unwrap();
         print!("{}", output);
         output.clear()

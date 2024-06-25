@@ -2,18 +2,16 @@ use bstr::ByteSlice;
 use sysinfo::System;
 
 use crate::{
-    structure::{
-        utils::{
-            enums::{
-                StoneTransferProtocol,
-                EncryptType
-            },
-            structs::define::{PacketBuilder, StructStonePayload},
+    structure::utils::{
+        enums::StoneTransferProtocol,
+        structs::define::{
+            EncryptionInfo,
+            PacketBuilder,
+            StructStonePayload
         }
     },
     utility::LZ4::CompressHandler,
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 pub const PACKET_DELIMITER: &[u8; 2] = b"\r\n";
 
@@ -71,10 +69,7 @@ impl StructStonePayload {
         payload: T,
     ) -> PacketBuilder {
         let mut vec_payload = payload.as_ref().to_vec();
-        let mut sysinfo = match  encryption.Type {
-            EncryptType::NoEncryption => Self::sysinfo().as_bytes().to_vec(),
-            _ => vec![]
-        };
+        let mut sysinfo = vec![];
 
         if compression {
             sysinfo.lz4_compress();
@@ -82,6 +77,9 @@ impl StructStonePayload {
         }
         
         let output = match protocol {
+            StoneTransferProtocol::Handshake => {
+                StructStonePayload::from(vec![], vec![], vec![], vec_payload)
+            }
             StoneTransferProtocol::Response | StoneTransferProtocol::ExecuteCmd => {
                 StructStonePayload::from(sysinfo, vec![], vec_payload, vec![])
             }
@@ -96,6 +94,10 @@ impl StructStonePayload {
             StoneTransferProtocol::Disconnect => StructStonePayload::default(),
             _ => StructStonePayload::default(),
         };
+
+        println!("build {:?}", protocol);
+        println!("build {:?}", output);
+
         PacketBuilder::from(compression, encryption, protocol, output)
     }
 

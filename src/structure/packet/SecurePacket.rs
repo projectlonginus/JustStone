@@ -5,16 +5,16 @@ use crate::{
             ParseError,
         },
         structs::define::{
+            EncryptionInfo,
             SecurePacket,
-            StructStone,
-        },
+            StructStone
+        }
     },
     utility::secure::{
         crypto::Crypto,
         utils::AesGcmSivCrypto,
     },
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl SecurePacket {
     pub fn build(mut source: StructStone, encryption: &EncryptionInfo) -> Result<SecurePacket, ParseError> {

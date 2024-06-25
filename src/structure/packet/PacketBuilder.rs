@@ -41,7 +41,6 @@ impl PacketBuilder {
     }
 
     pub fn handshake_packet(&mut self) -> Result<Packet, ParseError> {
-        self.raw_packet().payload.sysinfo = vec![];
         match SecureHandshakePacket::build(self.raw_packet(), self.encryption()) {
             Ok(packet) => Ok(Packet::from(packet)),
             Err(error) => Err(error)

@@ -1,13 +1,17 @@
 use crate::{
     structure::utils::{
         enums::{
+            EncryptionFlag,
             EncryptType,
             HandshakeType,
-            ParseError,
+            ParseError
         },
-        structs::define::{
-            SecureHandshakePacket,
-            StructStone,
+        structs::{
+            define::{
+                SecureHandshakePacket,
+                StructStone,
+            },
+            define::EncryptionInfo
         },
     },
     utility::secure::{
@@ -15,8 +19,6 @@ use crate::{
         utils::RsaCrypto,
     },
 };
-use crate::structure::utils::enums::EncryptionFlag;
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl SecureHandshakePacket {
     pub fn build(mut source: StructStone, encryption_info: &EncryptionInfo) -> Result<SecureHandshakePacket, ParseError> {

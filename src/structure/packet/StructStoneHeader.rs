@@ -1,8 +1,8 @@
 use crate::structure::utils::{
+    enums::StatusCode,
     structs::define::StructStoneHeader,
-    traits::define::ProtocolCodec,
+    traits::define::ProtocolCodec
 };
-use crate::structure::utils::enums::StatusCode;
 
 impl StructStoneHeader {
     pub fn load(packet: Vec<u8>) -> StructStoneHeader {

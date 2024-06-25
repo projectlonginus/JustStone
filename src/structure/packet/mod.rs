@@ -37,7 +37,7 @@ pub fn exploit(output: Vec<u8>) -> Packet {
 }
 
 pub fn secure_connection() -> Packet {
-    define::StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::Connection, vec![]).handshake_packet().unwrap()
+    define::StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::Handshake, vec![]).handshake_packet().unwrap()
 }
 
 pub fn secure_disconnect() -> Packet {
