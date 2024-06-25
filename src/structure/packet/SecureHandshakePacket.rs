@@ -9,18 +9,19 @@ use crate::{
             SecureHandshakePacket,
             StructStone,
         },
-        traits::define::ProtocolCodec,
     },
     utility::secure::{
         crypto::Crypto,
         utils::RsaCrypto,
     },
 };
+use crate::structure::utils::enums::EncryptionFlag;
 use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl SecureHandshakePacket {
     pub fn build(mut source: StructStone, encryption_info: &EncryptionInfo) -> Result<SecureHandshakePacket, ParseError> {
         let packet = SecureHandshakePacket::new();
+        let flag = EncryptionFlag::from_info(encryption_info);
 
         if encryption_info.Type != EncryptType::AesGcmSiv {
             return Err(ParseError::Unimplemented("EncryptionInfo algorithms other than AesGcmSiv have not yet been implemented.".to_string()));
@@ -33,6 +34,6 @@ impl SecureHandshakePacket {
         };
 
         source.stone = handshake_method.encrypt(source.stone);
-        packet.set(source.stone.len(), encryption_info.Handshake_Type.to_vec(), encryption_info.Type.to_vec(), source)
+        packet.set(source.stone.len(), flag, source)
     }
 }

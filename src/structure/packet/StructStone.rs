@@ -10,7 +10,7 @@ use crate::structure::utils::{
 impl StructStone {
     pub fn build(header: StructStoneHeader, payload: StructStonePayload) -> StructStone {
         let mut stone: Vec<u8> = header.to_vec();
-        if header.stone_size.as_slice() == &0_i32.to_le_bytes() {
+        if header.stone_size == 0 {
             return StructStone::from(header, payload, stone);
         }
         if !payload.is_empty() {

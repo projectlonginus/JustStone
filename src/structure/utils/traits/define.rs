@@ -21,8 +21,8 @@ pub trait Builder {
 }
 
 pub trait ProtocolCodec {
-    fn get_type(vec: &Vec<u8>) -> Self;
-    fn to_vec(&self) -> Vec<u8>;
+    fn get_type(vec: &[u8; 4]) -> Self;
+    fn to_bytes(&self) -> [u8; 4];
     fn to_string(&self) -> String;
 }
 

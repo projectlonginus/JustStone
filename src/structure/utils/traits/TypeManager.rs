@@ -68,13 +68,10 @@ impl TypeManager for StructStonePayload {
 
 impl TypeManager for StructStoneHeader {
     fn to_json(&self) -> JsonValue {
-        let mut array = [0; std::mem::size_of::<usize>()];
-        array.copy_from_slice(&self.stone_size);
-
         return object! {
             stone_status: StatusCode::get_type(&self.stone_status).to_string(),
             stone_type: StoneTransferProtocol::get_type(&self.stone_type).to_string(),
-            stone_size: usize::from_le_bytes(array)
+            stone_size: self.stone_size
         };
     }
 
@@ -82,7 +79,9 @@ impl TypeManager for StructStoneHeader {
         let mut header: Vec<u8> = Vec::new();
         header.extend(&self.stone_status);
         header.extend(&self.stone_type);
-        header.extend(&self.stone_size);
+        let size = self.stone_size.to_be_bytes();
+        println!("{:?}", size);
+        header.extend(size);
         header
     }
 }

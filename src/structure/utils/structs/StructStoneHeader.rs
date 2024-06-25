@@ -1,14 +1,15 @@
 use crate::{
     structure::{
         utils::{
-            enums::HeaderError,
             structs::define::StructStoneHeader
         }
     }
 };
+use crate::structure::utils::enums::{StatusCode, StoneTransferProtocol};
+use crate::structure::utils::traits::define::ProtocolCodec;
 
 impl StructStoneHeader {
-    pub fn from(stone_status: Vec<u8>, stone_type: Vec<u8>, stone_size: Vec<u8>) -> StructStoneHeader {
+    pub fn from(stone_status: [u8; 4], stone_type: [u8; 4], stone_size: u32) -> StructStoneHeader {
         StructStoneHeader {
             stone_status,
             stone_type,
@@ -18,34 +19,22 @@ impl StructStoneHeader {
 
     pub fn new() -> StructStoneHeader {
         StructStoneHeader {
-            stone_status: vec![],
-            stone_type: vec![],
-            stone_size: vec![],
+            stone_status: [0,0,0,0], // from StatusCode
+            stone_type:   [0,0,0,0],   // from StoneTransferProtocol
+            stone_size:   0,   // from usize
         }
     }
 
-    pub fn set_stone_status(&mut self, stone_status: Vec<u8>) -> Result<(), HeaderError> {
-        match stone_status.len() {
-            4 => self.stone_status = stone_status,
-            _ => return Err(HeaderError::StatusIsNot4Bytes)
-        }
-        Ok(())
+    pub fn set_stone_status(&mut self, stone_status: StatusCode){
+        self.stone_status = stone_status.to_bytes()
     }
 
-    pub fn set_stone_type(&mut self, stone_type: Vec<u8>) -> Result<(), HeaderError> {
-        match stone_type.len() {
-            4 => self.stone_status = stone_type,
-            _ => return Err(HeaderError::TypeIsNot4Bytes)
-        }
-        Ok(())
+    pub fn set_stone_type(&mut self, stone_type: StoneTransferProtocol) {
+        self.stone_type = stone_type.to_bytes()
     }
 
-    pub fn set_stone_size(&mut self, stone_size: Vec<u8>) -> Result<(), HeaderError> {
-        match stone_size.len() {
-            4 => self.stone_status = stone_size,
-            _ => return Err(HeaderError::SizeIsNot4Bytes)
-        }
-        Ok(())
+    pub fn set_stone_size(&mut self,size: usize) {
+        self.stone_size = size as u32
     }
 
     pub fn is_compression(&self) -> bool {
@@ -55,7 +44,7 @@ impl StructStoneHeader {
         }
     }
 
-    pub fn is_encrypted(&self) -> bool {
+    pub fn is_signed(&self) -> bool {
         match self.stone_status[..] {
             [0, 0, 1, 0] | [0, 0, 1, 1 ] => true,
             _ => false
@@ -64,9 +53,9 @@ impl StructStoneHeader {
 
     pub fn default() -> StructStoneHeader {
         StructStoneHeader {
-            stone_status: vec![0, 0, 0, 0],
-            stone_type: vec![0, 0, 0, 0],
-            stone_size: vec![12, 0, 0, 0],
+            stone_status: [0, 0, 0, 0],
+            stone_type:   [0, 0, 0, 0],
+            stone_size:   12,
         }
     }
 }

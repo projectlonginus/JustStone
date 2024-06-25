@@ -70,7 +70,6 @@ impl StructStonePayload {
         protocol: StoneTransferProtocol,
         payload: T,
     ) -> PacketBuilder {
-        println!("{:?}", encryption);
         let mut vec_payload = payload.as_ref().to_vec();
         let mut sysinfo = match  encryption.Type {
             EncryptType::NoEncryption => Self::sysinfo().as_bytes().to_vec(),

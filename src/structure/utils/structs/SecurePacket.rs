@@ -1,24 +1,23 @@
-use crate::structure::utils::structs::define::{SecurePacket, StructStone};
+use std::mem::replace;
+use crate::structure::utils::enums::EncryptionFlag;
+use crate::structure::utils::structs::define::{EncryptionInfo, SecurePacket, StructStone};
+use crate::structure::utils::traits::define::ProtocolCodec;
 
 impl SecurePacket {
     pub fn new() -> SecurePacket {
         SecurePacket {
-            encrypt_data_block_length: vec![0, 0, 0, 0, 0, 0],
-            encrypted_packet: Default::default(),
-            origin_packet: StructStone::new(),
+            encryption_flag:            [0,0,0,0],
+            encrypt_data_block_length:  0,
+            encrypted_packet:           Default::default(),
+            origin_packet:              StructStone::new(),
         }
     }
 
-    pub fn set(&self, encrypt_data_size: usize,mut origin_packet: StructStone) -> SecurePacket {
-        let mut encrypt_data_block_length: Vec<u8> = encrypt_data_size.to_le_bytes().to_vec();
-        let encrypted_packet = origin_packet.stone;
-
-        encrypt_data_block_length.resize(6, 0);
-        origin_packet.stone = Default::default();
-
+    pub fn set(&self, encryption_info: &EncryptionInfo, encrypt_data_size: usize,mut origin_packet: StructStone) -> SecurePacket {
         Self {
-            encrypt_data_block_length,
-            encrypted_packet,
+            encryption_flag:            EncryptionFlag::from_info(encryption_info).to_bytes(),
+            encrypt_data_block_length:  encrypt_data_size as u32,
+            encrypted_packet:           replace(&mut origin_packet.stone, Default::default()),
             origin_packet,
         }
     }

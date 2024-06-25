@@ -11,10 +11,11 @@ use crate::{
         }
     }
 };
+use crate::structure::utils::enums::EncryptionFlag;
 
 impl ProtocolCodec for StoneTransferProtocol {
-    fn get_type(vec: &Vec<u8>) -> Self {
-        match vec[..] {
+    fn get_type(vec: &[u8; 4]) -> Self {
+        match vec {
             [0, 0, 0, 0] => StoneTransferProtocol::Connection,
             [0, 0, 0, 1] => StoneTransferProtocol::Handshake,
             [0, 0, 1, 0] => StoneTransferProtocol::HealthCheck,
@@ -29,59 +30,59 @@ impl ProtocolCodec for StoneTransferProtocol {
         }
     }
 
-    fn to_vec(&self) -> Vec<u8>
+    fn to_bytes(&self) -> [u8; 4]
     {
         match self {
-            StoneTransferProtocol::Connection => vec![0, 0, 0, 0],
-            StoneTransferProtocol::Handshake => vec![0, 0, 0, 1],
-            StoneTransferProtocol::HealthCheck => vec![0, 0, 1, 0],
-            StoneTransferProtocol::Disconnect => vec![0, 0, 1, 1],
+            StoneTransferProtocol::Connection   => [0, 0, 0, 0],
+            StoneTransferProtocol::Handshake    => [0, 0, 0, 1],
+            StoneTransferProtocol::HealthCheck  => [0, 0, 1, 0],
+            StoneTransferProtocol::Disconnect   => [0, 0, 1, 1],
 
-            StoneTransferProtocol::ExecuteCmd => vec![0, 1, 0, 0],
-            StoneTransferProtocol::Upload => vec![0, 1, 0, 1],
-            StoneTransferProtocol::Download => vec![0, 1, 1, 0],
-            StoneTransferProtocol::Response => vec![0, 1, 1, 1],
+            StoneTransferProtocol::ExecuteCmd   => [0, 1, 0, 0],
+            StoneTransferProtocol::Upload       => [0, 1, 0, 1],
+            StoneTransferProtocol::Download     => [0, 1, 1, 0],
+            StoneTransferProtocol::Response     => [0, 1, 1, 1],
 
-            _ => vec![],
+            _ => [1,0,0,0],
         }
     }
 
     fn to_string(&self) -> String {
         match self {
-            StoneTransferProtocol::Connection => "Connection".to_string(),
-            StoneTransferProtocol::Handshake => "handshake".to_string(),
-            StoneTransferProtocol::HealthCheck => "HealthCheck".to_string(),
-            StoneTransferProtocol::Disconnect => "Disconnect".to_string(),
+            StoneTransferProtocol::Connection   => "Connection".to_string(),
+            StoneTransferProtocol::Handshake    => "handshake".to_string(),
+            StoneTransferProtocol::HealthCheck  => "HealthCheck".to_string(),
+            StoneTransferProtocol::Disconnect   => "Disconnect".to_string(),
 
-            StoneTransferProtocol::ExecuteCmd => "ExecuteCmd".to_string(),
-            StoneTransferProtocol::Upload => "Upload".to_string(),
-            StoneTransferProtocol::Download => "Download".to_string(),
-            StoneTransferProtocol::Response => "Response".to_string(),
+            StoneTransferProtocol::ExecuteCmd   => "ExecuteCmd".to_string(),
+            StoneTransferProtocol::Upload       => "Upload".to_string(),
+            StoneTransferProtocol::Download     => "Download".to_string(),
+            StoneTransferProtocol::Response     => "Response".to_string(),
 
-            StoneTransferProtocol::Unknown => "Unknown".to_string(),
+            StoneTransferProtocol::Unknown      => "Unknown".to_string(),
             _ => "Unknown".to_string(),
         }
     }
 }
 
 impl ProtocolCodec for StatusCode {
-    fn get_type(vec: &Vec<u8>) -> Self {
-        match vec[..] {
-            [0, 0, 0, 0] => StatusCode::Normal,
-            [0, 0, 0, 1] => StatusCode::Compressed,
-            [0, 0, 1, 0] => StatusCode::Secured,
-            [0, 0, 1, 1] => StatusCode::SCPacket,
-            _ => StatusCode::Modulated
+    fn get_type(vec: &[u8; 4]) -> Self {
+        match vec {
+            [0, 0, 0, 0] => StatusCode::Normal,     // 압축 x 서명 x
+            [0, 0, 0, 1] => StatusCode::Compressed, // 압축 o 서명 x
+            [0, 0, 1, 0] => StatusCode::Secured,    // 압축 x 서명 o
+            [0, 0, 1, 1] => StatusCode::SCPacket,   // 압축 o 서명 o
+            _ => StatusCode::Modulated // 패킷이 변조되거나 손상됨
         }
     }
 
-    fn to_vec(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> [u8; 4] {
         match self {
-            StatusCode::Normal => vec![0, 0, 0, 0],
-            StatusCode::Secured => vec![0, 0, 0, 1],
-            StatusCode::Compressed => vec![0, 0, 1, 0],
-            StatusCode::SCPacket => vec![0, 0, 1, 1],
-            _ => vec![]
+            StatusCode::Normal =>     [0, 0, 0, 0],
+            StatusCode::Secured =>    [0, 0, 0, 1],
+            StatusCode::Compressed => [0, 0, 1, 0],
+            StatusCode::SCPacket =>   [0, 0, 1, 1],
+            _ =>  [0,1,0,0]
         }
     }
 
@@ -97,19 +98,19 @@ impl ProtocolCodec for StatusCode {
 }
 
 impl ProtocolCodec for HandshakeType {
-    fn get_type(vec: &Vec<u8>) -> Self {
-        match vec[..] {
-            [0,1] => HandshakeType::RSA,
-            [1,0] => HandshakeType::DiffieHellman,
+    fn get_type(vec: &[u8; 4]) -> Self {
+        match vec {
+            [0,0,0,1] => HandshakeType::RSA,
+            [0,0,1,0] => HandshakeType::DiffieHellman,
             _ => HandshakeType::NoHandshake
         }
     }
 
-    fn to_vec(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> [u8; 4] {
         match self {
-            HandshakeType::RSA => { vec![0, 1] }
-            HandshakeType::DiffieHellman => { vec![1, 0] }
-            HandshakeType::NoHandshake => { vec![0, 0] }
+            HandshakeType::NoHandshake      => { [0,0,0,0] }
+            HandshakeType::RSA              => { [0,0,0,1] }
+            HandshakeType::DiffieHellman    => { [0,0,1,0] }
         }
     }
 
@@ -124,7 +125,7 @@ impl ProtocolCodec for HandshakeType {
 
 
 impl ProtocolCodec for EncryptType {
-    fn get_type(vec: &Vec<u8>) -> Self {
+    fn get_type(vec: &[u8; 4]) -> Self {
         match vec[..] {
             [0, 0, 0, 1] => EncryptType::RSA,
             [0, 0, 1, 0] => EncryptType::AesCbc,
@@ -134,13 +135,13 @@ impl ProtocolCodec for EncryptType {
         }
     }
 
-    fn to_vec(&self) -> Vec<u8> {
+    fn to_bytes(&self) -> [u8; 4] {
         match self {
-            EncryptType::RSA => { vec![0, 0, 0, 1] }
-            EncryptType::AesCbc => { vec![0, 0, 1, 0] }
-            EncryptType::AesGcm => { vec![0, 0, 1, 1] }
-            EncryptType::AesGcmSiv => { vec![0, 1, 0, 0] }
-            _ => { vec![0, 0, 0, 0] }
+            EncryptType::RSA        => { [0, 0, 0, 1] }
+            EncryptType::AesCbc     => { [0, 0, 1, 0] }
+            EncryptType::AesGcm     => { [0, 0, 1, 1] }
+            EncryptType::AesGcmSiv  => { [0, 1, 0, 0] }
+            _ => { [0, 0, 0, 0] }
         }
     }
 
@@ -151,6 +152,44 @@ impl ProtocolCodec for EncryptType {
             EncryptType::AesGcm => { "AecCbc".to_string() }
             EncryptType::AesGcmSiv => { "AesGcmSiv".to_string() }
             _ => { "NotEncryption".to_string() }
+        }
+    }
+}
+
+impl ProtocolCodec for EncryptionFlag {
+    fn get_type(vec: &[u8; 4]) -> Self {
+        match vec {
+            [0, 1, 0, 1] => EncryptionFlag::RAGS,
+            [0, 1, 1, 0] => EncryptionFlag::RAG,
+            [0, 1, 1, 1] => EncryptionFlag::RAC,
+            [1, 0, 0, 0] => EncryptionFlag::DHAGS,
+            [1, 0, 0, 1] => EncryptionFlag::DHAG,
+            [1, 0, 1, 0] => EncryptionFlag::DHAC,
+            _ => { EncryptionFlag::Unknown }
+        }
+    }
+
+    fn to_bytes(&self) -> [u8; 4] {
+        match self {
+            EncryptionFlag::RAGS    => [0, 1, 0, 1],
+            EncryptionFlag::RAG     => [0, 1, 1, 0],
+            EncryptionFlag::RAC     => [0, 1, 1, 1],
+            EncryptionFlag::DHAGS   => [1, 0, 0, 0],
+            EncryptionFlag::DHAG    => [1, 0, 0, 1],
+            EncryptionFlag::DHAC    => [1, 0, 1, 0],
+            _ => [1, 0, 1, 1]
+        }
+    }
+
+    fn to_string(&self) -> String {
+        match self {
+            EncryptionFlag::RAGS    => "RSA-AesGcmSiv".to_string(),
+            EncryptionFlag::RAG     => "RSA-AesGcm".to_string(),
+            EncryptionFlag::RAC     => "RSA-AesCbc".to_string(),
+            EncryptionFlag::DHAGS   => "Diffie_Hellman-AesGcmSiv".to_string(),
+            EncryptionFlag::DHAG    => "Diffie_Hellman-AesGcm".to_string(),
+            EncryptionFlag::DHAC    => "Diffie_Hellman-AesCbc".to_string(),
+            _ => "Unknown".to_string()
         }
     }
 }

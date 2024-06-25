@@ -14,7 +14,7 @@ mod structure;
 mod utility;
 
 fn main() {
-    let mut client = Client::secure("127.0.0.1", RSA, AesGcmSiv);
+    let mut client = Client::normal("127.0.0.1").use_encrypt(true, AesGcmSiv, RSA);
 
     client.default_client_handler();
 }

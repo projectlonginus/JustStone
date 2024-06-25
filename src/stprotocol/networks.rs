@@ -19,24 +19,31 @@ use crate::{
 };
 use crate::structure::utils::structs::define::{EncryptionInfo, StructStoneHeader};
 
+static PORT:u16 = 6974;
+
 impl HandleSession for Session {
-    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> io::Result<TcpStream> {
+    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> io::Result<(TcpStream,Packet)> {
         TcpStream::connect(address).and_then(|mut socket| {
             socket.write_all(packet.take_stone().unwrap())?;
-            Ok(socket)
+            packet.display();
+            Ok((socket, packet))
         })
     }
 
     fn normal(address: IpAddr) -> Session {
-        Self::new(SocketAddr::new(address, 6974), connection())
-            .map(|socket| Session::set(EncryptionInfo::default(), socket, connection()))
-            .unwrap_or_else(|error| panic!("normal connection error: {:?}", error))
+        Self::new(SocketAddr::new(address, PORT), connection())
+            .map(|(socket,packet)| {
+                println!("normal connection success");
+                Session::set(EncryptionInfo::default(), socket, packet)})
+            .unwrap_or_else(|error| { println!("A normal connection failed: {:?}\nretry normal connection", error); Self::normal(address) })
     }
 
     fn secure(address: IpAddr, encryption: EncryptionInfo) -> Session {
-        Self::new(SocketAddr::new(address, 6974), secure_connection())
-            .map(|socket| Session::set(encryption, socket, secure_connection()))
-            .unwrap_or_else(|error| panic!("secure connection error: {:?}", error))
+        Self::new(SocketAddr::new(address, PORT), secure_connection())
+            .map(|(socket,packet)| {
+                println!("secure connection success");
+                Session::set(encryption, socket, packet)})
+            .unwrap_or_else(|error| { println!("A secure connection failed. This continues as an unsafe connection: {:?}", error); Self::normal(address) }) // 리펙토링 필요 *
     }
 
     fn is_connected(&self) -> bool {
@@ -72,8 +79,6 @@ impl HandleSession for Session {
             Packet::StructStone(ref mut packet) => replace(packet, Default::default()),
             _ => return Err(ParseError::Unimplemented("Packet does not exist".to_string())),
         };
-
-        println!("{:?}", packet.get_type());
 
         let encrypted_packet = match packet.get_type() {
             Connection => {

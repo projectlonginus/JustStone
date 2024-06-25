@@ -48,13 +48,7 @@ impl Detector for StructStone {
         StoneTransferProtocol::get_type(&self.header.stone_type)
     }
     fn get_size(&self) -> usize {
-        let length = u32::from_le_bytes([
-            self.header.stone_size[0],
-            self.header.stone_size[1],
-            self.header.stone_size[2],
-            self.header.stone_size[3],
-        ]) as usize;
-        usize::from(length)
+        self.header.stone_size as usize
     }
 
     fn get_encryption(&self) -> EncryptionInfo {
@@ -83,6 +77,6 @@ impl Detector for StructStone {
         self.header.is_compression()
     }
     fn is_encryption(&self) -> bool {
-        self.header.is_encrypted()
+        self.header.is_signed()
     }
 }

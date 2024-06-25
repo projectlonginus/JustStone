@@ -2,16 +2,16 @@ use crate::structure::utils::enums::{EncryptType, HandshakeType};
 
 #[derive(Clone, Debug, Default)]
 pub struct SecureHandshakePacket {
-    pub(crate) encrypt_data_block_length: Vec<u8>,
-    pub(crate) handshake_type: Vec<u8>,
-    pub(crate) encrypt_type: Vec<u8>,
+    pub(crate) encryption_flag: [u8; 4],
+    pub(crate) encrypt_data_block_length: u32,
     pub(crate) encrypted_packet: Vec<u8>,
     pub(crate) origin_packet: StructStone,
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct SecurePacket {
-    pub(crate) encrypt_data_block_length: Vec<u8>,
+    pub(crate) encryption_flag: [u8; 4],
+    pub(crate) encrypt_data_block_length: u32,
     pub(crate) encrypted_packet: Vec<u8>,
     pub(crate) origin_packet: StructStone,
 }
@@ -33,9 +33,9 @@ pub struct StructStonePayload {
 
 #[derive(Debug, Clone, Default)]
 pub struct StructStoneHeader {
-    pub(crate) stone_status: Vec<u8>,
-    pub(crate) stone_type: Vec<u8>,
-    pub(crate) stone_size: Vec<u8>,
+    pub(crate) stone_status: [u8; 4], // 4바이트
+    pub(crate) stone_type:   [u8; 4],   // 4바이트
+    pub(crate) stone_size:   u32,   // 4바이트
 }
 
 #[derive(Debug, Clone, Default)]

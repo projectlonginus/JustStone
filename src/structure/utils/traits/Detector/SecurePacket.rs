@@ -55,19 +55,7 @@ impl Detector for SecurePacket {
     }
 
     fn get_size(&self) -> usize {
-        let length = u32::from_le_bytes([
-            self.encrypt_data_block_length[0],
-            self.encrypt_data_block_length[1],
-            self.encrypt_data_block_length[2],
-            self.encrypt_data_block_length[3],
-        ]) as usize
-            + u32::from_le_bytes([
-            self.encrypt_data_block_length[4],
-            self.encrypt_data_block_length[5],
-            0,
-            0,
-        ]) as usize;
-        usize::from(length)
+        self.origin_packet.get_size()
     }
 
     fn get_encryption(&self) -> EncryptionInfo {
@@ -98,6 +86,6 @@ impl Detector for SecurePacket {
         self.origin_packet.header.is_compression()
     }
     fn is_encryption(&self) -> bool {
-        self.origin_packet.header.is_encrypted()
+        self.origin_packet.header.is_signed()
     }
 }

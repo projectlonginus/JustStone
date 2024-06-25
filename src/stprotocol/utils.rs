@@ -90,6 +90,7 @@ impl Client {
     }
 
     pub fn use_encrypt(&mut self, enable: bool, encrypt_type: EncryptType, handshake_type: HandshakeType) -> Client {
+
         let encryption = EncryptionInfo {
             Activated: enable,
             Type: encrypt_type,
@@ -113,7 +114,7 @@ pub trait PacketProcessing {
 }
 
 pub trait HandleSession {
-    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> std::io::Result<TcpStream>;
+    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> std::io::Result<(TcpStream, Packet)>;
     fn normal(address: IpAddr) -> Session;
     fn secure(address: IpAddr, encryption: EncryptionInfo) -> Session;
     fn is_connected(&self) -> bool;
