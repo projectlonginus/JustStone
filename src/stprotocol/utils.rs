@@ -1,23 +1,21 @@
-use std::io;
-use std::io::Error;
-use std::net::{IpAddr, TcpStream, ToSocketAddrs};
+use std::{
+    io::Error,
+    net::{IpAddr, TcpStream, ToSocketAddrs}
+};
 
 use crate::{
     Application::malware::utils::shell::ShellStream,
-    structure::{
-        utils::{
-            enums::{
-                EncryptType,
-                HandshakeType,
-                Packet,
-                ParseError,
-            },
-            structs::{
-                define::StructStone,
-                define::EncryptionInfo
-            }
+    structure::utils::{
+        enums::{
+            EncryptType,
+            HandshakeType,
+            Packet,
+            ParseError,
         },
-        packet::{connection, secure_connection}
+        structs::{
+            define::EncryptionInfo,
+            define::StructStone
+        }
     },
     utility::secure::{
         crypto::Crypto,
@@ -50,9 +48,7 @@ pub struct ProtocolEditor {
 type SResult<T> = std::io::Result<T>;
 
 impl Session {
-    pub fn take_packet(&self) -> &Packet {
-        &self.packet
-    }
+    pub fn take_packet(&self) -> &Packet { &self.packet }
     pub fn get_packet(&self) -> Packet { self.packet.clone() }
     pub fn set_packet(&mut self, packet: Packet) {
         self.packet = packet
@@ -74,9 +70,7 @@ impl Session {
     pub fn take_handshake_type(&self) -> &HandshakeType {
         &self.encryption.Handshake_Type
     }
-    pub fn set_handshake(&mut self, handshake_type: HandshakeType) {
-        self.encryption.Handshake_Type = handshake_type
-    }
+    pub fn set_handshake(&mut self, handshake_type: HandshakeType) { self.encryption.Handshake_Type = handshake_type }
     pub fn set_encryption(&mut self, encryption: EncryptionInfo) {
         self.encryption = encryption;
         match self.encryption.Type {

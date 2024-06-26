@@ -1,11 +1,12 @@
-use crate::structure::packet::secure_connection;
-use crate::structure::packet::connection;
-use egui::ahash::{HashMap, HashMapExt};
 use crate::structure::utils::{
-    structs::define::{SecureHandshakePacket, SecurePacket, StructStone},
+    structs::define::{
+        EncryptionInfo,
+        SecureHandshakePacket,
+        SecurePacket,
+        StructStone
+    },
     traits::define::Detector,
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum StoneTransferProtocol {

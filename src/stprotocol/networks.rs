@@ -1,13 +1,14 @@
 use std::{
     io::{
         self,
+        Error,
         Read,
-        Write,
-        Error
+        Write
     },
     mem::replace,
     net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs},
 };
+
 use utils::Session;
 
 use crate::{
@@ -15,16 +16,14 @@ use crate::{
     structure::{
         packet::{connection, disconnect, secure_connection, secure_disconnect},
         utils::{
-            enums::{EncryptType, Packet, ParseError, StoneTransferProtocol::Connection, HandshakeType},
-            structs::{
-                define::{
-                    SecureHandshakePacket,
-                    SecurePacket,
-                    StructStone,
-                    StructStonePayload,
-                    EncryptionInfo,
-                    StructStoneHeader
-                }
+            enums::{EncryptType, HandshakeType, Packet, ParseError, StoneTransferProtocol::Connection},
+            structs::define::{
+                EncryptionInfo,
+                SecureHandshakePacket,
+                SecurePacket,
+                StructStone,
+                StructStoneHeader,
+                StructStonePayload
             },
             traits::define::Detector,
         }
@@ -36,12 +35,15 @@ static PORT:u16 = 6974;
 impl HandleSession for Session {
     fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> Result<(TcpStream,Packet), (Error, Packet)> {
         packet.display();
-        TcpStream::connect(address)
-            .and_then(|mut socket| {
-                let stone = packet.take_stone().unwrap();
-                socket.write_all(&stone).map(|_| (socket, packet))
-            })
-            .map_err(|error| (error, packet))
+        match TcpStream::connect(address) {
+            Ok(mut socket ) => {
+                return match socket.write_all(packet.take_stone().unwrap()) {
+                    Ok(_) => Ok((socket, packet)),
+                    Err(error)  => Err((error, packet)),
+                }
+            },
+            Err(error) => Err((error, packet))
+        }
     }
 
     fn normal(address: IpAddr, packet: Packet) -> Session {

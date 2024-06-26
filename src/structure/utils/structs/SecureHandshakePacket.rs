@@ -1,13 +1,10 @@
 use std::mem::replace;
-use crate::{
-    structure::{
-        utils::{
-            enums::ParseError,
-            structs::define::{SecureHandshakePacket, StructStone}
-        }
-    }
+
+use crate::structure::utils::{
+    enums::ParseError,
+    structs::define::{SecureHandshakePacket, StructStone}
 };
-use crate::structure::utils::enums::{EncryptionFlag, HeaderError};
+use crate::structure::utils::enums::EncryptionFlag;
 use crate::structure::utils::traits::define::ProtocolCodec;
 
 impl SecureHandshakePacket {
@@ -29,9 +26,7 @@ impl SecureHandshakePacket {
         })
     }
 
-    pub fn set_flag(&mut self, encryption_flag: EncryptionFlag) {
-        self.encryption_flag = encryption_flag.to_bytes();
-    }
+    pub fn set_flag(&mut self, encryption_flag: EncryptionFlag) { self.encryption_flag = encryption_flag.to_bytes(); }
 
     pub fn set_size(&mut self, size: usize) {
         self.encrypt_data_block_length = size as u32

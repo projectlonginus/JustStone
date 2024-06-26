@@ -1,12 +1,4 @@
 use stprotocol::{Client, Handlers};
-use structure::{
-    utils::{
-        enums::{
-            EncryptType::AesGcmSiv,
-            HandshakeType::RSA
-        }
-    }
-};
 
 mod Application;
 mod stprotocol;
@@ -14,7 +6,7 @@ mod structure;
 mod utility;
 
 fn main() {
-    let mut client = Client::secure("127.0.0.1", RSA, AesGcmSiv);
+    let mut client = Client::secure("127.0.0.1");
 
     client.default_client_handler();
 }
