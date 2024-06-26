@@ -1,16 +1,16 @@
 use crate::structure::utils::{
     enums::{
         Packet,
-        StoneTransferProtocol,
+        StatusCode,
+        StoneTransferProtocol
     },
     structs::define::{
+        EncryptionInfo,
         StructStoneHeader,
-        StructStonePayload,
+        StructStonePayload
     },
     traits::define::Detector,
 };
-use crate::structure::utils::enums::StatusCode;
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl Detector for Packet {
     fn display(&self) { self.payload().display() }

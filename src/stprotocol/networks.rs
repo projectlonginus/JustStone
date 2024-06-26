@@ -49,11 +49,11 @@ impl HandleSession for Session {
     fn normal(address: IpAddr, packet: Packet) -> Session {
         Self::new(SocketAddr::new(address, PORT), packet)
             .map(|(socket,packet)| {
-                println!("normal connection success");
+                println!("normal connection success.\n");
                 Session::set(EncryptionInfo::no_encryption(), socket, packet)
             })
             .unwrap_or_else(|(Error, Packet)| {
-                println!("A normal connection failed: {:?}.\nretry normal connection", Error);
+                println!("A normal connection failed: {:?}.\nretry normal connection.\n", Error);
                 Self::normal(address, Packet)
             })
     }
@@ -61,11 +61,11 @@ impl HandleSession for Session {
     fn secure(address: IpAddr, packet: Packet) -> Session {
         Self::new(SocketAddr::new(address, PORT), packet)
             .map(|(socket,packet)| {
-                println!("secure connection success");
+                println!("secure connection success.\n");
                 Session::set(EncryptionInfo::default_encryption(), socket, packet)
             })
             .unwrap_or_else(|(Error, Packet)| {
-                println!("A secure connection failed: {:?}.\nretry normal connection: ", Error);
+                println!("A secure connection failed: {:?}.\nretry normal connection.\n", Error);
                 Self::secure(address, Packet)
             }) // 리펙토링 필요 *
     }
@@ -73,18 +73,18 @@ impl HandleSession for Session {
     fn establish_connection(address: IpAddr, conn_type: EncryptionInfo, packet: Packet, attempts: u32) -> Session {
         if attempts >= 3 {
             match conn_type.Handshake_Type {
-                HandshakeType::NoHandshake => panic!("Failed to establish any connection after multiple attempts"),
+                HandshakeType::NoHandshake => panic!("Failed to establish any connection after multiple attempts.\n"),
                 _ => return Self::establish_connection(address, conn_type, packet, attempts),
             }
         }
 
         match Self::new(SocketAddr::new(address, PORT), packet) {
             Ok((socket, packet)) => {
-                println!("{} connection success", conn_type.Activated);
+                println!("{} connection success.\n", conn_type.Activated);
                 Session::set(conn_type, socket, packet)
             }
             Err((error, packet)) => {
-                println!("A {:?} connection failed (attempt {}): {:?}.\nRetrying connection",
+                println!("A {:?} connection failed (attempt {}): {:?}.\nRetrying connection.\n",
                          conn_type.Type, attempts + 1, error);
                 Self::establish_connection(address, conn_type, packet, attempts + 1)
             }

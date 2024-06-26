@@ -24,8 +24,13 @@ use crate::structure::utils::{
 impl Detector for SecurePacket {
     fn display(&self) {
         let mut output = String::new();
-        writeln!(output, "flag: {:?} ({:?})",
-            EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
+        writeln!(output, "\
+        SecurePacket:
+        Encryption Flag:             {:?} ({:?})
+        Encrypted Data Block Length: {:?} ({:?})
+        Encrypted Data Field: \
+        ", EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
+        self.get_size(), self.encrypt_data_block_length.to_be_bytes()
         ).unwrap();
         print!("{}", output);
         self.origin_packet.display()

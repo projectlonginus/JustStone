@@ -3,27 +3,32 @@ use std::mem::replace;
 
 use crate::structure::utils::{
     enums::{
+        EncryptionFlag,
         StatusCode,
-        StoneTransferProtocol,
+        StoneTransferProtocol
     },
     structs::define::{
+        EncryptionInfo,
         SecureHandshakePacket,
         StructStoneHeader,
-        StructStonePayload,
+        StructStonePayload
     },
-    structs::define::EncryptionInfo,
     traits::define::{
         Detector,
         ProtocolCodec
     }
 };
-use crate::structure::utils::enums::EncryptionFlag;
 
 impl Detector for SecureHandshakePacket {
     fn display(&self) {
         let mut output = String::new();
-        writeln!(output, "Encryption Flag: {:?} ({:?})",
-         EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
+        writeln!(output, "\
+        SecureHandshakePacket:
+        Encryption Flag:             {:?} ({:?})
+        Encrypted Data Block Length: {:?} ({:?})
+        Encrypted Data Field: \
+        ", EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
+        self.get_size(), self.encrypt_data_block_length.to_be_bytes()
         ).unwrap();
         print!("{}", output);
         self.origin_packet.display()

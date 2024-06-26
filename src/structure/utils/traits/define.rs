@@ -1,20 +1,16 @@
 use json::JsonValue;
 
-use crate::{
-    structure::{
-        utils::{
-            enums::StoneTransferProtocol,
-            structs::{
-                define::{
-                    StructStoneHeader,
-                    StructStonePayload,
-                    EncryptionInfo
-                }
-            }
-        }
-    }
+use crate::structure::utils::{
+    enums::{
+        StatusCode,
+        StoneTransferProtocol
+    },
+    structs::define::{
+        EncryptionInfo,
+        StructStoneHeader,
+        StructStonePayload
+    },
 };
-use crate::structure::utils::enums::StatusCode;
 
 pub trait Builder {
 

@@ -3,14 +3,18 @@ use std::{
     mem::replace
 };
 
-use crate::structure::{
-    utils::{
-        enums::{StatusCode, StoneTransferProtocol},
-        structs::define::{StructStone, StructStoneHeader, StructStonePayload},
-        traits::define::Detector,
+use crate::structure::utils::{
+    enums::{StatusCode, StoneTransferProtocol},
+    structs::define::{
+        EncryptionInfo,
+        StructStone,
+        StructStoneHeader,
+        StructStonePayload
     },
-    utils::structs::define::EncryptionInfo,
-    utils::traits::define::ProtocolCodec
+    traits::define::{
+        Detector,
+        ProtocolCodec
+    },
 };
 
 impl Detector for StructStone {
