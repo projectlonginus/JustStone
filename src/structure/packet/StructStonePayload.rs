@@ -95,8 +95,8 @@ impl StructStonePayload {
             _ => StructStonePayload::default(),
         };
 
-        println!("build {:?}", protocol);
-        println!("build {:?}", output);
+        println!("build 프로토콜: {:?}", protocol);
+        println!("build 페이로드: {:?}", output);
 
         PacketBuilder::from(compression, encryption, protocol, output)
     }

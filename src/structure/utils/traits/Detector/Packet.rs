@@ -13,9 +13,7 @@ use crate::structure::utils::enums::StatusCode;
 use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl Detector for Packet {
-    fn display(&self) {
-        self.payload().display()
-    }
+    fn display(&self) { self.payload().display() }
 
     fn get_status(&self) -> StatusCode {
         self.payload().get_status()

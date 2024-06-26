@@ -1,9 +1,13 @@
 use std::{
-    io::{self, Read, Write},
+    io::{
+        self,
+        Read,
+        Write,
+        Error
+    },
     mem::replace,
     net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs},
 };
-use std::io::Error;
 use utils::Session;
 
 use crate::{
@@ -11,39 +15,86 @@ use crate::{
     structure::{
         packet::{connection, disconnect, secure_connection, secure_disconnect},
         utils::{
-            enums::{EncryptType, Packet, ParseError, StoneTransferProtocol::Connection},
-            structs::define::{SecureHandshakePacket, SecurePacket, StructStone, StructStonePayload},
+            enums::{EncryptType, Packet, ParseError, StoneTransferProtocol::Connection, HandshakeType},
+            structs::{
+                define::{
+                    SecureHandshakePacket,
+                    SecurePacket,
+                    StructStone,
+                    StructStonePayload,
+                    EncryptionInfo,
+                    StructStoneHeader
+                }
+            },
             traits::define::Detector,
-        },
+        }
     }
 };
-use crate::structure::utils::structs::define::{EncryptionInfo, StructStoneHeader};
 
 static PORT:u16 = 6974;
 
 impl HandleSession for Session {
-    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> io::Result<(TcpStream,Packet)> {
+    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> Result<(TcpStream,Packet), (Error, Packet)> {
         packet.display();
-        TcpStream::connect(address).and_then(|mut socket| {
-            socket.write_all(packet.take_stone().unwrap())?;
-            Ok((socket, packet))
-        })
+        TcpStream::connect(address)
+            .and_then(|mut socket| {
+                let stone = packet.take_stone().unwrap();
+                socket.write_all(&stone).map(|_| (socket, packet))
+            })
+            .map_err(|error| (error, packet))
     }
 
-    fn normal(address: IpAddr) -> Session {
-        Self::new(SocketAddr::new(address, PORT), connection())
+    fn normal(address: IpAddr, packet: Packet) -> Session {
+        Self::new(SocketAddr::new(address, PORT), packet)
             .map(|(socket,packet)| {
                 println!("normal connection success");
-                Session::set(EncryptionInfo::default(), socket, packet)})
-            .unwrap_or_else(|error| { println!("A normal connection failed: {:?}\nretry normal connection", error); Self::normal(address) })
+                Session::set(EncryptionInfo::no_encryption(), socket, packet)
+            })
+            .unwrap_or_else(|(Error, Packet)| {
+                println!("A normal connection failed: {:?}.\nretry normal connection", Error);
+                Self::normal(address, Packet)
+            })
     }
 
-    fn secure(address: IpAddr, encryption: EncryptionInfo) -> Session {
-        Self::new(SocketAddr::new(address, PORT), secure_connection())
+    fn secure(address: IpAddr, packet: Packet) -> Session {
+        Self::new(SocketAddr::new(address, PORT), packet)
             .map(|(socket,packet)| {
                 println!("secure connection success");
-                Session::set(encryption, socket, packet)})
-            .unwrap_or_else(|error| { println!("A secure connection failed. This continues as an unsafe connection: {:?}", error); Self::normal(address) }) // 리펙토링 필요 *
+                Session::set(EncryptionInfo::default_encryption(), socket, packet)
+            })
+            .unwrap_or_else(|(Error, Packet)| {
+                println!("A secure connection failed: {:?}.\nretry normal connection: ", Error);
+                Self::secure(address, Packet)
+            }) // 리펙토링 필요 *
+    }
+
+    fn establish_connection(address: IpAddr, conn_type: EncryptionInfo, packet: Packet, attempts: u32) -> Session {
+        if attempts >= 3 {
+            match conn_type.Handshake_Type {
+                HandshakeType::NoHandshake => panic!("Failed to establish any connection after multiple attempts"),
+                _ => return Self::establish_connection(address, conn_type, packet, attempts),
+            }
+        }
+
+        match Self::new(SocketAddr::new(address, PORT), packet) {
+            Ok((socket, packet)) => {
+                println!("{} connection success", conn_type.Activated);
+                Session::set(conn_type, socket, packet)
+            }
+            Err((error, packet)) => {
+                println!("A {:?} connection failed (attempt {}): {:?}.\nRetrying connection",
+                         conn_type.Type, attempts + 1, error);
+                Self::establish_connection(address, conn_type, packet, attempts + 1)
+            }
+        }
+    }
+
+    fn optional(address: IpAddr, encryption: EncryptionInfo) -> Session {
+        let packet = match encryption.Activated {
+            false => connection(),
+            _ => secure_connection()
+        };
+        Self::establish_connection(address, encryption, packet, 0)
     }
 
     fn is_connected(&self) -> bool {
@@ -58,11 +109,8 @@ impl HandleSession for Session {
         if !self.is_connected() {
             let ip = self.socket.peer_addr().unwrap().ip();
             return match self.encryption.Type {
-                EncryptType::NoEncryption => Ok(Session::normal(ip)),
-                _ => Ok(Session::secure(
-                    ip,
-                    replace(&mut self.encryption, Default::default())
-                )),
+                EncryptType::NoEncryption => Ok(Session::normal(ip, connection())),
+                _ => Ok(Session::secure(ip, secure_connection())),
             };
         }
 

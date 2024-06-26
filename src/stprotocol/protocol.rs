@@ -36,6 +36,7 @@ use crate::{
         }
     }
 };
+use crate::structure::packet::{connection, secure_connection};
 
 type Result<T> = std::io::Result<T>;
 
@@ -48,21 +49,24 @@ impl Client {
     }
     pub fn normal(ip: &str) -> Client {
         Client {
-            session: Session::normal(ip.parse().unwrap()),
+            session: Session::normal(ip.parse().unwrap(), connection()),
             exploits: ShellStream::default(),
         }
     }
 
-    pub fn secure(ip: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Client {
+    pub fn secure(ip: &str) -> Client {
         Client {
-            session: Session::secure(
-                ip.parse().unwrap(),
-                EncryptionInfo {
-                    Activated: true,
-                    Type: encrypt_type,
-                    Handshake_Type: handshake_type,
-                }
-            ),
+            session: Session::secure(ip.parse().unwrap(), secure_connection()),
+            exploits: ShellStream::default(),
+        }
+    }
+    pub fn optional(ip: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Client {
+        Client {
+            session: Session::optional(ip.parse().unwrap(), EncryptionInfo {
+                Activated: true,
+                Type: encrypt_type,
+                Handshake_Type: handshake_type,
+            }),
             exploits: ShellStream::default(),
         }
     }

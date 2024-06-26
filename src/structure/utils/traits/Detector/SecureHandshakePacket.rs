@@ -24,7 +24,7 @@ impl Detector for SecureHandshakePacket {
         let mut output = String::new();
 
         writeln!(output, "\
-        flag: {:?} ({:?})\n\
+        Encryption Flag: {:?} ({:?})\n\
         Header:
         Status: {:?} ({:?})
         Type:   {:?} ({:?})

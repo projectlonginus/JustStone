@@ -1,3 +1,5 @@
+use crate::structure::packet::secure_connection;
+use crate::structure::packet::connection;
 use egui::ahash::{HashMap, HashMapExt};
 use crate::structure::utils::{
     structs::define::{SecureHandshakePacket, SecurePacket, StructStone},
