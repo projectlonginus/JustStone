@@ -29,9 +29,7 @@ impl Detector for SecurePacket {
         ).unwrap();
         print!("{}", output);
         self.origin_packet.display()
-
     }
-
     fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.origin_packet.header.stone_status) }
     fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type) }
     fn get_size(&self) -> usize { self.origin_packet.get_size() }

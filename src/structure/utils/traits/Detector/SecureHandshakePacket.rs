@@ -22,14 +22,12 @@ use crate::structure::utils::enums::EncryptionFlag;
 impl Detector for SecureHandshakePacket {
     fn display(&self) {
         let mut output = String::new();
-
         writeln!(output, "Encryption Flag: {:?} ({:?})",
          EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
         ).unwrap();
         print!("{}", output);
         self.origin_packet.display()
     }
-
     fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.origin_packet.header.stone_status) }
     fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type) }
     fn get_size(&self) -> usize { self.origin_packet.get_size() }
