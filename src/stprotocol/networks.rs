@@ -8,9 +8,6 @@ use std::{
     mem::replace,
     net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs},
 };
-
-use utils::Session;
-
 use crate::{
     stprotocol::{HandleSession, utils},
     structure::{
@@ -29,6 +26,9 @@ use crate::{
         }
     }
 };
+use utils::Session;
+use crate::utility::secure::crypto::Crypto;
+use crate::utility::secure::utils::RsaCrypto;
 
 static PORT:u16 = 6974;
 
@@ -58,16 +58,19 @@ impl HandleSession for Session {
             })
     }
 
-    fn secure(address: IpAddr, packet: Packet) -> Session {
-        Self::new(SocketAddr::new(address, PORT), packet)
-            .map(|(socket,packet)| {
-                println!("secure connection success.\n");
-                Session::set(EncryptionInfo::default_encryption(), socket, packet)
-            })
-            .unwrap_or_else(|(Error, Packet)| {
-                println!("A secure connection failed: {:?}.\nretry normal connection.\n", Error);
-                Self::secure(address, Packet)
-            }) // 리펙토링 필요 *
+    fn secure(&mut self) -> Session {
+        self.receiving(StructStone::buffer());
+        self.cipher.rsa = RsaCrypto::from_pub_key(self.recv_packet.take_file().unwrap());
+        todo!("CA 인증서 서명 인증 로직 추가")
+        // Self::new(SocketAddr::new(address, PORT), packet)
+        //     .map(|(socket,packet)| {
+        //         println!("secure connection success.\n");
+        //         Session::set(EncryptionInfo::default_encryption(), socket, packet)
+        //     })
+        //     .unwrap_or_else(|(Error, Packet)| {
+        //         println!("A secure connection failed: {:?}.\nretry secure connection.\n", Error);
+        //         Self::secure(address, Packet)
+        //     }) // 리펙토링 필요 *
     }
 
     fn establish_connection(address: IpAddr, conn_type: EncryptionInfo, packet: Packet, attempts: u32) -> Session {
@@ -108,24 +111,21 @@ impl HandleSession for Session {
     }
 
     fn reconnection(&mut self) -> Result<Session, Error> {
-        if !self.is_connected() {
-            let ip = self.socket.peer_addr().unwrap().ip();
-            return match self.encryption.Type {
-                EncryptType::NoEncryption => Ok(Session::normal(ip, connection())),
-                _ => Ok(Session::secure(ip, secure_connection())),
-            };
+        match self.encryption.Type {
+            EncryptType::NoEncryption => {
+                self.send_disconnect()?;
+                Ok(Session::normal(self.socket.peer_addr().unwrap().ip(), connection()))
+            },
+            _ => Ok(self.secure())
         }
-
-        self.send_disconnect()?;
-        self.reconnection()
     }
 
     fn encryption(&mut self) -> Result<(), ParseError> {
-        if !self.packet.is_encryption() {
+        if !self.send_packet.is_encryption() {
             return Err(ParseError::Unimplemented("".to_string()));
         }
 
-        let packet = match &mut self.packet {
+        let packet = match &mut self.send_packet {
             Packet::StructStone(ref mut packet) => replace(packet, Default::default()),
             _ => return Err(ParseError::Unimplemented("Packet does not exist".to_string())),
         };
@@ -154,13 +154,13 @@ impl HandleSession for Session {
     }
 
     fn send(&mut self) -> Result<Packet, Error> {
-        if self.packet.is_encryption() {
+        if self.send_packet.is_encryption() {
             println!("암호화 할거임");
             self.encryption().expect("Packet encryption failed.");
         }
 
         self.take_socket()
-            .write_all(self.packet.take_stone().unwrap())
+            .write_all(self.send_packet.take_stone().unwrap())
             .map(|_| self.get_packet())
     }
 
@@ -170,14 +170,14 @@ impl HandleSession for Session {
         buffer
     }
 
-    fn receiving(&mut self, mut buffer: StructStone) -> Packet {
+    fn receiving(&mut self, mut buffer: StructStone) -> &mut Packet {
         let mut payload = StructStonePayload::default();
         let buffer_size = buffer.get_size();
 
         if buffer_size != 12 {
             payload = StructStonePayload::load(self.recv(buffer_size));
-            self.set_packet(Packet::from(StructStone::build(buffer.get_header(), payload)));
-            return self.get_packet();
+            self.save_packet(Packet::from(StructStone::build(buffer.get_header(), payload)));
+            return &mut self.peek_packet();
         }
 
         let header = StructStoneHeader::load(self.recv(12));

@@ -10,8 +10,8 @@ use crate::{
             define::{
                 SecureHandshakePacket,
                 StructStone,
-            },
-            define::EncryptionInfo
+                EncryptionInfo
+            }
         },
     },
     utility::secure::{

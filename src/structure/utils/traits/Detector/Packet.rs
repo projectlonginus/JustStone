@@ -58,9 +58,7 @@ impl Detector for Packet {
     fn take_response(&self) -> Option<&Vec<u8>> {
         self.payload().take_response()
     }
-    fn take_file(&self) -> Option<&Vec<u8>> {
-        self.payload().take_file()
-    }
+    fn take_file(&self) -> Option<&Vec<u8>> { self.payload().take_file() }
     fn take_stone(&self) -> Option<&Vec<u8>> {
         self.payload().take_stone()
     }

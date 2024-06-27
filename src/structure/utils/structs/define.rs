@@ -10,7 +10,7 @@ pub struct SecureHandshakePacket {
 
 #[derive(Clone, Debug, Default)]
 pub struct SecurePacket {
-    pub(crate) encryption_flag: [u8; 4],
+    // pub(crate) encryption_flag: [u8; 4],
     pub(crate) encrypt_data_block_length: u32,
     pub(crate) encrypted_packet: Vec<u8>,
     pub(crate) origin_packet: StructStone,

@@ -26,18 +26,16 @@ impl Detector for SecurePacket {
         let mut output = String::new();
         writeln!(output, "\
         SecurePacket:
-        Encryption Flag:             {:?} ({:?})
         Encrypted Data Block Length: {:?} ({:?})
         Encrypted Data Field: \
-        ", EncryptionFlag::get_type(&self.encryption_flag), self.encryption_flag,
-        self.get_size(), self.encrypt_data_block_length.to_be_bytes()
+        ", self.get_size(), self.encrypt_data_block_length.to_be_bytes()
         ).unwrap();
         print!("{}", output);
         self.origin_packet.display()
     }
     fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.origin_packet.header.stone_status) }
     fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type) }
-    fn get_size(&self) -> usize { self.origin_packet.get_size() }
+    fn get_size(&self) -> usize { self.origin_packet.get_size() + 12 }
     fn get_encryption(&self) -> EncryptionInfo { todo!() }
     fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.origin_packet.header, Default::default()) }
     fn get_payload(&mut self) -> StructStonePayload { replace(&mut self.origin_packet.payload, Default::default()) }

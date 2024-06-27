@@ -77,9 +77,6 @@ impl StructStonePayload {
         }
         
         let output = match protocol {
-            StoneTransferProtocol::Handshake => {
-                StructStonePayload::from(vec![], vec![], vec![], vec_payload)
-            }
             StoneTransferProtocol::Response | StoneTransferProtocol::ExecuteCmd => {
                 StructStonePayload::from(sysinfo, vec![], vec_payload, vec![])
             }

@@ -2,6 +2,7 @@ use std::{
     io::Error,
     net::{IpAddr, TcpStream, ToSocketAddrs}
 };
+use std::mem::replace;
 
 use crate::{
     Application::malware::utils::shell::ShellStream,
@@ -26,7 +27,8 @@ use crate::{
 pub struct Session {
     pub(crate) encryption: EncryptionInfo,
     pub(crate) socket: TcpStream,
-    pub(crate) packet: Packet,
+    pub(crate) recv_packet: Packet,
+    pub(crate) send_packet: Packet,
     pub(crate) cipher: Cipher,
 }
 
@@ -36,8 +38,8 @@ pub struct Client {
 }
 
 pub(crate) struct Cipher {
-    aes: AesGcmSivCrypto,
-    rsa: RsaCrypto,
+    pub(crate) aes: AesGcmSivCrypto,
+    pub(crate) rsa: RsaCrypto,
 }
 
 pub struct ProtocolEditor {
@@ -48,11 +50,16 @@ pub struct ProtocolEditor {
 type SResult<T> = std::io::Result<T>;
 
 impl Session {
-    pub fn take_packet(&self) -> &Packet { &self.packet }
-    pub fn get_packet(&self) -> Packet { self.packet.clone() }
-    pub fn set_packet(&mut self, packet: Packet) {
-        self.packet = packet
+    pub fn save_packet(&mut self, packet: Packet) {
+        self.recv_packet = packet
     }
+    pub fn peek_packet(&self) -> &Packet { &self.recv_packet }
+    pub fn load_packet(&mut self) -> Packet { replace(&mut self.send_packet, Default::default()) }
+    pub fn set_packet(&mut self, packet: Packet) {
+        self.send_packet = packet
+    }
+    pub fn take_packet(&self) -> &Packet { &self.send_packet }
+    pub fn get_packet(&mut self) -> Packet { replace(&mut self.send_packet, Default::default()) }
     pub fn take_socket(&self) -> &TcpStream {
         &self.socket
     }
@@ -115,7 +122,7 @@ pub trait PacketProcessing {
 pub trait HandleSession {
     fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> Result<(TcpStream,Packet), (Error, Packet)>;
     fn normal(address: IpAddr, packet: Packet) -> Session;
-    fn secure(address: IpAddr, packet: Packet) -> Session;
+    fn secure(&self) -> Session;
     fn establish_connection(address: IpAddr, conn_type: EncryptionInfo, packet: Packet, attempts: u32) -> Session;
     fn optional(address: IpAddr, encryption: EncryptionInfo) -> Session;
     fn is_connected(&self) -> bool;
@@ -124,7 +131,7 @@ pub trait HandleSession {
     fn decryption(&mut self) -> Result<(), ParseError>;
     fn send(&mut self) -> Result<Packet, Error>;
     fn recv(&mut self, buffer_size: usize) -> Vec<u8>;
-    fn receiving(&mut self, buffer: StructStone) -> Packet;
+    fn receiving(&mut self, buffer: StructStone) -> &mut Packet;
     fn send_disconnect(&mut self) -> SResult<()>;
 }
 

@@ -35,7 +35,7 @@ impl Detector for SecureHandshakePacket {
     }
     fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.origin_packet.header.stone_status) }
     fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type) }
-    fn get_size(&self) -> usize { self.origin_packet.get_size() }
+    fn get_size(&self) -> usize { self.origin_packet.get_size() + 12 }
     fn get_encryption(&self) -> EncryptionInfo { EncryptionFlag::get_type(&self.encryption_flag).get_types() }
     fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.origin_packet.header, Default::default()) }
     fn get_payload(&mut self) -> StructStonePayload { replace(&mut self.origin_packet.payload, Default::default()) }
