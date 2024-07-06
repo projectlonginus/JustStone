@@ -9,7 +9,7 @@ use crate::{
     structure::{
         utils::{
             enums::{Packet, StoneTransferProtocol},
-            traits::define::Detector
+            traits::Detector
         }
     },
 };

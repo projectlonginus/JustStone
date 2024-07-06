@@ -4,7 +4,7 @@ use crate::structure::utils::{
         StructStoneHeader,
         StructStonePayload,
     },
-    traits::define::TypeManager,
+    traits::TypeManager,
 };
 
 impl StructStone {

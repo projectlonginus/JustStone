@@ -22,7 +22,7 @@
 //         },
 //         utils::{
 //             enums::Packet,
-//             traits::define::Detector,
+//             traits::define::Detectors,
 //         }
 //     },
 // };
