@@ -30,11 +30,6 @@ pub struct Session {
     pub(crate) cipher: Cipher,
 }
 
-pub struct Client {
-    pub session: Session,
-    pub exploits: ShellStream,
-}
-
 pub(crate) struct Cipher {
     aes: AesGcmSivCrypto,
     rsa: RsaCrypto,
@@ -79,27 +74,6 @@ impl Session {
                 self.cipher.aes.setup().expect("self.aes_cipher.setup()");
                 self.cipher.rsa.setup().expect("self.rsa_cipher.setup()");
             }
-        }
-    }
-}
-
-impl Client {
-    pub fn set_packet(&mut self, packet: Packet) {
-        self.session.set_packet(packet)
-    }
-
-    pub fn use_encrypt(&mut self, enable: bool, encrypt_type: EncryptType, handshake_type: HandshakeType) -> Client {
-
-        let encryption = EncryptionInfo {
-            Activated: enable,
-            Type: encrypt_type,
-            Handshake_Type: handshake_type,
-        };
-
-        self.session.set_encryption(encryption);
-        match self.session.reconnection() {
-            Ok(session) => Client::new(session),
-            Err(error) => panic!("reconnection error :{}", error)
         }
     }
 }

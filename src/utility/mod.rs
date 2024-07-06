@@ -1,4 +1,4 @@
 pub mod secure;
 pub mod LZ4;
-mod gui;
+pub mod interface;
 mod editor;

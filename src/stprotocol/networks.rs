@@ -9,10 +9,8 @@ use std::{
     net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs},
 };
 
-use utils::Session;
-
 use crate::{
-    stprotocol::{HandleSession, utils},
+    stprotocol::utils::{HandleSession, Session},
     structure::{
         packet::{connection, disconnect, secure_connection, secure_disconnect},
         utils::{
