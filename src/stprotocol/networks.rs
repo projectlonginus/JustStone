@@ -4,7 +4,13 @@ use std::{io::{
     Write
 }, io, mem::replace, net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs}};
 use crate::{
-    stprotocol::utils::{HandleSession, Session},
+    stprotocol::{
+        utils::{
+            HandleSession,
+            Session,
+            PacketProcessing
+        }
+    },
     structure::{
         packet::{connection, disconnect, secure_connection, secure_disconnect},
         utils::{
@@ -20,7 +26,7 @@ use crate::{
             traits::Detector,
         }
     },
-    utility::secure::utils::RsaCrypto
+    utility::secure::utils::RsaCrypto,
 };
 
 static PORT:u16 = 6974;
@@ -43,7 +49,7 @@ impl HandleSession for Session {
         Self::new(SocketAddr::new(address, PORT), packet)
             .map(|(socket,packet)| {
                 println!("normal connection success.\n");
-                Session::set(EncryptionInfo::no_encryption(), socket, packet)
+                Session::set(EncryptionInfo::no_encryption(), socket).with_send_packet(packet)
             })
             .unwrap_or_else(|(Error, Packet)| {
                 println!("A normal connection failed: {:?}.\nretry normal connection.\n", Error);
@@ -53,7 +59,7 @@ impl HandleSession for Session {
 
     fn secure(&mut self) -> Session {
         self.receiving(StructStone::buffer());
-        self.cipher.rsa = RsaCrypto::from_pub_key(self.recv_packet.take_file().unwrap());
+        self.cipher.rsa.set_public_key(RsaCrypto::from_pub_key(self.recv_packet.take_file().unwrap()));
         todo!("CA 인증서 서명 인증 로직 추가")
         // Self::new(SocketAddr::new(address, PORT), packet)
         //     .map(|(socket,packet)| {
@@ -77,7 +83,7 @@ impl HandleSession for Session {
         match Self::new(SocketAddr::new(address, PORT), packet) {
             Ok((socket, packet)) => {
                 println!("{} connection success.\n", conn_type.Activated);
-                Session::set(conn_type, socket, packet)
+                Session::set(conn_type, socket).with_send_packet(packet)
             }
             Err((error, packet)) => {
                 println!("A {:?} connection failed (attempt {}): {:?}.\nRetrying connection.\n",
@@ -163,14 +169,14 @@ impl HandleSession for Session {
         buffer
     }
 
-    fn receiving(&mut self, mut buffer: StructStone) -> &mut Packet {
+    fn receiving(&mut self, mut buffer: StructStone) -> &Packet {
         let mut payload = StructStonePayload::default();
         let buffer_size = buffer.get_size();
 
         if buffer_size != 12 {
             payload = StructStonePayload::load(self.recv(buffer_size));
             self.save_packet(Packet::from(StructStone::build(buffer.get_header(), payload)));
-            return &mut self.peek_packet();
+            return self.peek_packet();
         }
 
         let header = StructStoneHeader::load(self.recv(12));

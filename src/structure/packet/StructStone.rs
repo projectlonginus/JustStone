@@ -4,8 +4,8 @@ use crate::structure::utils::{
         StructStoneHeader,
         StructStonePayload,
     },
-    traits::TypeManager,
 };
+use crate::structure::utils::traits::define::TypeManager;
 
 impl StructStone {
     pub fn build(header: StructStoneHeader, payload: StructStonePayload) -> StructStone {

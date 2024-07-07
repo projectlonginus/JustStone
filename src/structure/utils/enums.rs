@@ -69,7 +69,7 @@ pub enum EncryptionFlag { // 8바이트 길이 암호화 플레그
     Unknown // 알수없는 암호화 유형
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Packet {
     StructStone(
         StructStone
@@ -91,6 +91,8 @@ pub enum Packet {
         // encrypted_packet: StructStone,
         // secure_stone: Vec<u8>,
     ),
+    #[default]
+    Default
 }
 
 #[derive(Debug)]
@@ -129,20 +131,25 @@ impl Packet {
     {
         packet.into()
     }
-    pub fn mutable_payload(&mut self) -> &mut dyn Detector {
+    pub fn mutable_payload(&mut self) -> Result<&mut dyn Detector,StructStone>  {
         return match self {
-            Packet::StructStone(packet) => packet as &mut dyn Detector,
-            Packet::SecurePacket(packet) => packet as &mut dyn Detector,
-            Packet::SecureHandshakePacket(packet) => packet as &mut dyn Detector,
+            Packet::StructStone(packet) => Ok(packet as &mut dyn Detector),
+            Packet::SecurePacket(packet) => Ok(packet as &mut dyn Detector),
+            Packet::SecureHandshakePacket(packet) => Ok(packet as &mut dyn Detector),
+            Packet::Default => Err(StructStone::default())
         }
     }
 
-    pub fn payload(&self) -> &dyn Detector {
+    pub fn payload(&self) -> Result<&dyn Detector,StructStone> {
         return match self {
-            Packet::StructStone(packet) => packet,
-            Packet::SecurePacket(packet) => packet,
-            Packet::SecureHandshakePacket(packet) => packet,
+            Packet::StructStone(packet) => Ok(packet),
+            Packet::SecurePacket(packet) => Ok(packet),
+            Packet::SecureHandshakePacket(packet) => Ok(packet),
+            Packet::Default => Err(StructStone::default())
         }
+    }
+    pub fn default() -> Self {
+        Packet::Default
     }
 }
 

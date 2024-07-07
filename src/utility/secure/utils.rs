@@ -76,14 +76,10 @@ impl RsaCrypto {
             rng,
         }
     }
-    pub fn from_pub_key(pub_key: &[u8]) -> RsaCrypto {
-        let mut rng = rand::thread_rng();
-        RsaCrypto {
-            public_key: RsaPublicKey::from_public_key_der(pub_key).expect("public_key: RsaPublicKey::from_public_key_der(pub_key)"),
-            private_key: Default::default(),
-            rng,
-        }
+    pub fn from_pub_key(pub_key: &[u8]) -> RsaPublicKey {
+        RsaPublicKey::from_public_key_der(pub_key).expect("public_key: RsaPublicKey::from_public_key_der(pub_key)")
     }
+
     pub fn set_keys(&mut self, bit: usize) -> std::io::Result<()> {
         self.rng = rand::thread_rng();
         self.private_key = RsaPrivateKey::new(&mut self.rng, bit).expect("RsaPrivateKey::new(&mut rng, bit)");

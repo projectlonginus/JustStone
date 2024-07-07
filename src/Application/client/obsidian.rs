@@ -7,6 +7,7 @@ use std::{
         Read
     }
 };
+
 use bstr::ByteSlice;
 use crate::{
     Application::{
@@ -18,7 +19,8 @@ use crate::{
         utils::{
             HandleSession,
             Session,
-            HandleProtocols
+            HandleProtocols,
+            PacketProcessing
         }
     },
     structure::{
@@ -35,7 +37,7 @@ use crate::{
             structs::define::{EncryptionInfo, StructStone},
             traits::Detector
         }
-    }
+    },
 };
 
 type Result<T> = std::io::Result<T>;
@@ -54,11 +56,12 @@ impl Obsidian {
         }
     }
 
-    pub fn secure(ip: &str) -> Obsidian {
-        Obsidian {
-            session: Session::secure(ip.parse().unwrap()),
-            exploits: ShellStream::default(),
-        }
+    pub fn secure(ip: &str) -> Obsidian { // 핸드세이크, 암호화 통신 구조가 아직 확립되지 않음
+        panic!("The specific structure for handshake, encryption communication has not yet been established and cannot be used.\n");
+        // Obsidian {
+        //     session: Session::secure(),  // 핸드세이크, 암호화 통신 구조가 아직 확립되지 않음
+        //     exploits: ShellStream::default(),
+        // }
     }
     pub fn optional(ip: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Obsidian {
         Obsidian {
@@ -71,7 +74,7 @@ impl Obsidian {
         }
     }
 
-    pub fn receiving(&mut self) -> &mut Packet {
+    pub fn receiving(&mut self) -> &Packet {
         self.session.receiving(StructStone::buffer())
     }
 

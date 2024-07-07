@@ -5,7 +5,7 @@ use crate::structure::utils::{
     structs::define::{SecureHandshakePacket, StructStone}
 };
 use crate::structure::utils::enums::EncryptionFlag;
-use crate::structure::utils::traits::define::ProtocolCodec;
+use crate::structure::utils::traits::ProtocolCodec;
 
 impl SecureHandshakePacket {
     pub fn new() -> SecureHandshakePacket {
