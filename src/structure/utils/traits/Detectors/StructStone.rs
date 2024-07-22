@@ -44,7 +44,7 @@ impl Detector for StructStone {
     fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.header.stone_status) }
     fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.header.stone_type) }
     fn get_size(&self) -> usize { self.header.stone_size as usize }
-    fn get_encryption(&self) -> EncryptionInfo {
+    fn get_encryption_flag(&self) -> EncryptionInfo {
         EncryptionInfo::default()
     }
     fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.header, Default::default()) }

@@ -13,6 +13,7 @@ use crate::structure::utils::{
         StructStonePayload
     },
 };
+use crate::structure::utils::enums::EncryptionFlag;
 
 pub trait PacketTest: PacketPreset  {
     fn connectionTest() -> Packet;
@@ -47,7 +48,7 @@ pub trait Detector {
     fn get_status(&self) -> StatusCode;
     fn get_type(&self) -> StoneTransferProtocol;
     fn get_size(&self) -> usize;
-    fn get_encryption(&self) -> EncryptionInfo;
+    fn get_encryption_flag(&self) -> EncryptionFlag;
     fn get_header(&mut self) -> StructStoneHeader;
     fn get_payload(&mut self) -> StructStonePayload;
     fn get_sysinfo(&mut self) -> Vec<u8>;

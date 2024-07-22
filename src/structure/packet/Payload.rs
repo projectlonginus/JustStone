@@ -4,7 +4,10 @@ use bstr::ByteSlice;
 use crate::{
     structure::{
         utils::{
-            enums::StoneTransferProtocol,
+            enums::{
+                StoneTransferProtocol,
+                EncryptionFlag
+            },
             structs::{
                 define::{
                     EncryptionInfo,
@@ -12,13 +15,13 @@ use crate::{
                     StructStonePayload,
                     PACKET_DELIMITER
                 }
-            }
+            },
         }
     },
     utility::{
         LZ4::CompressHandler,
         interface::utils::SystemInterface
-    }
+    },
 };
 
 
@@ -42,7 +45,7 @@ impl StructStonePayload{
 
     pub fn build<T: AsRef<[u8]>>(
         compression: bool,
-        encryption: EncryptionInfo,
+        encryption_flag: EncryptionFlag,
         protocol: StoneTransferProtocol,
         payload: T,
     ) -> PacketBuilder {
@@ -65,6 +68,6 @@ impl StructStonePayload{
             _ => StructStonePayload::new(),
         };
 
-        PacketBuilder::from(compression, encryption, protocol, output)
+        PacketBuilder::from(compression, encryption_flag, protocol, output)
     }
 }

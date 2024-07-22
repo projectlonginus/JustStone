@@ -13,6 +13,7 @@ use crate::{
         }
     }
 };
+use crate::structure::utils::enums::EncryptionFlag;
 
 impl SecurePacket {
     pub fn new() -> SecurePacket {
@@ -33,9 +34,9 @@ impl SecurePacket {
         }
     }
 
-    pub fn build(mut source: StructStone, encryption: &EncryptionInfo) -> Result<SecurePacket, ParseError> {
+    pub fn build(mut source: StructStone, encryption_flag: &EncryptionFlag) -> Result<SecurePacket, ParseError> {
         let packet = SecurePacket::new();
-        let mut encrypt_method = match encryption.Type {
+        let mut encrypt_method = match encryption_flag.get_encryption_type() {
             EncryptType::AesGcmSiv => AesGcmSivCrypto::default(),
             _ => return Err(ParseError::Unimplemented("EncryptionInfo algorithms other than AesGcmSiv have not yet been implemented.".to_string()))
         };

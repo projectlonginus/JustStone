@@ -23,7 +23,7 @@ impl SecureHandshakePacket {
         }
     }
 
-    pub fn set(&self, encrypt_data_size: usize, encryption_flag: EncryptionFlag,mut origin_packet: StructStone) -> Result<SecureHandshakePacket, ParseError> {
+    pub fn set(&self, encrypt_data_size: usize, encryption_flag: &EncryptionFlag, mut origin_packet: StructStone) -> Result<SecureHandshakePacket, ParseError> {
         Ok(Self {
             encryption_flag: encryption_flag.to_bytes(),
             encrypt_data_block_length: encrypt_data_size as u32,

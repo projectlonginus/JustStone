@@ -1,15 +1,20 @@
-use crate::structure::utils::{
-    enums::{
-        Packet,
-        StatusCode,
-        StoneTransferProtocol
-    },
-    structs::define::{
-        EncryptionInfo,
-        StructStoneHeader,
-        StructStonePayload
-    },
-    traits::define::Detector,
+use crate::{
+    structure::{
+        utils::{
+            enums::{
+                Packet,
+                StatusCode,
+                StoneTransferProtocol,
+                EncryptionFlag
+            },
+            structs::define::{
+                EncryptionInfo,
+                StructStoneHeader,
+                StructStonePayload
+            },
+            traits::define::Detector,
+        }
+    }
 };
 
 impl Detector for Packet {
@@ -23,9 +28,7 @@ impl Detector for Packet {
     fn get_size(&self) -> usize {
         self.payload().unwrap().get_size()
     }
-    fn get_encryption(&self) -> EncryptionInfo {
-        self.payload().unwrap().get_encryption()
-    }
+    fn get_encryption_flag(&self) -> EncryptionFlag { self.payload().unwrap().get_encryption_flag() }
     fn get_header(&mut self) -> StructStoneHeader { self.mutable_payload().unwrap().get_header() }
     fn get_payload(&mut self) -> StructStonePayload { self.mutable_payload().unwrap().get_payload() }
     fn get_sysinfo(&mut self) -> Vec<u8> {

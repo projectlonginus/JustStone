@@ -35,7 +35,7 @@ impl Detector for SecurePacket {
     fn get_status(&self) -> StatusCode { StatusCode::get_type(&self.origin_packet.header.stone_status) }
     fn get_type(&self) -> StoneTransferProtocol { StoneTransferProtocol::get_type(&self.origin_packet.header.stone_type) }
     fn get_size(&self) -> usize { self.origin_packet.get_size() + 12 }
-    fn get_encryption(&self) -> EncryptionInfo { todo!() }
+    fn get_encryption_flag(&self) -> EncryptionInfo { todo!() }
     fn get_header(&mut self) -> StructStoneHeader { replace(&mut self.origin_packet.header, Default::default()) }
     fn get_payload(&mut self) -> StructStonePayload { replace(&mut self.origin_packet.payload, Default::default()) }
     fn get_sysinfo(&mut self) -> Vec<u8> { replace(&mut self.origin_packet.payload.sysinfo, Default::default()) }

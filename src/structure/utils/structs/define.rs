@@ -1,4 +1,4 @@
-use crate::structure::utils::enums::{EncryptType, HandshakeType, StoneTransferProtocol};
+use crate::structure::utils::enums::{EncryptionFlag, EncryptType, HandshakeType, StoneTransferProtocol};
 
 pub const PACKET_DELIMITER: &[u8; 2] = b"\r\n";
 
@@ -57,7 +57,7 @@ pub struct EncryptionInfo {
 #[derive(Debug, Clone, Default)]
 pub struct PacketBuilder {
     pub(crate) compression: bool,
-    pub(crate) encryption: EncryptionInfo,
+    pub(crate) encryption_flag: EncryptionFlag,
     pub(crate) protocol: StoneTransferProtocol,
     pub(crate) output: StructStonePayload,
 }

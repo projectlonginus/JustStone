@@ -13,6 +13,7 @@ use crate::{
         utils::traits::PacketPreset
     }
 };
+use crate::structure::utils::enums::EncryptionFlag;
 
 pub(crate) mod PacketBuilder;
 pub(crate) mod Header;
@@ -27,52 +28,52 @@ mod test;
 
 impl PacketPreset for NormalSession {
     fn connection() -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::Connection, vec![]).packet()
+        StructStonePayload::build(false, EncryptionFlag::NoEncryption, StoneTransferProtocol::Connection, vec![]).packet()
     }
 
     fn disconnect(&self) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::Disconnect, vec![]).packet()
+        StructStonePayload::build(false, EncryptionFlag::NoEncryption, StoneTransferProtocol::Disconnect, vec![]).packet()
     }
 
     fn response(&self, msg: &str) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::Response, msg).packet()
+        StructStonePayload::build(false, EncryptionFlag::NoEncryption, StoneTransferProtocol::Response, msg).packet()
     }
 
     fn download(&self, file: Vec<u8>) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::Download, file).packet()
+        StructStonePayload::build(false, EncryptionFlag::NoEncryption, StoneTransferProtocol::Download, file).packet()
     }
 
     fn upload(&self, file: Vec<u8>) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::Upload, file).packet()
+        StructStonePayload::build(false, EncryptionFlag::NoEncryption, StoneTransferProtocol::Upload, file).packet()
     }
 
     fn exploit(&self, output: Vec<u8>) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::no_encryption(), StoneTransferProtocol::ExecuteCmd, output).packet()
+        StructStonePayload::build(false, EncryptionFlag::NoEncryption, StoneTransferProtocol::ExecuteCmd, output).packet()
     }
 }
 impl PacketPreset for SecureSession {
     
     fn connection() -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::Handshake, vec![]).handshake_packet().unwrap()
+        StructStonePayload::build(false, EncryptionFlag::RAGS, StoneTransferProtocol::Handshake, vec![]).handshake_packet().unwrap()
     }
 
     fn disconnect(&self) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::Disconnect, vec![]).packet()
+        StructStonePayload::build(false, EncryptionFlag::RAGS, StoneTransferProtocol::Disconnect, vec![]).packet()
     }
 
     fn response(&self, msg: &str) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::Response, msg).packet()
+        StructStonePayload::build(false, EncryptionFlag::RAGS, StoneTransferProtocol::Response, msg).packet()
     }
 
     fn download(&self, file: Vec<u8>) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::Download, file).packet()
+        StructStonePayload::build(false, EncryptionFlag::RAGS, StoneTransferProtocol::Download, file).packet()
     }
 
     fn upload(&self, file: Vec<u8>) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::Upload, file).packet()
+        StructStonePayload::build(false, EncryptionFlag::RAGS, StoneTransferProtocol::Upload, file).packet()
     }
 
     fn exploit(&self, output: Vec<u8>) -> Packet {
-        StructStonePayload::build(false, EncryptionInfo::default_encryption(), StoneTransferProtocol::ExecuteCmd, output).packet()
+        StructStonePayload::build(false, EncryptionFlag::RAGS, StoneTransferProtocol::ExecuteCmd, output).packet()
     }
 }
