@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
 use std::{
     env,
     fs::File,
@@ -18,8 +20,8 @@ use crate::{
     stprotocol::{
         utils::{
             HandleSession,
-            Session,
-            HandleProtocols,
+            NormalSession,
+            HandleClient,
             PacketProcessing
         }
     },
@@ -43,7 +45,7 @@ use crate::{
 type Result<T> = std::io::Result<T>;
 
 impl Obsidian {
-    pub fn new(session: Session) -> Obsidian {
+    pub fn new(session: NormalSession) -> Obsidian {
         Obsidian {
             session,
             exploits: ShellStream::default(),
@@ -51,7 +53,7 @@ impl Obsidian {
     }
     pub fn normal(ip: &str) -> Obsidian {
         Obsidian {
-            session: Session::normal(ip.parse().unwrap(), connection()),
+            session: NormalSession::normal(ip.parse().unwrap(), connection()),
             exploits: ShellStream::default(),
         }
     }
@@ -59,13 +61,13 @@ impl Obsidian {
     pub fn secure(ip: &str) -> Obsidian { // 핸드세이크, 암호화 통신 구조가 아직 확립되지 않음
         panic!("The specific structure for handshake, encryption communication has not yet been established and cannot be used.\n");
         // Obsidian {
-        //     session: Session::secure(),  // 핸드세이크, 암호화 통신 구조가 아직 확립되지 않음
+        //     session: NormalSession::secure(),  // 핸드세이크, 암호화 통신 구조가 아직 확립되지 않음
         //     exploits: ShellStream::default(),
         // }
     }
     pub fn optional(ip: &str, handshake_type: HandshakeType, encrypt_type: EncryptType) -> Obsidian {
         Obsidian {
-            session: Session::optional(ip.parse().unwrap(), EncryptionInfo {
+            session: NormalSession::optional(ip.parse().unwrap(), EncryptionInfo {
                 Activated: true,
                 Type: encrypt_type,
                 Handshake_Type: handshake_type,
@@ -106,7 +108,7 @@ impl Obsidian {
     }
 }
 
-impl HandleProtocols for Obsidian {
+impl HandleClient for Obsidian {
     fn response(&mut self, msg: &str) -> Result<Packet> {
         self.set_packet(response(msg));
         self.session.send()

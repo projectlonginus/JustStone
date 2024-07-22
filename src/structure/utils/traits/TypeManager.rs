@@ -2,23 +2,25 @@ use json::{JsonValue, object};
 
 use crate::{
     structure::{
-        packet::StructStonePayload::PACKET_DELIMITER,
         utils::{
             enums::{
                 StatusCode,
                 StoneTransferProtocol,
             },
-            structs::define::{
-                StructRawStonePayload,
-                StructStoneHeader,
-                StructStonePayload,
+            structs::{
+                define::{
+                    StructRawStonePayload,
+                    StructStoneHeader,
+                    StructStonePayload,
+                    PACKET_DELIMITER
+                }
             },
             traits::{
                 define::{
                     TypeManager,
                     ProtocolCodec
                 }
-            }
+            },
         }
     }
 };

@@ -1,11 +1,22 @@
+#![allow(dead_code)]
+
 use std::mem::replace;
-use crate::structure::utils::{
-    enums::{
-        StoneTransferProtocol,
-    },
-    structs::define::{PacketBuilder, StructStonePayload},
+use crate::{
+    structure::{
+        utils::{
+            enums::{
+                StoneTransferProtocol,
+            },
+            structs::{
+                define::{
+                    PacketBuilder,
+                    StructStonePayload,
+                    EncryptionInfo
+                }
+            }
+        }
+    }
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl PacketBuilder {
     pub fn is_compression(&self) -> &bool {

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 //! # [Ratatui] User Input example
 //!
 //! The latest version of this example is available in the [examples] folder in the repository.

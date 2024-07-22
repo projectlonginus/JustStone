@@ -1,9 +1,11 @@
 use json::JsonValue;
+use crate::stprotocol::utils::PacketProcessing;
 
 use crate::structure::utils::{
     enums::{
         StatusCode,
-        StoneTransferProtocol
+        StoneTransferProtocol,
+        Packet
     },
     structs::define::{
         EncryptionInfo,
@@ -12,8 +14,21 @@ use crate::structure::utils::{
     },
 };
 
-pub trait Builder {
+pub trait PacketTest: PacketPreset  {
+    fn connectionTest() -> Packet;
+    fn disconnectTest(&self) -> Packet;
+    fn responseTest(&self, msg: &str) -> Packet;
+    fn downloadTest(&self, file: Vec<u8>) -> Packet;
+    fn uploadTest(&self, file: Vec<u8>) -> Packet;
+}
 
+pub trait PacketPreset{
+    fn connection() -> Packet;
+    fn disconnect(&self) -> Packet;
+    fn response(&self, msg: &str) -> Packet;
+    fn download(&self, file: Vec<u8>) -> Packet;
+    fn upload(&self, file: Vec<u8>) -> Packet;
+    fn exploit(&self, output: Vec<u8>) -> Packet;
 }
 
 pub trait ProtocolCodec {

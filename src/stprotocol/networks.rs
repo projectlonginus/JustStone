@@ -6,32 +6,33 @@ use std::{io::{
 use crate::{
     stprotocol::{
         utils::{
-            HandleSession,
-            Session,
+            HandleSessions,
+            NormalSession,
             PacketProcessing
         }
     },
     structure::{
-        packet::{connection, disconnect, secure_connection, secure_disconnect},
         utils::{
-            enums::{EncryptType, HandshakeType, Packet, ParseError, StoneTransferProtocol::Connection},
+            enums::{HandshakeType, Packet},
             structs::define::{
                 EncryptionInfo,
-                SecureHandshakePacket,
-                SecurePacket,
                 StructStone,
                 StructStoneHeader,
                 StructStonePayload
             },
-            traits::Detector,
+            traits::{Detector, PacketPreset},
         }
     },
-    utility::secure::utils::RsaCrypto,
 };
+use crate::stprotocol::utils::{NormalSessionLayer, SecureSession, SecureSessionLayer};
 
 static PORT:u16 = 6974;
 
-impl HandleSession for Session {
+impl NormalSessionLayer for NormalSession {}
+
+impl SecureSessionLayer for NormalSession {}
+
+impl HandleSessions for NormalSession {
     fn new<A: ToSocketAddrs>(address: A, packet: Packet) -> Result<(TcpStream,Packet), (Error, Packet)> {
         packet.display();
         match TcpStream::connect(address) {
@@ -45,11 +46,11 @@ impl HandleSession for Session {
         }
     }
 
-    fn normal(address: IpAddr, packet: Packet) -> Session {
+    fn normal(address: IpAddr, packet: Packet) -> NormalSession {
         Self::new(SocketAddr::new(address, PORT), packet)
             .map(|(socket,packet)| {
                 println!("normal connection success.\n");
-                Session::set(EncryptionInfo::no_encryption(), socket).with_send_packet(packet)
+                NormalSession::set(socket).with_send_packet(packet)
             })
             .unwrap_or_else(|(Error, Packet)| {
                 println!("A normal connection failed: {:?}.\nretry normal connection.\n", Error);
@@ -57,33 +58,32 @@ impl HandleSession for Session {
             })
     }
 
-    fn secure(&mut self) -> Session {
-        self.receiving(StructStone::buffer());
-        self.cipher.rsa.set_public_key(RsaCrypto::from_pub_key(self.recv_packet.take_file().unwrap()));
-        todo!("CA 인증서 서명 인증 로직 추가")
-        // Self::new(SocketAddr::new(address, PORT), packet)
-        //     .map(|(socket,packet)| {
-        //         println!("secure connection success.\n");
-        //         Session::set(EncryptionInfo::default_encryption(), socket, packet)
-        //     })
-        //     .unwrap_or_else(|(Error, Packet)| {
-        //         println!("A secure connection failed: {:?}.\nretry secure connection.\n", Error);
-        //         Self::secure(address, Packet)
-        //     }) // 리펙토링 필요 *
-    }
+    // fn secure(&mut self) -> SecureSession {
+    //     self.receiving(StructStone::buffer());
+    //     // self.cipher.rsa.set_public_key(RsaCrypto::from_pub_key(self.recv_packet.take_file().unwrap()));
+    //     todo!("CA 인증서 서명 인증 로직 추가")
+    //     // Self::new(SocketAddr::new(address, PORT), packet)
+    //     //     .map(|(socket,packet)| {
+    //     //         println!("secure connection success.\n");
+    //     //         NormalSession::set(EncryptionInfo::default_encryption(), socket, packet)
+    //     //     })
+    //     //     .unwrap_or_else(|(Error, Packet)| {
+    //     //         println!("A secure connection failed: {:?}.\nretry secure connection.\n", Error);
+    //     //         Self::secure(address, Packet)
+    //     //     }) // 리펙토링 필요 *
+    // }
 
-    fn establish_connection(address: IpAddr, conn_type: EncryptionInfo, packet: Packet, attempts: u32) -> Session {
+    fn establish_connection(address: IpAddr, conn_type: EncryptionInfo, packet: Packet, attempts: u32) -> NormalSession { // 리팩터링 필요
         if attempts >= 3 {
             match conn_type.Handshake_Type {
                 HandshakeType::NoHandshake => panic!("Failed to establish any connection after multiple attempts.\n"),
                 _ => return Self::establish_connection(address, conn_type, packet, attempts),
             }
         }
-
         match Self::new(SocketAddr::new(address, PORT), packet) {
             Ok((socket, packet)) => {
                 println!("{} connection success.\n", conn_type.Activated);
-                Session::set(conn_type, socket).with_send_packet(packet)
+                NormalSession::set(socket).with_send_packet(packet)
             }
             Err((error, packet)) => {
                 println!("A {:?} connection failed (attempt {}): {:?}.\nRetrying connection.\n",
@@ -93,10 +93,10 @@ impl HandleSession for Session {
         }
     }
 
-    fn optional(address: IpAddr, encryption: EncryptionInfo) -> Session {
+    fn optional(address: IpAddr, encryption: EncryptionInfo) -> NormalSession { // 리팩터링 필요
         let packet = match encryption.Activated {
-            false => connection(),
-            _ => secure_connection()
+            false => NormalSession::connection(),
+            _ => SecureSession::connection()
         };
         Self::establish_connection(address, encryption, packet, 0)
     }
@@ -109,55 +109,47 @@ impl HandleSession for Session {
         }
     }
 
-    fn reconnection(&mut self) -> Result<Session, Error> {
-        match self.encryption.Type {
-            EncryptType::NoEncryption => {
-                self.send_disconnect()?;
-                Ok(Session::normal(self.socket.peer_addr().unwrap().ip(), connection()))
-            },
-            _ => Ok(self.secure())
-        }
+    fn reconnection(&mut self) -> Result<NormalSession, Error> {
+        self.send_disconnect()?;
+        Ok(NormalSession::normal(self.socket.peer_addr().unwrap().ip(), self.connection()))
     }
 
-    fn encryption(&mut self) -> Result<(), ParseError> {
-        if !self.send_packet.is_encryption() {
-            return Err(ParseError::Unimplemented("".to_string()));
-        }
-
-        let packet = match &mut self.send_packet {
-            Packet::StructStone(ref mut packet) => replace(packet, Default::default()),
-            _ => return Err(ParseError::Unimplemented("Packet does not exist".to_string())),
-        };
-
-        let encrypted_packet = match packet.get_type() {
-            Connection => {
-                println!("핸드셰이크");
-                SecureHandshakePacket::build(packet, &self.encryption)
-                    .map(Packet::from)
-                    .map_err(|error| error)?
-            }
-            _ => {
-                println!("암호화");
-                SecurePacket::build(packet, &self.encryption)
-                    .map(Packet::from)
-                    .map_err(|error| error)?
-            }
-        };
-
-        self.set_packet(encrypted_packet);
-        Ok(())
-    }
-
-    fn decryption(&mut self) -> Result<(), ParseError> {
-        Ok(())
-    }
+    // fn encryption(&mut self) -> Result<(), ParseError> { 리펙터링 필요
+    //     if !self.send_packet.is_encryption() {
+    //         return Err(ParseError::Unimplemented("".to_string()));
+    //     }
+    //
+    //     let packet = match &mut self.send_packet {
+    //         Packet::StructStone(ref mut packet) => replace(packet, Default::default()),
+    //         _ => return Err(ParseError::Unimplemented("Packet does not exist".to_string())),
+    //     };
+    //
+    //     let temp_enc = EncryptionInfo::default_encryption();
+    //
+    //     let encrypted_packet = match packet.get_type() {
+    //         Connection => {
+    //             println!("핸드셰이크");
+    //             SecureHandshakePacket::build(packet, &temp_enc)
+    //                 .map(Packet::from)
+    //                 .map_err(|error| error)?
+    //         }
+    //         _ => {
+    //             println!("암호화");
+    //             SecurePacket::build(packet, &temp_enc) // 리펙타링 필요
+    //                 .map(Packet::from)
+    //                 .map_err(|error| error)?
+    //         }
+    //     };
+    //
+    //     self.set_packet(encrypted_packet);
+    //     Ok(())
+    // }
+    //
+    // fn decryption(&mut self) -> Result<(), ParseError> {
+    //     Ok(())
+    // }
 
     fn send(&mut self) -> Result<Packet, Error> {
-        if self.send_packet.is_encryption() {
-            println!("암호화 할거임");
-            self.encryption().expect("Packet encryption failed.");
-        }
-
         self.take_socket()
             .write_all(self.send_packet.take_stone().unwrap())
             .map(|_| self.get_packet())
@@ -184,11 +176,7 @@ impl HandleSession for Session {
     }
 
     fn send_disconnect(&mut self) -> io::Result<()> {
-        let packet = match self.encryption.Type {
-            EncryptType::NoEncryption => disconnect(),
-            _ => secure_disconnect(),
-        };
-        self.set_packet(packet);
+        self.set_packet(self.disconnect().unwrap().unwrap());
         self.send().map(|_| ())
     }
 }

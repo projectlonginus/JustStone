@@ -3,7 +3,7 @@ use crate::{
     stprotocol::{
         utils::{
             Handlers,
-            HandleProtocols,
+            HandleClient,
             PacketProcessing
         }
     },
@@ -20,6 +20,7 @@ use crate::{
 
 pub mod utils;
 pub mod obsidian;
+mod test;
 
 impl Handlers for Obsidian {
     fn default_client_handler(&mut self) {

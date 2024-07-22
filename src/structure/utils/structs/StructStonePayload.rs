@@ -1,6 +1,15 @@
 use crate::structure::utils::structs::define::StructStonePayload;
+use crate::utility::interface::utils::SystemInterface;
 
 impl StructStonePayload {
+    pub fn default() -> StructStonePayload {
+        StructStonePayload {
+            sysinfo: SystemInterface::info().as_bytes().to_vec(),
+            command_input: vec![],
+            response: vec![],
+            file: vec![],
+        }
+    }
     pub fn from(sysinfo: Vec<u8>, command_input: Vec<u8>, response: Vec<u8>, file: Vec<u8>) -> StructStonePayload {
         StructStonePayload {
             sysinfo,

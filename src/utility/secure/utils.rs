@@ -1,7 +1,12 @@
+#![allow(dead_code)]
+
 use aes_gcm_siv::{aead::{KeyInit, OsRng}, Aes256GcmSiv, Key, Nonce};
 use rand::rngs::ThreadRng;
-use rsa::{RsaPrivateKey, RsaPublicKey};
-use rsa::pkcs8::DecodePublicKey;
+use rsa::{
+    RsaPrivateKey,
+    RsaPublicKey,
+    pkcs8::DecodePublicKey
+};
 
 pub struct RsaCrypto {
     private_key: RsaPrivateKey,

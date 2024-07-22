@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 // use std::convert::Into;
 // use egui::ahash::HashSet;
 // use uuid::Uuid;

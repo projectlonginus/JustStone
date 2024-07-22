@@ -1,11 +1,17 @@
+#![allow(dead_code)]
+
 use std::mem::replace;
 
-use crate::structure::utils::{
-    enums::ParseError,
-    structs::define::{SecureHandshakePacket, StructStone}
+use crate::{
+    structure::{
+        utils::{
+            enums::EncryptionFlag,
+            enums::ParseError,
+            structs::define::{SecureHandshakePacket, StructStone},
+            traits::ProtocolCodec
+        }
+    }
 };
-use crate::structure::utils::enums::EncryptionFlag;
-use crate::structure::utils::traits::ProtocolCodec;
 
 impl SecureHandshakePacket {
     pub fn new() -> SecureHandshakePacket {

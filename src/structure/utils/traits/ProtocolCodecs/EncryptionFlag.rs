@@ -10,6 +10,8 @@ impl ProtocolCodec for EncryptionFlag {
             [1, 0, 0, 0] => EncryptionFlag::DHAGS,
             [1, 0, 0, 1] => EncryptionFlag::DHAG,
             [1, 0, 1, 0] => EncryptionFlag::DHAC,
+            [1, 0, 1, 1] => EncryptionFlag::NoEncryption,
+            [1, 1, 0, 0] => EncryptionFlag::Unknown,
             _ => { EncryptionFlag::Unknown }
         }
     }
@@ -22,7 +24,8 @@ impl ProtocolCodec for EncryptionFlag {
             EncryptionFlag::DHAGS   => [1, 0, 0, 0],
             EncryptionFlag::DHAG    => [1, 0, 0, 1],
             EncryptionFlag::DHAC    => [1, 0, 1, 0],
-            _ => [1, 0, 1, 1]
+            EncryptionFlag::NoEncryption => [1,0,1,1],
+            _ => [1, 1, 0, 0]
         }
     }
 
@@ -34,6 +37,7 @@ impl ProtocolCodec for EncryptionFlag {
             EncryptionFlag::DHAGS   => "Diffie_Hellman-AesGcmSiv".to_string(),
             EncryptionFlag::DHAG    => "Diffie_Hellman-AesGcm".to_string(),
             EncryptionFlag::DHAC    => "Diffie_Hellman-AesCbc".to_string(),
+            EncryptionFlag::NoEncryption => "Disable-Encryption".to_string(),
             _ => "Unknown".to_string()
         }
     }

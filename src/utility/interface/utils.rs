@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub(crate) enum InputMode {
     Normal,
     Editing,
@@ -14,3 +16,5 @@ pub(crate) struct App {
     /// History of recorded messages
     pub(crate) messages: Vec<String>,
 }
+
+pub struct SystemInterface;

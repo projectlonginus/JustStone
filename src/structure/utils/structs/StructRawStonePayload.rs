@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::structure::utils::structs::define::StructRawStonePayload;
 
 impl StructRawStonePayload {

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::structure::utils::{
     enums::{
         Packet,
@@ -19,6 +21,7 @@ impl PacketBuilder {
         Packet::from(
             StructStone::build(
                 StructStoneHeader::build(
+                    &self.encryption().Activated,
                     self.is_compression(),
                     self.protocol(),
                     output.get_size(),
@@ -32,6 +35,7 @@ impl PacketBuilder {
         let output = self.output();
         StructStone::build(
             StructStoneHeader::build(
+                &self.encryption().Activated,
                 self.is_compression(),
                 self.protocol(),
                 output.get_size(),
