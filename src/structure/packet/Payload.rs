@@ -50,7 +50,7 @@ impl StructStonePayload{
         payload: T,
     ) -> PacketBuilder {
         let mut vec_payload = payload.as_ref().to_vec();
-        let mut sysinfo = SystemInterface::info().as_bytes().to_vec();
+        let mut sysinfo = SystemInterface::information().as_bytes().to_vec();
 
         if compression {
             sysinfo.lz4_compress();

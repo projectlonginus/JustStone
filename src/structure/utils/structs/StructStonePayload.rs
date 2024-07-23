@@ -4,7 +4,7 @@ use crate::utility::interface::utils::SystemInterface;
 impl StructStonePayload {
     pub fn default() -> StructStonePayload {
         StructStonePayload {
-            sysinfo: SystemInterface::info().as_bytes().to_vec(),
+            sysinfo: SystemInterface::information().as_bytes().to_vec(),
             command_input: vec![],
             response: vec![],
             file: vec![],

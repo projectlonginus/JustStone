@@ -3,13 +3,13 @@ use crate::{
         utils::{
             enums::{
                 EncryptType,
-                HandshakeType
+                HandshakeType,
+                EncryptionFlag
             },
-            structs::define::EncryptionInfo
+            structs::define::EncryptionInfo,
         }
     }
 };
-use crate::structure::utils::enums::EncryptionFlag;
 
 impl EncryptionInfo {
     pub fn default_encryption() -> EncryptionInfo {

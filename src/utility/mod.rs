@@ -3,4 +3,4 @@ pub mod LZ4;
 pub mod interface;
 mod editor;
 mod test;
-mod TestFixtures;
+pub mod TestFixtures;

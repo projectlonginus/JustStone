@@ -1,29 +1,35 @@
 use json::JsonValue;
-use crate::stprotocol::utils::PacketProcessing;
 
-use crate::structure::utils::{
-    enums::{
-        StatusCode,
-        StoneTransferProtocol,
-        Packet
+use crate::{
+    structure::{
+        utils::{
+            enums::{
+                StatusCode,
+                StoneTransferProtocol,
+                Packet,
+                EncryptionFlag
+            },
+            structs::define::{
+                EncryptionInfo,
+                StructStoneHeader,
+                StructStonePayload
+            },
+        }
     },
-    structs::define::{
-        EncryptionInfo,
-        StructStoneHeader,
-        StructStonePayload
-    },
+    stprotocol::utils::PacketProcessing,
 };
-use crate::structure::utils::enums::EncryptionFlag;
+use crate::stprotocol::utils::{NormalSessionLayer, SecureSessionLayer};
 
 pub trait PacketTest: PacketPreset  {
-    fn connectionTest() -> Packet;
-    fn disconnectTest(&self) -> Packet;
-    fn responseTest(&self, msg: &str) -> Packet;
-    fn downloadTest(&self, file: Vec<u8>) -> Packet;
-    fn uploadTest(&self, file: Vec<u8>) -> Packet;
+    fn connectionTest();
+    fn disconnectTest(&self);
+    fn responseTest(&self);
+    fn downloadTest(&self);
+    fn uploadTest(&self);
+    fn exploitTest(&self);
 }
 
-pub trait PacketPreset{
+pub trait PacketPreset {
     fn connection() -> Packet;
     fn disconnect(&self) -> Packet;
     fn response(&self, msg: &str) -> Packet;

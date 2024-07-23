@@ -1,7 +1,7 @@
 use crate::utility::interface::utils::SystemInterface;
 
 impl SystemInterface {
-    pub fn info() -> String {
+    pub fn information() -> String {
         let mut sys = sysinfo::System::new_all();
         sys.refresh_all();
 

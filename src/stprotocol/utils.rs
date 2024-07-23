@@ -64,11 +64,11 @@ pub trait PacketProcessing {
     fn get_packet(&mut self) -> Packet;
 }
 
-pub trait SecureSessionLayer:PacketPreset {
+pub trait SecureSessionLayer:PacketPreset + HandleSessions + HandleClient {
 
 }
 
-pub trait NormalSessionLayer:PacketPreset {
+pub trait NormalSessionLayer:PacketPreset + HandleSessions + HandleClient {
     // 아마도 HandleSessions 을 대신하게 되지 않을까 생각중
 }
 
