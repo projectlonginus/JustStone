@@ -3,21 +3,39 @@ use json::JsonValue;
 use crate::{
     structure::{
         utils::{
-            enums::StoneTransferProtocol,
-            structs::{
-                define::{
-                    StructStoneHeader,
-                    StructStonePayload,
-                    EncryptionInfo
-                }
-            }
+            enums::{
+                StatusCode,
+                StoneTransferProtocol,
+                Packet,
+                EncryptionFlag
+            },
+            structs::define::{
+                EncryptionInfo,
+                StructStoneHeader,
+                StructStonePayload
+            },
         }
-    }
+    },
+    stprotocol::utils::PacketProcessing,
 };
-use crate::structure::utils::enums::StatusCode;
+use crate::stprotocol::utils::{NormalSessionLayer, SecureSessionLayer};
 
-pub trait Builder {
+pub trait PacketTest: PacketPreset  {
+    fn connectionTest();
+    fn disconnectTest(&self);
+    fn responseTest(&self);
+    fn downloadTest(&self);
+    fn uploadTest(&self);
+    fn exploitTest(&self);
+}
 
+pub trait PacketPreset {
+    fn connection() -> Packet;
+    fn disconnect(&self) -> Packet;
+    fn response(&self, msg: &str) -> Packet;
+    fn download(&self, file: Vec<u8>) -> Packet;
+    fn upload(&self, file: Vec<u8>) -> Packet;
+    fn exploit(&self, output: Vec<u8>) -> Packet;
 }
 
 pub trait ProtocolCodec {
@@ -36,7 +54,7 @@ pub trait Detector {
     fn get_status(&self) -> StatusCode;
     fn get_type(&self) -> StoneTransferProtocol;
     fn get_size(&self) -> usize;
-    fn get_encryption(&self) -> EncryptionInfo;
+    fn get_encryption_flag(&self) -> EncryptionFlag;
     fn get_header(&mut self) -> StructStoneHeader;
     fn get_payload(&mut self) -> StructStonePayload;
     fn get_sysinfo(&mut self) -> Vec<u8>;

@@ -1,19 +1,30 @@
+#![allow(dead_code)]
+
 use std::mem::replace;
-use crate::structure::utils::{
-    enums::{
-        StoneTransferProtocol,
-    },
-    structs::define::{PacketBuilder, StructStonePayload},
+use crate::{
+    structure::{
+        utils::{
+            enums::{
+                StoneTransferProtocol,
+                EncryptionFlag
+            },
+            structs::{
+                define::{
+                    PacketBuilder,
+                    StructStonePayload,
+                }
+            },
+        }
+    }
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 impl PacketBuilder {
     pub fn is_compression(&self) -> &bool {
         &self.compression
     }
 
-    pub fn encryption(&self) -> &EncryptionInfo {
-        &self.encryption
+    pub fn encryption(&self) -> &EncryptionFlag {
+        &self.encryption_flag
     }
 
     pub fn protocol(&self) -> &StoneTransferProtocol {
@@ -27,7 +38,7 @@ impl PacketBuilder {
     pub fn default() -> PacketBuilder {
         PacketBuilder {
             compression: false,
-            encryption: EncryptionInfo::default(),
+            encryption_flag: EncryptionFlag::default(),
             protocol: StoneTransferProtocol::default(),
             output: StructStonePayload::default(),
         }
@@ -35,13 +46,13 @@ impl PacketBuilder {
 
     pub fn from(
         compression: bool,
-        encryption: EncryptionInfo,
+        encryption_flag: EncryptionFlag,
         protocol: StoneTransferProtocol,
         output: StructStonePayload,
     ) -> PacketBuilder {
         PacketBuilder {
             compression,
-            encryption,
+            encryption_flag,
             protocol,
             output,
         }

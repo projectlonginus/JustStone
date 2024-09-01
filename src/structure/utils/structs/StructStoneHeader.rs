@@ -1,12 +1,14 @@
+#![allow(dead_code)]
+
 use crate::{
     structure::{
         utils::{
-            structs::define::StructStoneHeader
+            enums::{StatusCode, StoneTransferProtocol},
+            structs::define::StructStoneHeader,
+            traits::ProtocolCodec
         }
     }
 };
-use crate::structure::utils::enums::{StatusCode, StoneTransferProtocol};
-use crate::structure::utils::traits::define::ProtocolCodec;
 
 impl StructStoneHeader {
     pub fn from(stone_status: [u8; 4], stone_type: [u8; 4], stone_size: u32) -> StructStoneHeader {

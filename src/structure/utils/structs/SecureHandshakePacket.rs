@@ -1,14 +1,17 @@
+#![allow(dead_code)]
+
 use std::mem::replace;
+
 use crate::{
     structure::{
         utils::{
+            enums::EncryptionFlag,
             enums::ParseError,
-            structs::define::{SecureHandshakePacket, StructStone}
+            structs::define::{SecureHandshakePacket, StructStone},
+            traits::ProtocolCodec
         }
     }
 };
-use crate::structure::utils::enums::{EncryptionFlag, HeaderError};
-use crate::structure::utils::traits::define::ProtocolCodec;
 
 impl SecureHandshakePacket {
     pub fn new() -> SecureHandshakePacket {
@@ -20,7 +23,7 @@ impl SecureHandshakePacket {
         }
     }
 
-    pub fn set(&self, encrypt_data_size: usize, encryption_flag: EncryptionFlag,mut origin_packet: StructStone) -> Result<SecureHandshakePacket, ParseError> {
+    pub fn set(&self, encrypt_data_size: usize, encryption_flag: &EncryptionFlag, mut origin_packet: StructStone) -> Result<SecureHandshakePacket, ParseError> {
         Ok(Self {
             encryption_flag: encryption_flag.to_bytes(),
             encrypt_data_block_length: encrypt_data_size as u32,
@@ -29,9 +32,7 @@ impl SecureHandshakePacket {
         })
     }
 
-    pub fn set_flag(&mut self, encryption_flag: EncryptionFlag) {
-        self.encryption_flag = encryption_flag.to_bytes();
-    }
+    pub fn set_flag(&mut self, encryption_flag: EncryptionFlag) { self.encryption_flag = encryption_flag.to_bytes(); }
 
     pub fn set_size(&mut self, size: usize) {
         self.encrypt_data_block_length = size as u32

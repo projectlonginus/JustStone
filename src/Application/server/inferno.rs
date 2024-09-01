@@ -1,13 +1,15 @@
+#![allow(dead_code)]
+
 // use std::convert::Into;
 // use egui::ahash::HashSet;
 // use uuid::Uuid;
-// use crate::Application::server::utils::{Server, SessionInfo, SessionsSetup};
+// use crate::Application::server::utils::{server, SessionInfo, SessionsSetup};
 // use crate::utility::secure::utils::{AesGcmSivCrypto, RsaCrypto};
 // use std::net::{Ipv4Addr, TcpStream};
 //
-// impl Server {
-//     pub fn new() -> Server {
-//         Server {
+// impl server {
+//     pub fn new() -> server {
+//         server {
 //             max_sessions: 0,
 //             max_threads: 0,
 //             default_session_setup: SessionsSetup::new(),
@@ -17,7 +19,7 @@
 //         }
 //     }
 //
-//     pub fn set<T: Into<Server>>(&mut self, element: &str, value: T) {
+//     pub fn set<T: Into<server>>(&mut self, element: &str, value: T) {
 //         match element {
 //             "max_sessions" => self.max_sessions = value,
 //             "max_threads" => self.max_threads = value,
@@ -55,3 +57,9 @@
 //         }
 //     }
 // }
+
+use crate::utility::interface::ratatui::user_input;
+
+pub fn run_server() {
+    user_input().expect("user input error")
+}

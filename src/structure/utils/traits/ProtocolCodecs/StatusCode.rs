@@ -15,8 +15,8 @@ impl ProtocolCodec for StatusCode {
     fn to_bytes(&self) -> [u8; 4] {
         match self {
             StatusCode::Normal      => [0, 0, 0, 0],
-            StatusCode::Secured     => [0, 0, 0, 1],
-            StatusCode::Compressed  => [0, 0, 1, 0],
+            StatusCode::Compressed  => [0, 0, 0, 1],
+            StatusCode::Secured     => [0, 0, 1, 0],
             StatusCode::SCPacket    => [0, 0, 1, 1],
             _ => [0,1,0,0]
         }

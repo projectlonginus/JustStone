@@ -1,9 +1,15 @@
-use egui::ahash::{HashMap, HashMapExt};
+#![allow(dead_code)]
+
+use crate::stprotocol::utils::{HandleSessions, NormalSessionLayer, SecureSessionLayer};
 use crate::structure::utils::{
-    structs::define::{SecureHandshakePacket, SecurePacket, StructStone},
+    structs::define::{
+        EncryptionInfo,
+        SecureHandshakePacket,
+        SecurePacket,
+        StructStone
+    },
     traits::define::Detector,
 };
-use crate::structure::utils::structs::define::EncryptionInfo;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum StoneTransferProtocol {
@@ -62,11 +68,12 @@ pub enum EncryptionFlag { // 8바이트 길이 암호화 플레그
     DHAC, // 핸드셰이크: Diffie-Hellman, 패킷 암호화 알고리즘: AesCbc
     DHAG, // 핸드셰이크: Diffie-Hellman, 패킷 암호화 알고리즘: AesGcm
     DHAGS,// 핸드셰이크: Diffie-Hellman, 패킷 암호화 알고리즘: AesGcmSiv
+    Unknown, // 알수없는 암호화 유형
     #[default]
-    Unknown // 알수없는 암호화 유형
+    NoEncryption
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default, Eq, PartialEq)]
 pub enum Packet {
     StructStone(
         StructStone
@@ -88,6 +95,22 @@ pub enum Packet {
         // encrypted_packet: StructStone,
         // secure_stone: Vec<u8>,
     ),
+    #[default]
+    Default
+}
+
+#[derive(Debug, Clone, Default, Eq, PartialEq)]
+pub enum Sessions {
+    NormalSession(dyn NormalSessionLayer),
+    SecureSession(dyn SecureSessionLayer),
+    #[default]
+    Default
+}
+
+pub enum SessionParsingError {
+    NormalSessionParsingError(String),
+    SecureSessionParsingError(String),
+    UnexpectedDefaultSession,
 }
 
 #[derive(Debug)]
@@ -112,6 +135,40 @@ pub enum ParseError {
     Unimplemented(String),
 }
 
+impl Sessions {
+    pub fn unwrap<T>(self) -> Result<T, SessionParsingError>
+    where
+        T: TryFrom<Sessions, Error=SessionParsingError>,
+    {
+        T::try_from(self)
+    }
+
+    pub fn from<T>(packet: T) -> Packet
+    where
+        T: Into<Packet>,
+    {
+        packet.into()
+    }
+    pub fn mutable_session(&mut self) -> Result<&mut dyn HandleSessions, SessionParsingError>  {
+        return match self {
+            Sessions::NormalSession(session) => Ok(session as &mut dyn HandleSessions),
+            Sessions::SecureSession(session) => Ok(session as &mut dyn HandleSessions),
+            Sessions::Default => Err(SessionParsingError::UnexpectedDefaultSession)
+        }
+    }
+
+    pub fn session(&self) -> Result<&dyn HandleSessions, SessionParsingError> {
+        return match self {
+            Sessions::NormalSession(session) => Ok(session),
+            Sessions::SecureSession(session) => Ok(session),
+            Sessions::Default => Err(SessionParsingError::UnexpectedDefaultSession)
+        }
+    }
+    pub fn default() -> Self {
+        Self::default()
+    }
+}
+
 impl Packet {
     pub fn unwrap<T>(self) -> Result<T, PacketError>
         where
@@ -126,36 +183,29 @@ impl Packet {
     {
         packet.into()
     }
-    pub fn mutable_payload(&mut self) -> &mut dyn Detector {
+    pub fn mutable_payload(&mut self) -> Result<&mut dyn Detector,StructStone>  {
         return match self {
-            Packet::StructStone(packet) => packet as &mut dyn Detector,
-            Packet::SecurePacket(packet) => packet as &mut dyn Detector,
-            Packet::SecureHandshakePacket(packet) => packet as &mut dyn Detector,
+            Packet::StructStone(packet) => Ok(packet as &mut dyn Detector),
+            Packet::SecurePacket(packet) => Ok(packet as &mut dyn Detector),
+            Packet::SecureHandshakePacket(packet) => Ok(packet as &mut dyn Detector),
+            Packet::Default => Err(StructStone::default())
         }
     }
 
-    pub fn payload(&self) -> &dyn Detector {
+    pub fn payload(&self) -> Result<&dyn Detector,StructStone> {
         return match self {
-            Packet::StructStone(packet) => packet,
-            Packet::SecurePacket(packet) => packet,
-            Packet::SecureHandshakePacket(packet) => packet,
+            Packet::StructStone(packet) => Ok(packet),
+            Packet::SecurePacket(packet) => Ok(packet),
+            Packet::SecureHandshakePacket(packet) => Ok(packet),
+            Packet::Default => Err(StructStone::default())
         }
+    }
+    pub fn default() -> Self {
+        Packet::Default
     }
 }
 
 impl EncryptionFlag {
-
-    pub fn from_info(info: &EncryptionInfo) -> Self{
-        match (&info.Type,&info.Handshake_Type)  {
-            (EncryptType::AesGcmSiv, HandshakeType::RSA) => EncryptionFlag::RAGS,
-            (EncryptType::AesGcm, HandshakeType::RSA)  => EncryptionFlag::RAG,
-            (EncryptType::AesCbc, HandshakeType::RSA)  => EncryptionFlag::RAC,
-            (EncryptType::AesGcmSiv, HandshakeType::DiffieHellman)  => EncryptionFlag::DHAGS,
-            (EncryptType::AesGcm, HandshakeType::DiffieHellman)  => EncryptionFlag::DHAG,
-            (EncryptType::AesCbc, HandshakeType::DiffieHellman)  => EncryptionFlag::DHAC,
-            _ => { EncryptionFlag::Unknown }
-        }
-    }
     pub fn get_types(&self) -> EncryptionInfo {
         let element = match self {
             EncryptionFlag::RAGS    => (true, EncryptType::AesGcmSiv, HandshakeType::RSA),
@@ -164,7 +214,7 @@ impl EncryptionFlag {
             EncryptionFlag::DHAGS   => (true, EncryptType::AesGcmSiv, HandshakeType::DiffieHellman),
             EncryptionFlag::DHAG    => (true, EncryptType::AesGcm,    HandshakeType::DiffieHellman),
             EncryptionFlag::DHAC    => (true, EncryptType::AesCbc,    HandshakeType::DiffieHellman),
-            _ => (false, EncryptType::NoEncryption, HandshakeType::NoHandshake)
+            _ => (false, EncryptType::NoEncryption, HandshakeType::NoHandshake),
         };
         EncryptionInfo {
             Activated:      element.0,

@@ -1,6 +1,12 @@
+#![allow(dead_code)]
+
 use aes_gcm_siv::{aead::{KeyInit, OsRng}, Aes256GcmSiv, Key, Nonce};
 use rand::rngs::ThreadRng;
-use rsa::{RsaPrivateKey, RsaPublicKey};
+use rsa::{
+    RsaPrivateKey,
+    RsaPublicKey,
+    pkcs8::DecodePublicKey
+};
 
 pub struct RsaCrypto {
     private_key: RsaPrivateKey,
@@ -74,6 +80,9 @@ impl RsaCrypto {
             private_key: pvt_key,
             rng,
         }
+    }
+    pub fn from_pub_key(pub_key: &[u8]) -> RsaPublicKey {
+        RsaPublicKey::from_public_key_der(pub_key).expect("public_key: RsaPublicKey::from_public_key_der(pub_key)")
     }
 
     pub fn set_keys(&mut self, bit: usize) -> std::io::Result<()> {

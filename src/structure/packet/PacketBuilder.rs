@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::structure::utils::{
     enums::{
         Packet,
@@ -19,6 +21,7 @@ impl PacketBuilder {
         Packet::from(
             StructStone::build(
                 StructStoneHeader::build(
+                    &self.encryption().Activated,
                     self.is_compression(),
                     self.protocol(),
                     output.get_size(),
@@ -32,6 +35,7 @@ impl PacketBuilder {
         let output = self.output();
         StructStone::build(
             StructStoneHeader::build(
+                &self.encryption().Activated,
                 self.is_compression(),
                 self.protocol(),
                 output.get_size(),
@@ -41,7 +45,6 @@ impl PacketBuilder {
     }
 
     pub fn handshake_packet(&mut self) -> Result<Packet, ParseError> {
-        self.raw_packet().payload.sysinfo = vec![];
         match SecureHandshakePacket::build(self.raw_packet(), self.encryption()) {
             Ok(packet) => Ok(Packet::from(packet)),
             Err(error) => Err(error)
